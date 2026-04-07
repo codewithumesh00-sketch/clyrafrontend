@@ -1,3 +1,7 @@
-export default function Page() {
-  return <div>Coming Soon</div>;
+export default function SettingsPage() {
+  return (
+    <div className="p-6">
+      <h1>Settings Page</h1>
+    </div>
+  );
 }
