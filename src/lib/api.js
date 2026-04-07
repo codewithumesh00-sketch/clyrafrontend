@@ -1,5 +1,12 @@
-export async function generateWebsite(prompt, currentContent = {}) {
-  const res = await fetch("http://127.0.0.1:8000/generate", {
+export async function generateWebsite(
+  prompt: string,
+  currentContent = {}
+) {
+  const API_URL =
+    process.env.NEXT_PUBLIC_API_URL ||
+    "https://clyrawebbackend-666777548.europe-west1.run.app";
+
+  const res = await fetch(`${API_URL}/generate`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -9,6 +16,10 @@ export async function generateWebsite(prompt, currentContent = {}) {
       content: currentContent,
     }),
   });
+
+  if (!res.ok) {
+    throw new Error(`Backend error: ${res.status}`);
+  }
 
   const data = await res.json();
 

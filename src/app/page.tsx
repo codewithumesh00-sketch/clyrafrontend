@@ -207,7 +207,7 @@ body {
   const { user: firebaseUser, loading: authLoading, logout } = useAuth();
 
   const API_ORIGIN =
-    process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+    process.env.NEXT_PUBLIC_API_URL || "https://clyrawebbackend-666777548.europe-west1.run.app";
   const UI_WEBHOOK =
     process.env.NEXT_PUBLIC_UI_WEBHOOK || `${API_ORIGIN.replace(/\/$/, "")}/generate`;
   const BLOG_WEBHOOK =
@@ -473,7 +473,7 @@ const generatePageSchema = (pageName: string) => {
   ) => {
     if (!uid) return;
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/save`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://clyrawebbackend-666777548.europe-west1.run.app"}/save`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -703,7 +703,7 @@ All pages include auto-working navbar routes using Next.js Link component.
     setDeployStatus("Deploying to server...");
     setDeployedUrl(null);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://clyrawebbackend-666777548.europe-west1.run.app/";
       const res = await fetch(`${apiUrl}/deploy`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
