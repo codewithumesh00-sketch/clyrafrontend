@@ -1,7 +1,4 @@
-export async function generateWebsite(
-  prompt: string,
-  currentContent = {}
-) {
+export async function generateWebsite(prompt, currentContent = {}) {
   const API_URL =
     process.env.NEXT_PUBLIC_API_URL ||
     "https://clyrawebbackend-666777548.europe-west1.run.app";
