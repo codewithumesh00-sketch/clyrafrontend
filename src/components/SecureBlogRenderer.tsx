@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { sanitizeHTML } from '@/utils/security';
-import { BlogSkeleton } from './LoaderSkeleton';
+import BlogSkeleton from './LoaderSkeleton';
 
 interface BlogRendererProps {
   blogContent: string;
