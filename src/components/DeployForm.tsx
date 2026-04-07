@@ -47,14 +47,17 @@ export const DeployForm: React.FC<DeployFormProps> = ({ files, assets }) => {
         formData.append('assets', asset);
       });
 
-      // ✅ Call Flask backend
-      const response = await fetch('http://localhost:5000/api/deploy', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`, // ✅ ONLY THIS HEADER
-        },
-        body: formData,
-      });
+      const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://clyrawebbackend-666777548.europe-west1.run.app";
+
+const response = await fetch(`${API_URL}/api/deploy`, {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+  body: formData,
+});
 
       // ✅ Validate response
       await validateApiResponse(response);
