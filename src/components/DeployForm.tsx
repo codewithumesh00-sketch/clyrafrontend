@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { validateApiResponse } from '@/utils/security';
-import { DeploySkeleton } from './LoaderSkeleton';
+import DeploySkeleton from './LoaderSkeleton';
 import { useAuth } from '@/hooks/useAuth';
 
 interface DeployFormProps {
