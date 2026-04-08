@@ -1,3 +1,4 @@
+// 🚀 force fresh production build 2026-04-08-v3
 export async function generateWebsite(prompt, currentContent = {}) {
   const API_URL =
     process.env.NEXT_PUBLIC_API_URL ||
