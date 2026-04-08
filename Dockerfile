@@ -7,10 +7,15 @@ WORKDIR /app
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 
+
 # ===============================
 # Stage 2: Build app
 # ===============================
 FROM node:20-alpine AS builder
+
+# 🔥 force rebuild to avoid stale cache
+ARG CACHE_BREAK=20260408
+
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -20,7 +25,9 @@ COPY . .
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
+# 🔥 build fresh bundle
 RUN yarn build
+
 
 # ===============================
 # Stage 3: Production runner
@@ -31,6 +38,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=8080
 
+# copy standalone output (optimized)
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public

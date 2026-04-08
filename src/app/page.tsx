@@ -473,7 +473,7 @@ const generatePageSchema = (pageName: string) => {
   ) => {
     if (!uid) return;
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://clyrawebbackend-666777548.europe-west1.run.app"}/save`, {
+      await fetch(`${API_ORIGIN}/save`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -700,7 +700,7 @@ All pages include auto-working navbar routes using Next.js Link component.
     setDeployStatus("Deploying to server...");
     setDeployedUrl(null);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://clyrawebbackend-666777548.europe-west1.run.app/";
+      const apiUrl = API_ORIGIN;
       const res = await fetch(`${apiUrl}/deploy`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
