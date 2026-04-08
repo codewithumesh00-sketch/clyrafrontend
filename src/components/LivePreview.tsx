@@ -31,16 +31,17 @@ function LivePreviewComponent({
   isDark = true,
 }: LivePreviewProps) {
   // ✅ supports both sections + pages
-  const hasContent =
-    !!schema &&
-    ((Array.isArray(schema.sections) &&
-      schema.sections.length > 0) ||
-      (Array.isArray(schema.pages) &&
-        schema.pages.length > 0));
+const hasContent =
+  !!schema &&
+  (
+    (Array.isArray(schema.sections) && schema.sections.length > 0) ||
+    (Array.isArray(schema.pages) && schema.pages.length > 0) ||
+    Object.keys(schema || {}).length > 0
+  );
 
   // ✅ deep clone for fresh renderer updates
   const memoizedSchema = useMemo(() => {
-    if (!schema) return null;
+    if (!schema || typeof schema !== "object") return null;
 
     try {
       return JSON.parse(JSON.stringify(schema));

@@ -324,22 +324,21 @@ body {
       const result = await generateWebsite(prompt.trim());
 
       // ✅ Extract AI schema from response
-      const aiSchema =
-        result.website ||
-        result.schema ||
-        result.content;
+     const aiSchema =
+  result.website ||
+  result.schema ||
+  result.content ||
+  result.data ||
+  result;
 
-    if (
-  !aiSchema ||
-  (
-    !Array.isArray(aiSchema.sections) &&
-    !Array.isArray(aiSchema.pages)
-  )
-) {
+console.log("🔥 Backend result:", result);
+console.log("🔥 Parsed schema:", aiSchema);
+
+if (!aiSchema) {
   throw new Error("Invalid AI schema");
 }
       // ✅ Update state with AI-generated schema
-      setSiteData(aiSchema);
+      setSiteData(normalizeSiteContent(aiSchema));
       setPreviewKey((prev) => prev + 1);
       setActiveView("preview");
       setStatus("AI website generated successfully 🚀");
