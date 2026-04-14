@@ -87,7 +87,7 @@ export default function LandingPage() {
     {
       icon: Wand2,
       title: "Analyzing prompt...",
-      description: "Clyra AI helps determine the subject and style of your site.",
+      description: "Clyraweb helps determine the subject and style of your site.",
       color: "from-orange-500 to-red-600"
     },
     {
@@ -319,7 +319,7 @@ export default function LandingPage() {
                       <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-orange-500 via-red-500 to-violet-600 flex items-center justify-center">
                         <Sparkles size={40} className="text-white" />
                       </div>
-                      <div className="text-2xl font-bold text-white">Clyra AI</div>
+                      <div className="text-2xl font-bold text-white">ClyraWeb</div>
                       <div className="text-sm text-zinc-400 mt-1">Beta</div>
                     </div>
                   </div>

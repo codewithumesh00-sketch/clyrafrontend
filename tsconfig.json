@@ -38,7 +38,7 @@
   ],
   "exclude": [
     "node_modules",
-    "src/templates/src",
+    "src/components/templates/src",
     ".next",
     "out"
   ]
