@@ -84,7 +84,7 @@ export default function DeployForm({
 
       const API_URL =
         process.env.NEXT_PUBLIC_API_URL ||
-        "http://127.0.0.1:8000";
+        "https://clyrawebbackend-666777548.europe-west1.run.app/";
 
       const response = await fetch(
         `${API_URL}/api/deploy`,
