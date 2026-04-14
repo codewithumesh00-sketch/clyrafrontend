@@ -83,6 +83,14 @@ export default function LandingPage() {
     }
   };
 
+  const handleChatClick = () => {
+    if (!user) {
+      setShowLoginModal(true);
+    } else {
+      router.push("/dashboard");
+    }
+  };
+
   const pipelineSteps = [
     {
       icon: Wand2,
@@ -234,7 +242,7 @@ export default function LandingPage() {
                 onClick={handleGetStarted}
                 className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white text-sm font-medium transition-all"
               >
-                Get Started
+                Sign In
               </button>
             )}
           </div>
@@ -242,110 +250,83 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative z-10 pt-32 pb-32 px-6">
+      <section className="relative z-10 pt-20 pb-16 px-6">
         <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
-            {/* Left Content */}
-            <div 
-              className="space-y-8"
-              style={{ transform: `translateX(${Math.min(scrollY * 0.08, 40)}px)` }}
-            >
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900/80 border border-white/10 backdrop-blur-sm">
-                <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-sm text-zinc-300">AI-Powered Website Builder</span>
-              </div>
+          <div className="text-center mb-12">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900/80 border border-white/10 backdrop-blur-sm mb-8">
+              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-sm text-zinc-300">AI-Powered Website Builder</span>
+            </div>
 
-              {/* Main Heading */}
-              <h1 className="text-6xl md:text-7xl font-bold leading-[1.1] tracking-tight">
-                <span className="bg-gradient-to-b from-white via-white to-zinc-400 bg-clip-text text-transparent">
-                  Sites beyond
-                </span>
-                <br />
-                <span className="bg-gradient-to-r from-orange-400 via-red-400 to-violet-400 bg-clip-text text-transparent">
-                  imagination
-                </span>
-              </h1>
+            {/* Main Heading */}
+            <h1 className="text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight mb-6">
+              <span className="bg-gradient-to-b from-white via-white to-zinc-400 bg-clip-text text-transparent">
+               Presented By
+              </span>
+              <br />
+              <span className="bg-gradient-to-r from-orange-400 via-red-400 to-violet-400 bg-clip-text text-transparent">
+               Gen Ai
+              </span>
+            </h1>
 
-              <p className="text-2xl text-zinc-400 leading-relaxed">
-                one prompt away.
-              </p>
+            <p className="text-2xl text-zinc-400 leading-relaxed mb-4">
+              one prompt away.
+            </p>
 
-              <p className="text-lg text-zinc-500 leading-relaxed max-w-lg">
-                Build stunning, production-ready websites with AI. Just describe what you want, and watch it come to life in seconds.
-              </p>
+            <p className="text-lg text-zinc-500 leading-relaxed max-w-2xl mx-auto mb-12">
+              Build stunning, production-ready websites with AI. Just describe what you want, and watch it come to life in seconds.
+            </p>
+          </div>
 
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={handleGetStarted}
-                  className="group px-8 py-4 rounded-xl bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 hover:from-violet-500 hover:via-purple-500 hover:to-pink-500 text-white font-semibold flex items-center gap-2 transition-all hover:scale-105 shadow-2xl shadow-violet-600/25"
-                >
-                  Get Started Free
-                  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                </button>
-                <button className="px-8 py-4 rounded-xl bg-zinc-900/50 hover:bg-zinc-800/50 border border-white/10 text-white font-semibold flex items-center gap-2 transition-all backdrop-blur-sm">
-                  <Play size={18} />
-                  Watch Demo
-                </button>
-              </div>
-
-              <div className="flex items-center gap-6 text-sm text-zinc-500">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 size={16} className="text-emerald-500" />
-                  <span>No credit card</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 size={16} className="text-emerald-500" />
-                  <span>Free to start</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 size={16} className="text-emerald-500" />
-                  <span>AI-powered</span>
+          {/* Chat Interface */}
+          <div className="w-full max-w-3xl mx-auto mb-8">
+            <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-2 backdrop-blur-sm shadow-2xl shadow-violet-600/10">
+              <div className="relative">
+                <textarea
+                  placeholder="Describe what you want to build..."
+                  className="w-full bg-zinc-900/50 border border-white/10 rounded-xl px-6 py-4 text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 resize-none min-h-[120px] text-lg cursor-pointer"
+                  onClick={handleChatClick}
+                  readOnly
+                />
+                <div className="absolute bottom-4 right-4 flex items-center gap-2">
+                  <button 
+                    onClick={handleChatClick} 
+                    className="p-3 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white transition-all"
+                  >
+                    <ArrowRight size={20} />
+                  </button>
                 </div>
               </div>
             </div>
 
-            {/* Right - Sphere/Logo */}
-            <div 
-              className="relative flex items-center justify-center"
-              style={{ transform: `translateX(${-Math.min(scrollY * 0.08, 40)}px)` }}
-            >
-              {/* Main Sphere */}
-              <div className="relative w-80 h-80">
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-orange-500 via-red-500 to-violet-600 blur-3xl opacity-40 animate-pulse" />
-                <div className="relative w-full h-full rounded-full bg-gradient-to-br from-orange-500 via-red-500 to-violet-600 p-1 shadow-2xl">
-                  <div className="w-full h-full rounded-full bg-gradient-to-br from-zinc-900 to-black flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-orange-500 via-red-500 to-violet-600 flex items-center justify-center">
-                        <Sparkles size={40} className="text-white" />
-                      </div>
-                      <div className="text-2xl font-bold text-white">ClyraWeb</div>
-                      <div className="text-sm text-zinc-400 mt-1">Beta</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            {/* Quick Actions */}
+            <div className="flex flex-wrap gap-3 mt-6 justify-center">
+              <button onClick={handleChatClick} className="px-4 py-2 rounded-full bg-zinc-900/50 border border-white/10 hover:border-violet-500/50 text-sm text-zinc-400 hover:text-white transition-all">
+                ✨ Create a portfolio
+              </button>
+              <button onClick={handleChatClick} className="px-4 py-2 rounded-full bg-zinc-900/50 border border-white/10 hover:border-violet-500/50 text-sm text-zinc-400 hover:text-white transition-all">
+                🚀 Build a landing page
+              </button>
+              <button onClick={handleChatClick} className="px-4 py-2 rounded-full bg-zinc-900/50 border border-white/10 hover:border-violet-500/50 text-sm text-zinc-400 hover:text-white transition-all">
+                🎨 Design a dashboard
+              </button>
+            </div>
+          </div>
 
-              {/* Floating Elements */}
-              <div 
-                className="absolute -top-4 -right-4 px-4 py-2 rounded-xl bg-zinc-900/90 border border-white/10 backdrop-blur-xl shadow-xl"
-                style={{ transform: `translateY(${scrollY * 0.1}px)` }}
-              >
-                <div className="flex items-center gap-2">
-                  <Star className="text-yellow-400" size={16} />
-                  <span className="text-white font-semibold text-sm">4.9/5</span>
-                </div>
-              </div>
-
-              <div 
-                className="absolute -bottom-4 -left-4 px-4 py-2 rounded-xl bg-zinc-900/90 border border-white/10 backdrop-blur-xl shadow-xl"
-                style={{ transform: `translateY(${-scrollY * 0.1}px)` }}
-              >
-                <div className="flex items-center gap-2 text-sm">
-                  <Zap className="text-violet-400" size={16} />
-                  <span className="text-zinc-300">10k+ sites built</span>
-                </div>
-              </div>
+          {/* Trust Badges */}
+          <div className="flex items-center justify-center gap-6 text-sm text-zinc-500">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={16} className="text-emerald-500" />
+              <span>No credit card</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={16} className="text-emerald-500" />
+              <span>Free to start</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={16} className="text-emerald-500" />
+              <span>AI-powered</span>
             </div>
           </div>
         </div>
@@ -457,6 +438,7 @@ export default function LandingPage() {
               <Sparkles size={18} className="text-white" />
             </div>
             <span className="text-lg font-bold text-white">ClyraWeb</span>
+            <span className="text-sm text-zinc-500 ml-2">Beta</span>
           </div>
           <p className="text-zinc-500 text-sm">
             © 2026 ClyraWeb. All rights reserved.
@@ -528,4 +510,4 @@ export default function LandingPage() {
       `}</style>
     </div>
   );
- }
+}
