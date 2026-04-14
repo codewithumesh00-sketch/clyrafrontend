@@ -788,7 +788,9 @@
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            pages: filesRef.current,
+            pages: Object.keys(filesState).length
+  ? filesState
+  : filesRef.current,
             assets: { "style.css": globalCss, ...assets },
             projectName: deployConfig.projectName,
             platform: deployConfig.platform,
@@ -796,7 +798,12 @@
         });
         if (!res.ok) throw new Error("Server error");
         const data = await res.json();
-        if (!data.success) throw new Error(data.error || "Deploy failed");
+console.log("🚀 DEPLOY RESPONSE:", data);
+        if (!data.success) {
+  setDeployStatus("Deploy Failed: " + (data.error || "Unknown backend error"));
+  console.error("❌ Backend deploy failed:", data);
+  return;
+}
         setDeployedUrl(data.url);
         setDeployStatus("Deployment Successful!");
         if (data.url) window.open(data.url, "_blank");

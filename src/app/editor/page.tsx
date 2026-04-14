@@ -117,14 +117,14 @@ export default function EditorPage() {
   return (
     <div className="h-screen overflow-hidden bg-gray-50 flex flex-col">
       <LexicalComposer initialConfig={initialConfig}>
-        {/* MODERN HEADER */}
-        <header className="bg-white border-b border-gray-100 shadow-sm flex-shrink-0">
+        {!isPreviewMode && (
+  <header className="bg-white border-b border-gray-100 shadow-sm flex-shrink-0">
           <div className="flex items-center justify-between px-6 py-3">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                 className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
+              > 
                 {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
               <div className="flex items-center gap-2">
@@ -136,6 +136,7 @@ export default function EditorPage() {
                 </h1>
               </div>
             </div>
+            
 
             <div className="hidden md:flex items-center gap-1 bg-gray-50 rounded-xl p-1">
               {["desktop", "tablet", "mobile"].map((d) => (
@@ -170,7 +171,7 @@ export default function EditorPage() {
                 }`}
               >
                 <Eye className="h-4 w-4" />
-                <span className="text-sm">Preview</span>
+                <span className="text-sm"></span>
               </button>
 
               <button className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-sm hover:shadow-md">
@@ -179,12 +180,15 @@ export default function EditorPage() {
               </button>
             </div>
           </div>
-        </header>
+     
+          </header>
+)}
 
         {/* MAIN CONTENT */}
         <div className="flex-1 flex overflow-hidden relative">
           {/* SIDEBAR */}
-          <aside
+    {!isPreviewMode && (
+  <aside
             className={`
               fixed lg:relative z-20 lg:z-auto
               transform transition-transform duration-300 ease-in-out
@@ -282,29 +286,46 @@ export default function EditorPage() {
               )}
             </div>
           </aside>
+)}
 
           {/* PREVIEW AREA */}
-          <main className="flex-1 overflow-auto bg-gray-50">
-            <div className="min-h-full p-4 md:p-6">
+          <main
+  className={`flex-1 overflow-auto ${
+    isPreviewMode ? "bg-white" : "bg-gray-50"
+  }`}
+>
+  <div
+    className={`${
+      isPreviewMode
+        ? "min-h-screen w-full"
+        : "min-h-full p-4 md:p-6"
+    }`}
+  >
               <div className="flex justify-center">
                 <div
-                  className={`
-                    transition-all duration-300 ease-in-out
-                    ${isPreviewMode ? 'shadow-2xl' : 'shadow-sm'}
-                    bg-white rounded-2xl overflow-hidden
-                  `}
-                  style={{
-                    width: previewWidth[device],
-                    maxWidth: "100%",
-                    minHeight: "calc(100vh - 120px)",
-                  }}
+               className={`transition-all duration-300 ease-in-out ${
+  isPreviewMode
+    ? "w-full min-h-screen bg-white"
+    : "bg-white rounded-2xl shadow-sm overflow-hidden"
+}`}
+              style={
+  isPreviewMode
+    ? {}
+    : {
+        width: previewWidth[device],
+        maxWidth: "100%",
+        minHeight: "calc(100vh - 120px)",
+      }
+}
                 >
-                  {/* Preview Toolbar */}
-                  {isPreviewMode && (
-                    <div className="sticky top-0 z-10 bg-gray-50 border-b border-gray-100 p-2 text-center">
-                      <span className="text-xs text-gray-400">Preview Mode</span>
-                    </div>
-                  )}
+{isPreviewMode && (
+  <button
+    onClick={() => setIsPreviewMode(false)}
+    className="fixed top-6 right-6 z-50 rounded-xl bg-black px-4 py-2 text-sm font-medium text-white shadow-xl"
+  >
+    Exit Preview
+  </button>
+)}
                   <div className={isPreviewMode ? "pointer-events-auto" : ""}>
                     <LivePreview schema={schema} />
                   </div>

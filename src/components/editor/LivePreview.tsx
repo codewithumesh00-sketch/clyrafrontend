@@ -1,11 +1,8 @@
 "use client";
 
 import React, { memo, useMemo, useState } from "react";
-import {
-  Monitor,
-  Tablet,
-  Smartphone,
-} from "lucide-react";
+import { Monitor, Tablet, Smartphone, ExternalLink } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useWebsiteBuilderStore } from "@/store/useWebsiteBuilderStore";
 import WebsiteRenderer from "@/components/renderer/WebsiteRenderer";
 import type { TemplateSchema } from "@/store/useWebsiteBuilderStore";
@@ -17,6 +14,7 @@ type Props = {
 type DeviceView = "desktop" | "tablet" | "mobile";
 
 function LivePreview({ schema }: Props) {
+  const router = useRouter();
   const [deviceView, setDeviceView] =
     useState<DeviceView>("desktop");
 
@@ -31,6 +29,25 @@ function LivePreview({ schema }: Props) {
     if (!currentSchema) return null;
     return JSON.parse(JSON.stringify(currentSchema));
   }, [currentSchema]);
+
+  const handleOpenPreview = () => {
+    if (!memoizedSchema) return;
+
+    localStorage.setItem(
+      "clyra-preview-schema",
+      JSON.stringify(memoizedSchema)
+    );
+
+    const params = new URLSearchParams({
+      t: Date.now().toString(),
+      template:
+        memoizedSchema.templateId || "template1",
+      category:
+        memoizedSchema.category || "business",
+    });
+
+    window.open(`/preview?${params.toString()}`, "_blank");
+  };
 
   const deviceWidths = {
     desktop: "w-full",
@@ -83,8 +100,18 @@ function LivePreview({ schema }: Props) {
           </div>
         </div>
 
-        <div className="text-xs text-gray-400">
-          Editable Live Preview
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-gray-400">
+            Editable Live Preview
+          </span>
+
+          <button
+            onClick={handleOpenPreview}
+            className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/20"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Full Preview
+          </button>
         </div>
       </div>
 
@@ -94,7 +121,6 @@ function LivePreview({ schema }: Props) {
           <div
             className={`transition-all duration-500 ${deviceWidths[deviceView]}`}
           >
-            {/* browser chrome */}
             {deviceView !== "desktop" && (
               <div className="flex items-center gap-2 border-b border-white/10 bg-black/30 px-3 py-2">
                 <div className="h-2.5 w-2.5 rounded-full bg-red-400" />
@@ -103,7 +129,7 @@ function LivePreview({ schema }: Props) {
               </div>
             )}
 
-            <div className="overflow-hidden rounded-b-2xl">
+            <div className="overflow-hidden rounded-b-2xl bg-white">
               <WebsiteRenderer schema={memoizedSchema} />
             </div>
           </div>
