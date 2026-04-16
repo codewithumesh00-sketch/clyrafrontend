@@ -1,6 +1,12 @@
 ﻿"use client";
 
 import React, { useState, useCallback } from "react";
+import Script from "next/script";
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
 /**
  * PRODUCTION-SAFE TEMPLATE FOR CLYRA
@@ -8,33 +14,7 @@ import React, { useState, useCallback } from "react";
  * Topic: Law Firm (Template 14)
  */
 
-// --- DYNAMIC STORE IMPORTS ---
-let useWebsiteBuilderStore: any;
-let useRegionValue: any;
-let useThemeStore: any;
 
-try {
-  const websiteStore = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  // Fallback for preview/compiler isolation
-  useWebsiteBuilderStore = (selector: any) => selector({ updateRegion: () => {} });
-  useRegionValue = () => null;
-  useThemeStore = () => ({
-    theme: {
-      backgroundColor: "#ffffff",
-      textColor: "#111827",
-      primaryColor: "#0B1B3D", 
-      secondaryColor: "#F9FAFB",
-      borderRadius: 4,
-      sectionSpacing: 96,
-      fontFamily: "Inter, sans-serif",
-    },
-  });
-}
 
 export const template14Meta = {
   id: "business/template14",
@@ -100,7 +80,7 @@ export default function Template14({ editableData }: TemplateProps) {
     );
   };
 
-  const EditableImg = ({ regionKey, fallback, className = "", alt = "image" }: any) => {
+  const EditableImg = ({ regionKey, fallback, className = "", alt = "image", style = {} }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
     const src = hookValue ?? dataValue ?? fallback;
@@ -109,6 +89,7 @@ export default function Template14({ editableData }: TemplateProps) {
       <img
         src={src}
         alt={alt}
+        style={style}
         className={`cursor-pointer transition-opacity hover:opacity-90 ${className}`}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -467,3 +448,8 @@ export default function Template14({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+
+
+

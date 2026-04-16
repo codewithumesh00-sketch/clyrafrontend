@@ -1,33 +1,14 @@
 ﻿"use client";
 
 import React, { useState } from "react";
+import Script from "next/script";
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
-// --- DYNAMIC STORE IMPORTS ---
-let useWebsiteBuilderStore: any;
-let useRegionValue: any;
-let useThemeStore: any;
 
-try {
-  const websiteStore = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  useWebsiteBuilderStore = (selector: any) => selector({ updateRegion: () => {} });
-  useRegionValue = () => null;
-  useThemeStore = () => ({
-    theme: {
-      backgroundColor: "#ffffff",
-      textColor: "#111827",
-      primaryColor: "#e63946",
-      secondaryColor: "#f8f9fa",
-      borderRadius: 4,
-      sectionSpacing: 60,
-      fontFamily: "Inter, sans-serif",
-    },
-  });
-}
 
 export const template38Meta = {
   id: "business/template38",
@@ -91,7 +72,7 @@ export default function Template38({ editableData }: TemplateProps) {
     );
   };
 
-  const EditableImg = ({ regionKey, fallback, className = "", alt = "image" }: any) => {
+  const EditableImg = ({ regionKey, fallback, className = "", alt = "image", style = {} }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
     const src = hookValue ?? dataValue ?? fallback;
@@ -100,6 +81,7 @@ export default function Template38({ editableData }: TemplateProps) {
       <img
         src={src}
         alt={alt}
+        style={style}
         className={`cursor-pointer transition-opacity hover:opacity-90 ${className}`}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -463,3 +445,8 @@ export default function Template38({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+
+
+

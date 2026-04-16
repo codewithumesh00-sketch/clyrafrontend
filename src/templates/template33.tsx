@@ -1,6 +1,11 @@
 ﻿"use client";
 
 import React, { useState } from "react";
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 import Script from "next/script";
 
 /**
@@ -9,33 +14,7 @@ import Script from "next/script";
  * Theme: Mobile App Showcase (Canva-inspired UI/UX)
  */
 
-// --- DYNAMIC STORE IMPORTS ---
-let useWebsiteBuilderStore: any;
-let useRegionValue: any;
-let useThemeStore: any;
 
-try {
-  const websiteStore = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  // Fallback for preview/compiler isolation
-  useWebsiteBuilderStore = (selector: any) => selector({ updateRegion: () => {} });
-  useRegionValue = () => null;
-  useThemeStore = () => ({
-    theme: {
-      backgroundColor: "#ffffff",
-      textColor: "#0f172a",
-      primaryColor: "#8B3DFF", // Vibrant Canva-style purple
-      secondaryColor: "#f8fafc",
-      borderRadius: 24,
-      sectionSpacing: 100,
-      fontFamily: "Inter, sans-serif",
-    },
-  });
-}
 
 export const template33Meta = {
   id: "business/template33",
@@ -102,7 +81,7 @@ export default function Template33({ editableData }: TemplateProps) {
     );
   };
 
-  const EditableImg = ({ regionKey, fallback, className = "", alt = "image" }: any) => {
+  const EditableImg = ({ regionKey, fallback, className = "", alt = "image", style = {} }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
     const src = hookValue ?? dataValue ?? fallback;
@@ -111,6 +90,7 @@ export default function Template33({ editableData }: TemplateProps) {
       <img
         src={src}
         alt={alt}
+        style={style}
         className={`cursor-pointer transition-transform hover:scale-[1.02] max-w-full ${className}`}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -445,3 +425,7 @@ export default function Template33({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+
+

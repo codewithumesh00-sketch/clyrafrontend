@@ -1,13 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
+﻿import { NextRequest, NextResponse } from "next/server";
+import JSZip from "jszip";
 
 export async function POST(req: NextRequest) {
   try {
-    const { siteId } = await req.json();
+    const { siteId, files } = await req.json();
 
-    const zipPath = path.join(process.cwd(), "exports", "site.zip");
-    const zipBuffer = fs.readFileSync(zipPath);
+    const zip = new JSZip();
+
+    for (const [filePath, content] of Object.entries(files)) {
+      zip.file(filePath, String(content));
+    }
+
+    const zipBuffer = await zip.generateAsync({
+      type: "nodebuffer",
+    });
 
     const response = await fetch(
       `https://api.netlify.com/api/v1/sites/${siteId}/deploys`,
@@ -17,7 +23,7 @@ export async function POST(req: NextRequest) {
           Authorization: `Bearer ${process.env.NETLIFY_AUTH_TOKEN}`,
           "Content-Type": "application/zip",
         },
-        body: zipBuffer,
+        body: new Uint8Array(zipBuffer),
       }
     );
 
@@ -25,14 +31,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      url: data.ssl_url || data.deploy_ssl_url,
-      deployId: data.id,
+      url: data.ssl_url || data.deploy_ssl_url || data.url,
     });
   } catch (error) {
-    console.error("Netlify deploy failed:", error);
-    return NextResponse.json(
-      { success: false, error: "Deploy failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: "Deploy failed" });
   }
 }

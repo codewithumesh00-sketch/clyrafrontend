@@ -1,6 +1,11 @@
 ﻿"use client";
 
 import React, { useState } from "react";
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 import Script from "next/script";
 
 /**
@@ -9,33 +14,7 @@ import Script from "next/script";
  * Theme: Canva-inspired Wedding Planner (Elegant, Serif typography, Soft layouts)
  */
 
-// --- DYNAMIC STORE IMPORTS ---
-let useWebsiteBuilderStore: any;
-let useRegionValue: any;
-let useThemeStore: any;
 
-try {
-  const websiteStore = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  // Fallback for preview/compiler isolation
-  useWebsiteBuilderStore = (selector: any) => selector({ updateRegion: () => {} });
-  useRegionValue = () => null;
-  useThemeStore = () => ({
-    theme: {
-      backgroundColor: "#FAF9F7",
-      textColor: "#2C302E",
-      primaryColor: "#A3B19B",
-      secondaryColor: "#FFFFFF",
-      borderRadius: 16,
-      sectionSpacing: 100,
-      fontFamily: "Inter, sans-serif",
-    },
-  });
-}
 
 export const template31Meta = {
   id: "business/template31",
@@ -492,3 +471,9 @@ export default function Template31({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+
+
+
+

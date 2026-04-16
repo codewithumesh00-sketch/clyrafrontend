@@ -1,41 +1,12 @@
 ﻿"use client";
 
-import React, { useState, useEffect } from "react";
-
-/**
- * PRODUCTION-SAFE CLYRA TEMPLATE
- * Design: High-end Minimalist E-commerce
- * Note: Using dynamic resolution for Clyra-native stores to prevent build-time resolution errors.
- */
-
-// Dynamic Store Resolution for Clyra Environment
-let useWebsiteBuilderStore: any;
-let useRegionValue: any;
-let useThemeStore: any;
-
-try {
-  // Attempt to resolve Clyra stores
-  const builder = require("@/store/useWebsiteBuilderStore");
-  const theme = require("@/store/useThemeStore");
-  useWebsiteBuilderStore = builder.useWebsiteBuilderStore;
-  useRegionValue = builder.useRegionValue;
-  useThemeStore = theme.useThemeStore;
-} catch (e) {
-  // Fallback interfaces for environment stability
-  useWebsiteBuilderStore = (selector: any) => selector({ updateRegion: () => {} });
-  useRegionValue = () => null;
-  useThemeStore = () => ({
-    theme: {
-      backgroundColor: "#ffffff",
-      textColor: "#111827",
-      primaryColor: "#000000",
-      secondaryColor: "#f3f4f6",
-      borderRadius: 4,
-      sectionSpacing: 80,
-      fontFamily: "Inter, sans-serif",
-    },
-  });
-}
+import React, { useState } from "react";
+import Script from "next/script";
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
 type TemplateProps = {
   editableData?: any;
@@ -112,12 +83,13 @@ export default function Template2({ editableData }: TemplateProps) {
     );
   };
 
-  const EditableImg = ({ path, fallback, className = "" }: any) => {
+  const EditableImg = ({ path, fallback, className = "", style = {} }: any) => {
     const src = getVal(path, fallback);
     return (
       <img
         src={src}
         alt="Product/Content"
+        style={style}
         className={`cursor-pointer hover:opacity-95 transition-opacity ${className}`}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -361,3 +333,7 @@ export default function Template2({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+
+

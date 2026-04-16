@@ -1,33 +1,14 @@
 ﻿"use client";
 
 import React, { useState } from "react";
+import Script from "next/script";
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
-// --- DYNAMIC STORE IMPORTS ---
-let useWebsiteBuilderStore: any;
-let useRegionValue: any;
-let useThemeStore: any;
 
-try {
-  const websiteStore = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  useWebsiteBuilderStore = (selector: any) => selector({ updateRegion: () => {} });
-  useRegionValue = () => null;
-  useThemeStore = () => ({
-    theme: {
-      backgroundColor: "#FAF7F2",
-      textColor: "#4A3B32",
-      primaryColor: "#D97D54",
-      secondaryColor: "#F3EBE1",
-      borderRadius: 24,
-      sectionSpacing: 80,
-      fontFamily: "Inter, sans-serif",
-    },
-  });
-}
 
 export const template27Meta = {
   id: "business/template27",
@@ -532,3 +513,9 @@ export default function Template27({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+
+
+
+

@@ -1,33 +1,14 @@
 ﻿"use client";
 
 import React, { useState, useCallback } from "react";
+import Script from "next/script";
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
-// --- DYNAMIC STORE IMPORTS ---
-let useWebsiteBuilderStore: any;
-let useRegionValue: any;
-let useThemeStore: any;
 
-try {
-  const websiteStore = require("@/store/" + "useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/" + "useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  useWebsiteBuilderStore = (selector: any) => selector({ updateRegion: () => {} });
-  useRegionValue = () => null;
-  useThemeStore = () => ({
-    theme: {
-      backgroundColor: "#ffffff",
-      textColor: "#111827",
-      primaryColor: "#2563eb",
-      secondaryColor: "#f3f4f6",
-      borderRadius: 8,
-      sectionSpacing: 80,
-      fontFamily: "Inter, sans-serif",
-    },
-  });
-}
 
 export const template11Meta = {
   id: "business/template11",
@@ -101,7 +82,7 @@ export default function Template11({ editableData }: TemplateProps) {
     );
   };
 
-  const EditableImg = ({ regionKey, fallback, className = "", alt = "image" }: any) => {
+  const EditableImg = ({ regionKey, fallback, className = "", alt = "image", style = {} }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
     const src = hookValue ?? dataValue ?? fallback;
@@ -110,6 +91,7 @@ export default function Template11({ editableData }: TemplateProps) {
       <img
         src={src}
         alt={alt}
+        style={style}
         className={`cursor-pointer transition-transform hover:scale-[1.02] ${className}`}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -475,3 +457,8 @@ export default function Template11({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+
+
+

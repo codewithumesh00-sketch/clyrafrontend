@@ -1,41 +1,19 @@
 ﻿"use client";
 
 import React, { useState, useCallback } from "react";
+import Script from "next/script";
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
 /**
  * PRODUCTION-SAFE TEMPLATE FOR CLYRA: PORTFOLIO PRO
  * Updated to handle module resolution safely in the preview environment.
  */
 
-// --- DYNAMIC STORE IMPORTS ---
-// Using safety checks to ensure the compiler handles the environment correctly
-let useWebsiteBuilderStore: any;
-let useRegionValue: any;
-let useThemeStore: any;
 
-try {
-  // Using standard imports for production, but providing fallback logic for build isolation
-  const websiteStore = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  // Safe Fallbacks for isolated preview/compiler
-  useWebsiteBuilderStore = (selector: any) => selector({ updateRegion: () => {} });
-  useRegionValue = () => null;
-  useThemeStore = () => ({
-    theme: {
-      backgroundColor: "#ffffff",
-      textColor: "#111827",
-      primaryColor: "#000000",
-      secondaryColor: "#f3f4f6",
-      borderRadius: 8,
-      sectionSpacing: 80,
-      fontFamily: "Inter, sans-serif",
-    },
-  });
-}
 
 export const template3Meta = {
   id: "business/template3",
@@ -108,7 +86,7 @@ export default function Template3({ editableData }: TemplateProps) {
     );
   };
 
-  const EditableImg = ({ regionKey, fallback, className = "", alt = "" }: any) => {
+  const EditableImg = ({ regionKey, fallback, className = "", alt = "image", style = {} }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
     const src = hookValue ?? dataValue ?? fallback;
@@ -117,6 +95,7 @@ export default function Template3({ editableData }: TemplateProps) {
       <img
         src={src}
         alt={alt}
+        style={style}
         className={`cursor-pointer hover:brightness-95 transition-all w-full max-w-full h-auto ${className}`}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -392,3 +371,9 @@ export default function Template3({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+
+
+
+

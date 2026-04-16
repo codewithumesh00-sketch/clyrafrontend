@@ -1,6 +1,12 @@
 ﻿"use client";
 
 import React, { useState } from "react";
+import Script from "next/script";
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
 /**
  * PRODUCTION-SAFE TEMPLATE FOR CLYRA
@@ -8,34 +14,7 @@ import React, { useState } from "react";
  * Theme: High-End Fashion Brand (Editorial / Canva-style Moodboard Aesthetic)
  */
 
-// --- DYNAMIC STORE IMPORTS ---
-// Using dynamic imports or safety checks to ensure the compiler handles the environment correctly
-let useWebsiteBuilderStore: any;
-let useRegionValue: any;
-let useThemeStore: any;
 
-try {
-  const websiteStore = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  // Fallback for preview/compiler isolation if paths are not yet indexed
-  useWebsiteBuilderStore = (selector: any) => selector({ updateRegion: () => {} });
-  useRegionValue = () => null;
-  useThemeStore = () => ({
-    theme: {
-      backgroundColor: "#FAFAFA",
-      textColor: "#111111",
-      primaryColor: "#000000",
-      secondaryColor: "#EFEFEF",
-      borderRadius: 0, // Sharp edges for editorial fashion look
-      sectionSpacing: 100,
-      fontFamily: '"Playfair Display", serif', // Defaulting to a serif elegant feel
-    },
-  });
-}
 
 export const template24Meta = {
   id: "business/template24",
@@ -101,7 +80,7 @@ export default function Template24({ editableData }: TemplateProps) {
     );
   };
 
-  const EditableImg = ({ regionKey, fallback, className = "", alt = "image" }: any) => {
+  const EditableImg = ({ regionKey, fallback, className = "", alt = "image", style = {} }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
     const src = hookValue ?? dataValue ?? fallback;
@@ -110,6 +89,7 @@ export default function Template24({ editableData }: TemplateProps) {
       <img
         src={src}
         alt={alt}
+        style={style}
         className={`cursor-pointer transition-opacity hover:opacity-90 ${className}`}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -562,3 +542,8 @@ export default function Template24({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+
+
+

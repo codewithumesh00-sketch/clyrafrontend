@@ -1,40 +1,14 @@
 ﻿"use client";
 
 import React, { useState } from "react";
+import Script from "next/script";
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
-/**
- * PRODUCTION-SAFE TEMPLATE FOR CLYRA
- * Resolved environment compilation errors by using dynamic store access
- * and standardizing script injection for Cloudinary.
- */
 
-// --- DYNAMIC STORE SAFETY LAYER ---
-// These satisfy the compiler while maintaining native Clyra connectivity at runtime
-let useWebsiteBuilderStore: any = (selector: any) => selector({ updateRegion: () => {} });
-let useRegionValue: any = () => null;
-let useThemeStore: any = () => ({
-  theme: {
-    backgroundColor: "#ffffff",
-    textColor: "#111827",
-    primaryColor: "#f97316", // Construction Orange
-    secondaryColor: "#f3f4f6",
-    borderRadius: 4,
-    sectionSpacing: 80,
-    fontFamily: "ui-sans-serif, system-ui, sans-serif",
-  },
-});
-
-try {
-  // Attempt to link to Clyra internal stores
-  const builder = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = builder.useWebsiteBuilderStore;
-  useRegionValue = builder.useRegionValue;
-  
-  const theme = require("@/store/useThemeStore");
-  useThemeStore = theme.useThemeStore;
-} catch (e) {
-  // Silent fallback for isolated preview environments
-}
 
 export const template15Meta = {
   id: "business/template15",
@@ -107,7 +81,7 @@ export default function Template15({ editableData }: TemplateProps) {
     );
   };
 
-  const EditableImg = ({ regionKey, fallback, className = "", alt = "image" }: any) => {
+  const EditableImg = ({ regionKey, fallback, className = "", alt = "image", style = {} }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
     const src = hookValue ?? dataValue ?? fallback;
@@ -116,6 +90,7 @@ export default function Template15({ editableData }: TemplateProps) {
       <img
         src={src}
         alt={alt}
+        style={style}
         className={`cursor-pointer transition-opacity hover:opacity-90 ${className}`}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -421,3 +396,8 @@ export default function Template15({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+
+
+

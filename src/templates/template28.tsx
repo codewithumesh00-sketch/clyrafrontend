@@ -1,41 +1,11 @@
 ﻿"use client";
 
 import React, { useState, useEffect } from "react";
-
-/**
- * PRODUCTION-SAFE TEMPLATE FOR CLYRA - TEMPLATE 28 (GAMING ZONE)
- * Resolved: Replaced next/script with a standard side-effect script injection.
- * Built with internal routing, dynamic theme support, and Cloudinary integration.
- * Employs a bold, Canva-style UI/UX with glassmorphism and edge-to-edge imagery.
- */
-
-// --- DYNAMIC STORE IMPORTS ---
-let useWebsiteBuilderStore: any;
-let useRegionValue: any;
-let useThemeStore: any;
-
-try {
-  const websiteStore = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  // Fallback for preview/compiler isolation if paths are not yet indexed
-  useWebsiteBuilderStore = (selector: any) => selector({ updateRegion: () => {} });
-  useRegionValue = () => null;
-  useThemeStore = () => ({
-    theme: {
-      backgroundColor: "#09090b", // Deep dark background for gaming
-      textColor: "#ffffff",
-      primaryColor: "#3b82f6", // Vibrant blue/neon accent
-      secondaryColor: "#18181b",
-      borderRadius: 16,
-      sectionSpacing: 100,
-      fontFamily: "Inter, sans-serif",
-    },
-  });
-}
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
 export const template28Meta = {
   id: "business/template28",
@@ -122,6 +92,7 @@ export default function Template28({ editableData }: TemplateProps) {
       <img
         src={src}
         alt={alt}
+        style={style}
         className={`cursor-pointer transition-opacity hover:opacity-90 ${className}`}
         style={style}
         onDoubleClick={(e) => {
@@ -451,3 +422,7 @@ export default function Template28({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+
+

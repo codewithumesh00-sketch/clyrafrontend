@@ -1,40 +1,11 @@
 ﻿"use client";
 
 import React, { useState, useEffect } from "react";
-
-/**
- * PRODUCTION-SAFE TEMPLATE FOR CLYRA
- * Built with internal routing, dynamic theme support, and Cloudinary integration.
- * Topic: Pet Care & Grooming (template17)
- */
-
-// --- DYNAMIC STORE IMPORTS ---
-let useWebsiteBuilderStore: any;
-let useRegionValue: any;
-let useThemeStore: any;
-
-try {
-  const websiteStore = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  // Fallback for preview/compiler isolation
-  useWebsiteBuilderStore = (selector: any) => selector({ updateRegion: () => {} });
-  useRegionValue = () => null;
-  useThemeStore = () => ({
-    theme: {
-      backgroundColor: "#fffdfa", 
-      textColor: "#3f2b26", 
-      primaryColor: "#f4a261", 
-      secondaryColor: "#e9edc9", 
-      borderRadius: 24, 
-      sectionSpacing: 80,
-      fontFamily: "Nunito, Inter, sans-serif",
-    },
-  });
-}
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
 export const template17Meta = {
   id: "business/template17",
@@ -479,3 +450,8 @@ export default function Template17({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+
+
+

@@ -1,40 +1,12 @@
 ﻿"use client";
 
-import React, { useState, useEffect } from "react";
-
-/**
- * PRODUCTION-SAFE TEMPLATE FOR CLYRA
- * Fixed compilation errors by ensuring safe module resolution for the environment.
- */
-
-// --- DYNAMIC STORE RESOLUTION ---
-let useWebsiteBuilderStore: any;
-let useRegionValue: any;
-let useThemeStore: any;
-
-try {
-  // Attempt to resolve the Clyra internal stores
-  const websiteStore = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  // Robust fallback for the editor preview environment
-  useWebsiteBuilderStore = (selector: any) => selector({ updateRegion: () => {} });
-  useRegionValue = () => null;
-  useThemeStore = () => ({
-    theme: {
-      backgroundColor: "#ffffff",
-      textColor: "#111827",
-      primaryColor: "#000000",
-      secondaryColor: "#f3f4f6",
-      borderRadius: 4,
-      sectionSpacing: 80,
-      fontFamily: "Inter, sans-serif",
-    },
-  });
-}
+import React, { useState } from "react";
+import Script from "next/script";
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
 export const template7Meta = {
   id: "business/template7",
@@ -101,7 +73,7 @@ export default function Template7({
     );
   };
 
-  const EditableImg = ({ regionKey, fallback, className = "", alt = "agency asset" }: any) => {
+  const EditableImg = ({ regionKey, fallback, className = "", alt = "image", style = {} }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
     const src = hookValue ?? dataValue ?? fallback;
@@ -110,6 +82,7 @@ export default function Template7({
       <img
         src={src}
         alt={alt}
+        style={style}
         className={`cursor-pointer transition-opacity hover:opacity-90 ${className}`}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -349,3 +322,8 @@ export default function Template7({
     </main>
   );
 }
+
+
+
+
+

@@ -540,8 +540,11 @@ function LivePreviewComponent({
               )}
 
               {/* Website Renderer */}
-              <div className="overflow-hidden">
-                <Suspense fallback={
+           <div
+  className="overflow-hidden"
+  data-deploy-preview="true"
+>
+  <Suspense fallback={
                   <div className="flex h-96 w-full items-center justify-center">
                     <div className={`flex items-center gap-2 rounded-lg px-3 py-2 ${isDark ? "bg-white/5" : "bg-black/5"}`}>
                       <Loader2 className="h-3.5 w-3.5 animate-spin text-yellow-500" />

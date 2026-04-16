@@ -1,42 +1,13 @@
 ﻿
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Script from "next/script";
-
-/**
- * PRODUCTION-SAFE TEMPLATE FOR CLYRA
- * Built with internal routing, dynamic theme support, and Cloudinary integration.
- * Theme: "Resume Portfolio" (Canva-style Bento/Canvas UI)
- */
-
-// --- DYNAMIC STORE IMPORTS ---
-let useWebsiteBuilderStore: any;
-let useRegionValue: any;
-let useThemeStore: any;
-
-try {
-  const websiteStore = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  // Fallback for preview/compiler isolation if paths are not yet indexed
-  useWebsiteBuilderStore = (selector: any) => selector({ updateRegion: () => {} });
-  useRegionValue = () => null;
-  useThemeStore = () => ({
-    theme: {
-      backgroundColor: "#fafafa",
-      textColor: "#18181b",
-      primaryColor: "#6366f1",
-      secondaryColor: "#ffffff",
-      borderRadius: 24,
-      sectionSpacing: 60,
-      fontFamily: "Inter, sans-serif",
-    },
-  });
-}
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
 export const template30Meta = {
   id: "business/template30",
@@ -102,7 +73,7 @@ export default function Template30({ editableData }: TemplateProps) {
     );
   };
 
-  const EditableImg = ({ regionKey, fallback, className = "", alt = "image" }: any) => {
+  const EditableImg = ({ regionKey, fallback, className = "", alt = "image", style = {} }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
     const src = hookValue ?? dataValue ?? fallback;
@@ -111,6 +82,7 @@ export default function Template30({ editableData }: TemplateProps) {
       <img
         src={src}
         alt={alt}
+        style={style}
         className={`cursor-pointer transition-opacity hover:opacity-90 ${className}`}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -538,3 +510,8 @@ export default function Template30({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+
+
+

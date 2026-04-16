@@ -1,40 +1,11 @@
 ﻿"use client";
 
 import React, { useState, useEffect } from "react";
-
-/**
- * PRODUCTION-SAFE TEMPLATE FOR CLYRA
- * Built with internal routing, dynamic theme support, and Cloudinary integration.
- * Topic: Hotel Booking & Luxury Resort
- */
-
-// --- DYNAMIC STORE IMPORTS ---
-let useWebsiteBuilderStore: any;
-let useRegionValue: any;
-let useThemeStore: any;
-
-try {
-  const websiteStore = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  // Fallback for preview/compiler isolation
-  useWebsiteBuilderStore = (selector: any) => selector({ updateRegion: () => {} });
-  useRegionValue = () => null;
-  useThemeStore = () => ({
-    theme: {
-      backgroundColor: "#FAF9F6",
-      textColor: "#1C1917",
-      primaryColor: "#9A3412",
-      secondaryColor: "#E7E5E4",
-      borderRadius: 0,
-      sectionSpacing: 100,
-      fontFamily: "Playfair Display, serif",
-    },
-  });
-}
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
 export const template32Meta = {
   id: "business/template32",
@@ -112,7 +83,7 @@ export default function Template32({ editableData }: TemplateProps) {
     );
   };
 
-  const EditableImg = ({ regionKey, fallback, className = "", alt = "image" }: any) => {
+  const EditableImg = ({ regionKey, fallback, className = "", alt = "image", style = {} }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
     const src = hookValue ?? dataValue ?? fallback;
@@ -121,6 +92,7 @@ export default function Template32({ editableData }: TemplateProps) {
       <img
         src={src}
         alt={alt}
+        style={style}
         className={`cursor-pointer transition-opacity hover:opacity-90 ${className}`}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -545,3 +517,6 @@ export default function Template32({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+

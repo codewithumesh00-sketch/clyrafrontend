@@ -3,6 +3,7 @@
 import React, { useMemo } from "react";
 import { normalizeSiteContent } from "@/lib/siteContent";
 import WebsiteRenderer from "@/components/renderer/WebsiteRenderer";
+import { resolveTemplate } from "@/templates/templateRegistry";
 
 type StudioPreviewSchema = {
   page: string;
@@ -72,33 +73,24 @@ export function buildStudioExportSource(
   templateId: string,
   content: Record<string, unknown>
 ): string {
-  const normalized = normalizeSiteContent(
-    content ?? {}
-  );
+  const selected = resolveTemplate(templateId);
 
-  const safeSchema = JSON.stringify(
-    buildFallbackSchema(
-      normalized,
-      templateId
-    ),
-    null,
-    2
-  );
+  if (!selected) {
+    throw new Error(`Template not found: ${templateId}`);
+  }
+
+  const componentName = selected.component.name || "Page";
+  const componentCode = selected.component
+    .toString()
+    .replace(
+      `function ${componentName}`,
+      "export default function Page"
+    );
 
   return `"use client";
 
 import React from "react";
-import WebsiteRenderer from "@/components/renderer/WebsiteRenderer";
-
-export default function Page() {
-  const data = ${safeSchema};
-
-  return (
-    <div className="min-h-screen bg-white">
-      <WebsiteRenderer schema={data as any} />
-    </div>
-  );
-}
+${componentCode}
 `;
 }
 

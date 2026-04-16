@@ -1,40 +1,12 @@
 ﻿"use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Script from "next/script";
-
-/**
- * PRODUCTION-SAFE TEMPLATE FOR CLYRA
- * Built with internal routing, dynamic theme support, and Cloudinary integration.
- */
-
-// --- DYNAMIC STORE IMPORTS ---
-let useWebsiteBuilderStore: any;
-let useRegionValue: any;
-let useThemeStore: any;
-
-try {
-  const websiteStore = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  // Fallback for preview/compiler isolation if paths are not yet indexed
-  useWebsiteBuilderStore = (selector: any) => selector({ updateRegion: () => {} });
-  useRegionValue = () => null;
-  useThemeStore = () => ({
-    theme: {
-      backgroundColor: "#f8f9fa",
-      textColor: "#111827",
-      primaryColor: "#2563eb",
-      secondaryColor: "#ffffff",
-      borderRadius: 16,
-      sectionSpacing: 80,
-      fontFamily: "Inter, sans-serif",
-    },
-  });
-}
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
 export const template16Meta = {
   id: "business/template16",
@@ -448,3 +420,9 @@ export default function Template16({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+
+
+
+

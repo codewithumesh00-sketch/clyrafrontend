@@ -1,37 +1,12 @@
 ﻿"use client";
 
-import React, { useState, useEffect } from "react";
-
-/**
- * PRODUCTION-SAFE CRYPTO STARTUP TEMPLATE FOR CLYRA
- * Fixed resolution issues using safe dynamic loading for internal stores.
- */
-
-// --- CLYRA INTERFACE SAFETY LAYER ---
-let useWebsiteBuilderStore: any = () => ({ updateRegion: () => {} });
-let useRegionValue: any = () => null;
-let useThemeStore: any = () => ({
-  theme: {
-    backgroundColor: "#050505",
-    textColor: "#ffffff",
-    primaryColor: "#06b6d4",
-    secondaryColor: "#0f172a",
-    borderRadius: 12,
-    sectionSpacing: 100,
-    fontFamily: "Inter, sans-serif",
-  },
-});
-
-// Attempt to resolve Clyra stores safely at runtime to prevent build-time resolution errors
-try {
-  const websiteStore = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  // Silent fallback for restricted environments
-}
+import React, { useState } from "react";
+import Script from "next/script";
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
 export const template20Meta = {
   id: "business/template20",
@@ -97,7 +72,7 @@ export default function Template20({ editableData }: TemplateProps) {
     );
   };
 
-  const EditableImg = ({ regionKey, fallback, className = "", alt = "image" }: any) => {
+  const EditableImg = ({ regionKey, fallback, className = "", alt = "image", style = {} }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
     const src = hookValue ?? dataValue ?? fallback;
@@ -106,6 +81,7 @@ export default function Template20({ editableData }: TemplateProps) {
       <img
         src={src}
         alt={alt}
+        style={style}
         className={`cursor-pointer transition-all hover:brightness-110 ${className}`}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -346,3 +322,7 @@ export default function Template20({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+
+

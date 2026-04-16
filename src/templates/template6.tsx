@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import React, { useState, useCallback } from "react";
+import Script from "next/script";
 
 /**
  * PRODUCTION-SAFE TEMPLATE FOR CLYRA (SaaS Landing)
@@ -83,7 +84,7 @@ export default function Template6({
     );
   };
 
-  const EditableImg = ({ regionKey, fallback, className = "", alt = "image" }: any) => {
+  const EditableImg = ({ regionKey, fallback, className = "", alt = "image", style = {} }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
     const src = hookValue ?? dataValue ?? fallback;
@@ -92,6 +93,7 @@ export default function Template6({
       <img
         src={src}
         alt={alt}
+        style={style}
         className={`cursor-pointer transition-opacity hover:opacity-90 max-w-full h-auto ${className}`}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -270,3 +272,7 @@ export default function Template6({
     </div>
   );
 }
+
+
+
+

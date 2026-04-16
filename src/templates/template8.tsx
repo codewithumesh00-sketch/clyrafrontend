@@ -1,41 +1,12 @@
 ﻿"use client";
 
-import React, { useState, useEffect } from "react";
-
-/**
- * PRODUCTION-SAFE TEMPLATE 8: FURNITURE SHOWCASE
- * Updated with robust dependency resolution for the Clyra environment.
- */
-
-// --- DYNAMIC STORE RESOLUTION ---
-let useWebsiteBuilderStore: any;
-let useRegionValue: any;
-let useThemeStore: any;
-
-try {
-  // Using standard imports for runtime but wrapped in a safety check 
-  // to ensure the compiler doesn't halt on unresolved local paths.
-  const websiteStore = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  // Fallback state for isolated preview environments
-  useWebsiteBuilderStore = (selector: any) => selector({ updateRegion: () => {} });
-  useRegionValue = () => null;
-  useThemeStore = () => ({
-    theme: {
-      backgroundColor: "#ffffff",
-      textColor: "#111827",
-      primaryColor: "#1a1a1a",
-      secondaryColor: "#f9f9f9",
-      borderRadius: 0,
-      sectionSpacing: 80,
-      fontFamily: "serif",
-    },
-  });
-}
+import React, { useState } from "react";
+import Script from "next/script";
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
 export const template8Meta = {
   id: "business/template8",
@@ -338,3 +309,8 @@ export default function Template8({ editableData }: TemplateProps) {
     </div>
   );
 }
+
+
+
+
+

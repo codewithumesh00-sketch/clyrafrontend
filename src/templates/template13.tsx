@@ -1,6 +1,12 @@
 ﻿"use client";
 
 import React, { useState } from "react";
+import Script from "next/script";
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
 /**
  * PRODUCTION-SAFE TEMPLATE FOR CLYRA
@@ -8,33 +14,7 @@ import React, { useState } from "react";
  * Beauty Salon Edition - Elegant, Soft, High-end UI/UX.
  */
 
-// --- DYNAMIC STORE IMPORTS ---
-let useWebsiteBuilderStore: any;
-let useRegionValue: any;
-let useThemeStore: any;
 
-try {
-  const websiteStore = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  // Fallback for preview/compiler isolation if paths are not yet indexed
-  useWebsiteBuilderStore = (selector: any) => selector({ updateRegion: () => {} });
-  useRegionValue = () => null;
-  useThemeStore = () => ({
-    theme: {
-      backgroundColor: "#FAF6F0", 
-      textColor: "#3D352F", 
-      primaryColor: "#C19C74", 
-      secondaryColor: "#F2EBE3", 
-      borderRadius: 16,
-      sectionSpacing: 96,
-      fontFamily: "'Playfair Display', serif",
-    },
-  });
-}
 
 export const template13Meta = {
   id: "business/template13",
@@ -100,7 +80,7 @@ export default function Template13({ editableData }: TemplateProps) {
     );
   };
 
-  const EditableImg = ({ regionKey, fallback, className = "", alt = "image" }: any) => {
+  const EditableImg = ({ regionKey, fallback, className = "", alt = "image", style = {} }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
     const src = hookValue ?? dataValue ?? fallback;
@@ -109,6 +89,7 @@ export default function Template13({ editableData }: TemplateProps) {
       <img
         src={src}
         alt={alt}
+        style={style}
         className={`cursor-pointer transition-transform hover:scale-[1.02] duration-500 ${className}`}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -495,3 +476,8 @@ export default function Template13({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+
+
+

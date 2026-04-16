@@ -1,42 +1,12 @@
 ﻿"use client";
 
 import React, { useState, useCallback, useEffect } from "react";
-
-/**
- * PRODUCTION-SAFE TEMPLATE FOR CLYRA
- * Built with internal routing, dynamic theme support, and Cloudinary integration.
- * Optimized with defensive imports for the Clyra environment.
- */
-
-// --- DYNAMIC STORE IMPORTS (Defensive) ---
-let useWebsiteBuilderStore: any;
-let useRegionValue: any;
-let useThemeStore: any;
-
-try {
-  // Using standard imports works in the actual Clyra Next.js runtime, 
-  // but for the previewer, we handle resolution errors gracefully.
-  const websiteStore = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  // Fallback for preview/compiler isolation
-  useWebsiteBuilderStore = (selector: any) => selector({ updateRegion: () => {} });
-  useRegionValue = () => null;
-  useThemeStore = () => ({
-    theme: {
-      backgroundColor: "#ffffff",
-      textColor: "#111827",
-      primaryColor: "#2563eb",
-      secondaryColor: "#f8fafc",
-      borderRadius: 8,
-      sectionSpacing: 80,
-      fontFamily: "Inter, sans-serif",
-    },
-  });
-}
+import Script from "next/script";
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
 export const template29Meta = {
   id: "business/template29",
@@ -103,7 +73,7 @@ export default function Template29({ editableData }: TemplateProps) {
     );
   };
 
-  const EditableImg = ({ regionKey, fallback, className = "", alt = "image" }: any) => {
+  const EditableImg = ({ regionKey, fallback, className = "", alt = "image", style = {} }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
     const src = hookValue ?? dataValue ?? fallback;
@@ -112,6 +82,7 @@ export default function Template29({ editableData }: TemplateProps) {
       <img
         src={src}
         alt={alt}
+        style={style}
         className={`cursor-pointer transition-transform hover:scale-[1.02] ${className}`}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -392,3 +363,10 @@ export default function Template29({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+
+
+
+
+

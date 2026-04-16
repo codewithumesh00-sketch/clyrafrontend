@@ -1,41 +1,12 @@
 ﻿"use client";
 
-import React, { useState, useEffect } from "react";
-
-/**
- * PRODUCTION-SAFE TEMPLATE 34: ELECTRONICS SHOP
- * Features: Cyber-minimalist UI, Region-aware state, Cloudinary integration.
- * Resolved: Path resolution issues handled via dynamic runtime checks.
- */
-
-// --- DYNAMIC STORE IMPORTS ---
-let useWebsiteBuilderStore: any;
-let useRegionValue: any;
-let useThemeStore: any;
-
-try {
-  // Attempting to resolve internal stores safely
-  const websiteStore = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  // Environment Fallbacks
-  useWebsiteBuilderStore = (selector: any) => selector({ updateRegion: () => {} });
-  useRegionValue = () => null;
-  useThemeStore = () => ({
-    theme: {
-      backgroundColor: "#ffffff",
-      textColor: "#09090b",
-      primaryColor: "#06b6d4",
-      secondaryColor: "#f4f4f5",
-      borderRadius: 12,
-      sectionSpacing: 100,
-      fontFamily: "Inter, sans-serif",
-    },
-  });
-}
+import React, { useState } from "react";
+import Script from "next/script";
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
 export const template34Meta = {
   id: "business/template34",
@@ -100,7 +71,7 @@ export default function Template34({ editableData }: TemplateProps) {
     );
   };
 
-  const EditableImg = ({ regionKey, fallback, className = "", alt = "asset" }: any) => {
+  const EditableImg = ({ regionKey, fallback, className = "", alt = "image", style = {} }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
     const src = hookValue ?? dataValue ?? fallback;
@@ -109,6 +80,7 @@ export default function Template34({ editableData }: TemplateProps) {
       <img
         src={src}
         alt={alt}
+        style={style}
         className={`cursor-pointer transition-transform duration-500 hover:scale-[1.02] ${className}`}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -349,3 +321,8 @@ export default function Template34({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+
+
+

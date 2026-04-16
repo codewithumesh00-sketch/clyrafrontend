@@ -1,40 +1,12 @@
 ﻿"use client";
 
-import React, { useState, useEffect } from "react";
-
-/**
- * PRODUCTION-SAFE FITNESS COACH TEMPLATE FOR CLYRA
- * Resolved external module dependencies for isolated environment compatibility.
- */
-
-// --- DYNAMIC STORE RESOLUTION ---
-let useWebsiteBuilderStore: any;
-let useRegionValue: any;
-let useThemeStore: any;
-
-try {
-  // Attempt to resolve Clyra-specific stores
-  const websiteStore = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  // Fallback for environment isolation
-  useWebsiteBuilderStore = (selector: any) => selector({ updateRegion: () => {} });
-  useRegionValue = () => null;
-  useThemeStore = () => ({
-    theme: {
-      backgroundColor: "#0a0a0a",
-      textColor: "#ffffff",
-      primaryColor: "#3b82f6",
-      secondaryColor: "#171717",
-      borderRadius: 4,
-      sectionSpacing: 100,
-      fontFamily: "Inter, sans-serif",
-    },
-  });
-}
+import React, { useState } from "react";
+import Script from "next/script";
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
 export const template5Meta = {
   id: "business/template5",
@@ -102,7 +74,7 @@ export default function Template5({ editableData }: TemplateProps) {
     );
   };
 
-  const EditableImg = ({ regionKey, fallback, className = "", alt = "fitness" }: any) => {
+  const EditableImg = ({ regionKey, fallback, className = "", alt = "image", style = {} }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
     const src = hookValue ?? dataValue ?? fallback;
@@ -111,6 +83,7 @@ export default function Template5({ editableData }: TemplateProps) {
       <img
         src={src}
         alt={alt}
+        style={style}
         className={`cursor-pointer transition-all duration-500 ${className}`}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -345,3 +318,8 @@ export default function Template5({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+
+
+

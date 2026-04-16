@@ -74,7 +74,7 @@ export default function Template40({ editableData }: TemplateProps) {
     );
   };
 
-  const EditableImg = ({ regionKey, fallback, className = "", alt = "image" }: any) => {
+  const EditableImg = ({ regionKey, fallback, className = "", alt = "image", style = {} }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
     const src = hookValue ?? dataValue ?? fallback;
@@ -83,6 +83,7 @@ export default function Template40({ editableData }: TemplateProps) {
       <img
         src={src}
         alt={alt}
+        style={style}
         className={`cursor-pointer transition-transform duration-300 hover:scale-[1.02] hover:opacity-90 max-w-full ${className}`}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -512,3 +513,6 @@ export default function Template40({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+

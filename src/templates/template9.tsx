@@ -73,7 +73,7 @@ export default function Template9({ editableData }: TemplateProps) {
     );
   };
 
-  const EditableImg = ({ regionKey, fallback, className = "", alt = "property" }: any) => {
+  const EditableImg = ({ regionKey, fallback, className = "", alt = "image", style = {} }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
     const src = hookValue ?? dataValue ?? fallback;
@@ -82,6 +82,7 @@ export default function Template9({ editableData }: TemplateProps) {
       <img
         src={src}
         alt={alt}
+        style={style}
         className={`cursor-pointer transition-opacity hover:opacity-95 ${className}`}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -292,3 +293,7 @@ export default function Template9({ editableData }: TemplateProps) {
     </div>
   );
 }
+
+
+
+

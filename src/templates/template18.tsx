@@ -1,39 +1,19 @@
 ﻿"use client";
 
 import React, { useState } from "react";
+import Script from "next/script";
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
 /**
  * PRODUCTION-SAFE TEMPLATE FOR CLYRA
  * Built with internal routing, dynamic theme support, and Cloudinary integration.
  */
 
-// --- DYNAMIC STORE IMPORTS ---
-let useWebsiteBuilderStore: any;
-let useRegionValue: any;
-let useThemeStore: any;
 
-try {
-  const websiteStore = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  // Fallback for preview/compiler isolation if paths are not yet indexed
-  useWebsiteBuilderStore = (selector: any) => selector({ updateRegion: () => {} });
-  useRegionValue = () => null;
-  useThemeStore = () => ({
-    theme: {
-      backgroundColor: "#0a0a0a",
-      textColor: "#ffffff",
-      primaryColor: "#ffffff",
-      secondaryColor: "#1a1a1a",
-      borderRadius: 12,
-      sectionSpacing: 120,
-      fontFamily: "Inter, sans-serif",
-    },
-  });
-}
 
 export const template18Meta = {
   id: "business/template18",
@@ -99,7 +79,7 @@ export default function Template18({ editableData }: TemplateProps) {
     );
   };
 
-  const EditableImg = ({ regionKey, fallback, className = "", alt = "image" }: any) => {
+  const EditableImg = ({ regionKey, fallback, className = "", alt = "image", style = {} }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
     const src = hookValue ?? dataValue ?? fallback;
@@ -108,6 +88,7 @@ export default function Template18({ editableData }: TemplateProps) {
       <img
         src={src}
         alt={alt}
+        style={style}
         className={`cursor-pointer transition-transform duration-700 hover:scale-[1.02] ${className}`}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -430,3 +411,8 @@ export default function Template18({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+
+
+

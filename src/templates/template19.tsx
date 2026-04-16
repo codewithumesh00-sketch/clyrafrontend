@@ -1,37 +1,12 @@
 ﻿"use client";
 
 import React, { useState, useCallback } from "react";
-
-/**
- * PRODUCTION-SAFE TEMPLATE 19: EVENT PLANNER LUXE
- * Optimized for Clyra-native integration with safety fallbacks for store imports.
- */
-
-// --- CLYRA-NATIVE STORE RESOLVER ---
-let useWebsiteBuilderStore: any = (selector: any) => selector({ updateRegion: () => {} });
-let useRegionValue: any = () => null;
-let useThemeStore: any = () => ({
-  theme: {
-    backgroundColor: "#ffffff",
-    textColor: "#111827",
-    primaryColor: "#000000",
-    secondaryColor: "#f3f4f6",
-    borderRadius: 8,
-    sectionSpacing: 80,
-    fontFamily: "serif",
-  },
-});
-
-try {
-  // Use try-catch with require to handle environment-specific path resolution
-  const websiteStore = require("@/store/useWebsiteBuilderStore");
-  useWebsiteBuilderStore = websiteStore.useWebsiteBuilderStore;
-  useRegionValue = websiteStore.useRegionValue;
-  const themeStore = require("@/store/useThemeStore");
-  useThemeStore = themeStore.useThemeStore;
-} catch (e) {
-  // Fallback handled by initialized variables above
-}
+import Script from "next/script";
+import {
+  useWebsiteBuilderStore,
+  useRegionValue,
+} from "@/store/useWebsiteBuilderStore";
+import { useThemeStore } from "@/store/useThemeStore";
 
 export const template19Meta = {
   id: "business/template19",
@@ -99,7 +74,7 @@ export default function Template19({ editableData }: TemplateProps) {
     );
   };
 
-  const EditableImg = ({ regionKey, fallback, className = "", alt = "image" }: any) => {
+  const EditableImg = ({ regionKey, fallback, className = "", alt = "image", style = {} }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
     const src = hookValue ?? dataValue ?? fallback;
@@ -108,6 +83,7 @@ export default function Template19({ editableData }: TemplateProps) {
       <img
         src={src}
         alt={alt}
+        style={style}
         className={`cursor-pointer transition-transform hover:scale-[1.01] ${className}`}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -514,3 +490,11 @@ export default function Template19({ editableData }: TemplateProps) {
     </main>
   );
 }
+
+
+
+
+
+
+
+
