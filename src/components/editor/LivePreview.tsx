@@ -34,7 +34,7 @@ function LivePreview({ schema }: Props) {
     if (!memoizedSchema) return;
 
     localStorage.setItem(
-      "clyra-preview-schema",
+      "clyraweb-preview-schema",
       JSON.stringify(memoizedSchema)
     );
 
@@ -86,11 +86,10 @@ function LivePreview({ schema }: Props) {
                     onClick={() =>
                       setDeviceView(device)
                     }
-                    className={`rounded-sm p-1 ${
-                      deviceView === device
-                        ? "bg-white/20 text-white"
-                        : "text-gray-400"
-                    }`}
+                    className={`rounded-sm p-1 ${deviceView === device
+                      ? "bg-white/20 text-white"
+                      : "text-gray-400"
+                      }`}
                   >
                     <Icon className="h-4 w-4" />
                   </button>

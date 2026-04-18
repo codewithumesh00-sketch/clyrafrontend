@@ -36,9 +36,9 @@ export default function Template15({ editableData }: TemplateProps) {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
       const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-      
+
       if (!cloudName) return;
-      
+
       (window as any).cloudinary
         .createUploadWidget(
           {
@@ -56,7 +56,7 @@ export default function Template15({ editableData }: TemplateProps) {
     }
   };
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+  // --- clyraweb EDITABLE COMPONENTS ---
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -142,9 +142,8 @@ export default function Template15({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-sm font-bold transition-all uppercase tracking-widest border-b-2 py-1 ${
-                activePage === page.toLowerCase() ? "border-current" : "border-transparent opacity-60 hover:opacity-100"
-              }`}
+              className={`text-sm font-bold transition-all uppercase tracking-widest border-b-2 py-1 ${activePage === page.toLowerCase() ? "border-current" : "border-transparent opacity-60 hover:opacity-100"
+                }`}
               style={{ color: activePage === page.toLowerCase() ? theme.primaryColor : theme.textColor }}
             >
               {page}
@@ -195,7 +194,7 @@ export default function Template15({ editableData }: TemplateProps) {
             className="text-sm opacity-80 leading-relaxed block max-w-sm mx-auto md:mx-0"
           />
         </div>
-        
+
         <div className="flex flex-col gap-4">
           <h4 className="font-black uppercase tracking-widest text-xs opacity-50 mb-2">Company</h4>
           {["Home", "About", "Contact"].map((p) => (
@@ -329,7 +328,7 @@ export default function Template15({ editableData }: TemplateProps) {
           <EditableText as="h1" regionKey="contact.title" fallback="REQUEST A BID" className="text-5xl md:text-7xl font-black uppercase tracking-tighter block mb-6" />
           <EditableText as="p" regionKey="contact.subtitle" fallback="Ready to break ground? Contact our estimation team today." className="text-xl opacity-70 font-medium block" />
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-5 gap-12 bg-white/5 p-6 md:p-12 border shadow-2xl" style={{ borderRadius: `${theme.borderRadius}px`, borderColor: `${theme.textColor}10`, backgroundColor: theme.secondaryColor }}>
           <div className="md:col-span-2 space-y-10">
             <div>
@@ -343,10 +342,10 @@ export default function Template15({ editableData }: TemplateProps) {
               <EditableText regionKey="contact.email" fallback="estimating@apexbuilders.com" className="font-bold text-lg block" />
             </div>
             <div className="pt-6 border-t" style={{ borderColor: `${theme.textColor}20` }}>
-               <EditableText regionKey="contact.hours" fallback="Mon - Fri: 6:00 AM - 6:00 PM" className="font-medium text-sm block opacity-70" />
+              <EditableText regionKey="contact.hours" fallback="Mon - Fri: 6:00 AM - 6:00 PM" className="font-medium text-sm block opacity-70" />
             </div>
           </div>
-          
+
           <div className="md:col-span-3 space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <input className="w-full p-4 bg-transparent border-2 outline-none transition-colors font-medium" style={{ borderColor: `${theme.textColor}20`, borderRadius: `${theme.borderRadius}px` }} placeholder="COMPANY NAME" />
@@ -368,9 +367,9 @@ export default function Template15({ editableData }: TemplateProps) {
       className="min-h-screen selection:bg-orange-500 selection:text-white flex flex-col w-full max-w-full overflow-x-hidden"
       style={{ fontFamily: theme.fontFamily, backgroundColor: theme.backgroundColor }}
     >
-      {/* Dynamic script loading for Cloudinary in Clyra environment */}
+      {/* Dynamic script loading for Cloudinary in clyraweb environment */}
       <script src="https://upload-widget.cloudinary.com/global/all.js" async></script>
-      
+
       <Navbar />
 
       <div className="flex flex-col w-full flex-1">
@@ -381,7 +380,8 @@ export default function Template15({ editableData }: TemplateProps) {
 
       <Footer />
 
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         html { scroll-behavior: smooth; }
         body { overflow-x: hidden; }
         [contenteditable]:focus { outline: none; background: rgba(0,0,0,0.05); }

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import {
@@ -41,24 +41,35 @@ export default function Template28({ editableData }: TemplateProps) {
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = (regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
-      (window as any).cloudinary
-        .createUploadWidget(
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
           {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
             multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
           },
           (error: any, result: any) => {
             if (!error && result && result.event === "success") {
-              updateRegion(regionKey, result.info.secure_url);
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
+              }
             }
           }
-        )
-        .open();
+        );
+      }
+      (window as any).__cloudinaryWidget.open();
     }
   };
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+  // --- clyraweb EDITABLE COMPONENTS ---
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -94,7 +105,6 @@ export default function Template28({ editableData }: TemplateProps) {
         alt={alt}
         style={style}
         className={`cursor-pointer transition-opacity hover:opacity-90 ${className}`}
-        style={style}
         onDoubleClick={(e) => {
           e.stopPropagation();
           handleImageUpload(regionKey);
@@ -168,9 +178,8 @@ export default function Template28({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-xs font-black transition-all uppercase tracking-widest relative py-2 ${
-                activePage === page.toLowerCase() ? "opacity-100" : "opacity-40 hover:opacity-100"
-              }`}
+              className={`text-xs font-black transition-all uppercase tracking-widest relative py-2 ${activePage === page.toLowerCase() ? "opacity-100" : "opacity-40 hover:opacity-100"
+                }`}
               style={{ color: theme.textColor }}
             >
               {page}
@@ -238,7 +247,7 @@ export default function Template28({ editableData }: TemplateProps) {
         <div className="space-y-4">
           <h4 className="font-black uppercase tracking-widest text-xs opacity-30 mb-2">Protocol</h4>
           <EditableText regionKey="footer.discord" fallback="DISCORD // NEXUS" className="text-sm block font-bold hover:text-blue-500 cursor-pointer" />
-          <EditableText regionKey="footer.copy" fallback="© 2026 NEXUS. CORE SYSTEM LOADED." className="text-[10px] font-mono opacity-20 block pt-8" />
+          <EditableText regionKey="footer.copy" fallback=" 2026 NEXUS. CORE SYSTEM LOADED." className="text-[10px] font-mono opacity-20 block pt-8" />
         </div>
       </div>
     </footer>
@@ -248,18 +257,18 @@ export default function Template28({ editableData }: TemplateProps) {
     <div className="animate-in fade-in duration-700 w-full max-w-full">
       <section className="w-full px-4 sm:px-6 lg:px-8 pt-8 pb-16" style={{ backgroundColor: theme.backgroundColor }}>
         <div className="max-w-7xl mx-auto w-full overflow-hidden shadow-2xl relative" style={{ borderRadius: `${theme.borderRadius * 2}px` }}>
-          <EditableBackground 
-            regionKey="hero.bgImg" 
+          <EditableBackground
+            regionKey="hero.bgImg"
             fallback="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2000&auto=format&fit=crop"
             className="w-full min-h-[75vh] flex items-center p-8 md:p-16 lg:p-24"
           >
             <div className="max-w-3xl space-y-6 relative z-20">
               <div className="flex items-center gap-3 mb-6">
                 <span className="w-8 h-[2px]" style={{ backgroundColor: theme.primaryColor }}></span>
-                <EditableText 
-                  regionKey="hero.badge" 
-                  fallback="NOW RECRUITING TOP TALENT" 
-                  className="text-xs font-black uppercase tracking-[0.4em] text-blue-400" 
+                <EditableText
+                  regionKey="hero.badge"
+                  fallback="NOW RECRUITING TOP TALENT"
+                  className="text-xs font-black uppercase tracking-[0.4em] text-blue-400"
                 />
               </div>
               <EditableText
@@ -295,15 +304,15 @@ export default function Template28({ editableData }: TemplateProps) {
             { id: "h3", t: "03. VR SUITE", d: "Full-body tracking in haptic flight chairs.", i: "https://images.unsplash.com/photo-1605901309584-818e25960b8f?w=800" },
           ].map((f, i) => (
             <div key={f.id} className="group cursor-default">
-               <div className="overflow-hidden mb-6" style={{ borderRadius: `${theme.borderRadius}px` }}>
-                  <EditableImg 
-                    regionKey={`home.feat.${i}.img`} 
-                    fallback={f.i} 
-                    className="w-full aspect-[4/3] object-cover group-hover:scale-110 transition-transform duration-1000" 
-                  />
-               </div>
-               <EditableText as="h3" regionKey={`home.feat.${i}.title`} fallback={f.t} className="text-xl font-black italic block mb-2" />
-               <EditableText as="p" regionKey={`home.feat.${i}.desc`} fallback={f.d} className="text-sm opacity-50 block leading-relaxed" />
+              <div className="overflow-hidden mb-6" style={{ borderRadius: `${theme.borderRadius}px` }}>
+                <EditableImg
+                  regionKey={`home.feat.${i}.img`}
+                  fallback={f.i}
+                  className="w-full aspect-[4/3] object-cover group-hover:scale-110 transition-transform duration-1000"
+                />
+              </div>
+              <EditableText as="h3" regionKey={`home.feat.${i}.title`} fallback={f.t} className="text-xl font-black italic block mb-2" />
+              <EditableText as="p" regionKey={`home.feat.${i}.desc`} fallback={f.d} className="text-sm opacity-50 block leading-relaxed" />
             </div>
           ))}
         </div>
@@ -333,14 +342,14 @@ export default function Template28({ editableData }: TemplateProps) {
               className="text-xl opacity-80 leading-relaxed block font-medium"
             />
             <div className="grid grid-cols-2 gap-10 pt-10 border-t border-white/10">
-               <div>
-                  <EditableText as="span" regionKey="about.stat1" fallback="99.9%" className="text-5xl font-black block text-blue-500 italic" />
-                  <EditableText as="span" regionKey="about.stat1.l" fallback="UPTIME" className="text-xs font-black uppercase tracking-widest opacity-40 block" />
-               </div>
-               <div>
-                  <EditableText as="span" regionKey="about.stat2" fallback="24/7" className="text-5xl font-black block text-blue-500 italic" />
-                  <EditableText as="span" regionKey="about.stat2.l" fallback="DEPLOYED" className="text-xs font-black uppercase tracking-widest opacity-40 block" />
-               </div>
+              <div>
+                <EditableText as="span" regionKey="about.stat1" fallback="99.9%" className="text-5xl font-black block text-blue-500 italic" />
+                <EditableText as="span" regionKey="about.stat1.l" fallback="UPTIME" className="text-xs font-black uppercase tracking-widest opacity-40 block" />
+              </div>
+              <div>
+                <EditableText as="span" regionKey="about.stat2" fallback="24/7" className="text-5xl font-black block text-blue-500 italic" />
+                <EditableText as="span" regionKey="about.stat2.l" fallback="DEPLOYED" className="text-xs font-black uppercase tracking-widest opacity-40 block" />
+              </div>
             </div>
           </div>
         </div>
@@ -353,28 +362,28 @@ export default function Template28({ editableData }: TemplateProps) {
       <Section id="contact" className="py-32">
         <div className="max-w-4xl mx-auto bg-zinc-900/50 backdrop-blur-3xl border border-white/5 p-10 md:p-20" style={{ borderRadius: `${theme.borderRadius * 2}px` }}>
           <div className="text-center mb-16 space-y-4">
-            <EditableText 
-              as="h1" 
-              regionKey="contact.title" 
-              fallback="JOIN THE SQUAD" 
-              className="text-6xl md:text-8xl font-black tracking-tighter italic uppercase block leading-[0.8]" 
+            <EditableText
+              as="h1"
+              regionKey="contact.title"
+              fallback="JOIN THE SQUAD"
+              className="text-6xl md:text-8xl font-black tracking-tighter italic uppercase block leading-[0.8]"
             />
-            <EditableText 
-              as="p" 
-              regionKey="contact.subtitle" 
-              fallback="Ready to drop in? Reach out for membership or tournament info." 
-              className="text-lg opacity-50 block" 
+            <EditableText
+              as="p"
+              regionKey="contact.subtitle"
+              fallback="Ready to drop in? Reach out for membership or tournament info."
+              className="text-lg opacity-50 block"
             />
           </div>
 
           <div className="space-y-8">
             <div className="grid md:grid-cols-2 gap-8">
-               <input className="w-full p-5 bg-black/40 border border-white/10 outline-none focus:border-blue-500 transition-colors italic" placeholder="OPERATOR NAME" style={{ borderRadius: `${theme.borderRadius}px` }} />
-               <input className="w-full p-5 bg-black/40 border border-white/10 outline-none focus:border-blue-500 transition-colors italic" placeholder="COMM_ID (EMAIL)" style={{ borderRadius: `${theme.borderRadius}px` }} />
+              <input className="w-full p-5 bg-black/40 border border-white/10 outline-none focus:border-blue-500 transition-colors italic" placeholder="OPERATOR NAME" style={{ borderRadius: `${theme.borderRadius}px` }} />
+              <input className="w-full p-5 bg-black/40 border border-white/10 outline-none focus:border-blue-500 transition-colors italic" placeholder="COMM_ID (EMAIL)" style={{ borderRadius: `${theme.borderRadius}px` }} />
             </div>
             <textarea className="w-full p-5 bg-black/40 border border-white/10 outline-none focus:border-blue-500 transition-colors italic min-h-[150px]" placeholder="MESSAGE CONTENT" style={{ borderRadius: `${theme.borderRadius}px` }} />
-            <button 
-              className="w-full py-6 font-black uppercase tracking-[0.3em] text-sm shadow-xl hover:scale-[1.01] active:scale-95 transition-all italic" 
+            <button
+              className="w-full py-6 font-black uppercase tracking-[0.3em] text-sm shadow-xl hover:scale-[1.01] active:scale-95 transition-all italic"
               style={{ backgroundColor: theme.primaryColor, color: "#fff", borderRadius: `${theme.borderRadius}px` }}
             >
               <EditableText regionKey="contact.submit" fallback="TRANSMIT MESSAGE" />

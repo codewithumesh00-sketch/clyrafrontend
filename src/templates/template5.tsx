@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import Script from "next/script";
@@ -31,20 +31,31 @@ export default function Template5({ editableData }: TemplateProps) {
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = (regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
-      (window as any).cloudinary
-        .createUploadWidget(
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
           {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
             multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
           },
           (error: any, result: any) => {
             if (!error && result && result.event === "success") {
-              updateRegion(regionKey, result.info.secure_url);
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
+              }
             }
           }
-        )
-        .open();
+        );
+      }
+      (window as any).__cloudinaryWidget.open();
     }
   };
 
@@ -95,29 +106,29 @@ export default function Template5({ editableData }: TemplateProps) {
 
   // --- LAYOUT COMPONENTS ---
   const Navbar = () => (
-    <nav 
+    <nav
       className="fixed top-0 w-full z-50 backdrop-blur-xl border-b border-white/5"
       style={{ backgroundColor: `${theme.backgroundColor}CC` }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         <div className="flex items-center gap-4 flex-shrink-0">
-          <EditableText 
-            regionKey="global.brand" 
-            fallback="ULTRAFIT." 
-            className="text-2xl font-black italic tracking-tighter" 
+          <EditableText
+            regionKey="global.brand"
+            fallback="ULTRAFIT."
+            className="text-2xl font-black italic tracking-tighter"
             style={{ color: theme.primaryColor }}
           />
         </div>
-        
+
         <div className="hidden md:flex items-center gap-10">
           {["Home", "About", "Contact"].map((p) => (
             <button
               key={p}
               onClick={() => setActivePage(p.toLowerCase() as any)}
               className="text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:opacity-100"
-              style={{ 
+              style={{
                 color: theme.textColor,
-                opacity: activePage === p.toLowerCase() ? 1 : 0.4 
+                opacity: activePage === p.toLowerCase() ? 1 : 0.4
               }}
             >
               {p}
@@ -125,12 +136,12 @@ export default function Template5({ editableData }: TemplateProps) {
           ))}
         </div>
 
-        <button 
+        <button
           className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest transition-transform active:scale-95"
-          style={{ 
-            backgroundColor: theme.primaryColor, 
-            color: "#fff", 
-            borderRadius: `${theme.borderRadius}px` 
+          style={{
+            backgroundColor: theme.primaryColor,
+            color: "#fff",
+            borderRadius: `${theme.borderRadius}px`
           }}
           onClick={() => setActivePage("contact")}
         >
@@ -144,8 +155,8 @@ export default function Template5({ editableData }: TemplateProps) {
     <div className="animate-in fade-in duration-1000">
       <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <EditableImg 
-            regionKey="home.heroBg" 
+          <EditableImg
+            regionKey="home.heroBg"
             fallback="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2000&auto=format&fit=crop"
             className="w-full h-full object-cover opacity-30 grayscale scale-110"
           />
@@ -153,20 +164,20 @@ export default function Template5({ editableData }: TemplateProps) {
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <EditableText 
-            as="h1" 
-            regionKey="home.heroTitle" 
-            fallback="STRONGER EVERY DAY." 
+          <EditableText
+            as="h1"
+            regionKey="home.heroTitle"
+            fallback="STRONGER EVERY DAY."
             className="text-6xl md:text-9xl font-black italic tracking-tighter leading-[0.85] mb-6 block uppercase"
             style={{ color: theme.textColor }}
           />
-          <EditableText 
-            as="p" 
-            regionKey="home.heroSub" 
-            fallback="High-performance coaching for the dedicated few. Science-based protocols, zero excuses." 
+          <EditableText
+            as="p"
+            regionKey="home.heroSub"
+            fallback="High-performance coaching for the dedicated few. Science-based protocols, zero excuses."
             className="text-lg md:text-xl opacity-60 max-w-2xl mx-auto mb-12 block font-medium"
           />
-          <button 
+          <button
             className="px-14 py-6 font-black uppercase tracking-tighter text-xl italic hover:brightness-125 transition-all"
             style={{ backgroundColor: theme.primaryColor, color: "#fff" }}
           >
@@ -177,7 +188,7 @@ export default function Template5({ editableData }: TemplateProps) {
 
       <section className="py-24 border-y border-white/5" style={{ backgroundColor: theme.secondaryColor }}>
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
-          {[1,2,3,4].map(i => (
+          {[1, 2, 3, 4].map(i => (
             <div key={i} className="space-y-1">
               <EditableText regionKey={`home.statVal${i}`} fallback={i === 1 ? "1.2k+" : i === 2 ? "12kg" : i === 3 ? "14wk" : "24/7"} className="text-4xl md:text-6xl font-black italic block" style={{ color: theme.primaryColor }} />
               <EditableText regionKey={`home.statLabel${i}`} fallback={i === 1 ? "ATHLETES" : i === 2 ? "AVG GAIN" : i === 3 ? "INTENSIVE" : "SUPPORT"} className="text-[10px] font-black tracking-[0.2em] opacity-30 block" />
@@ -194,23 +205,23 @@ export default function Template5({ editableData }: TemplateProps) {
         <div className="grid lg:grid-cols-2 gap-20 items-center">
           <div className="relative group">
             <div className="absolute -top-6 -left-6 w-32 h-32 z-0 border-t-[12px] border-l-[12px]" style={{ borderColor: theme.primaryColor }} />
-            <EditableImg 
-              regionKey="about.coachImg" 
+            <EditableImg
+              regionKey="about.coachImg"
               fallback="https://images.unsplash.com/photo-1594381898411-846e7d193883?q=80&w=1000&auto=format&fit=crop"
               className="relative z-10 w-full aspect-[4/5] object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-1000"
             />
           </div>
           <div className="space-y-10">
-            <EditableText 
-              as="h2" 
-              regionKey="about.title" 
-              fallback="THE METHODOLOGY." 
+            <EditableText
+              as="h2"
+              regionKey="about.title"
+              fallback="THE METHODOLOGY."
               className="text-5xl md:text-8xl font-black italic tracking-tighter leading-none block uppercase"
             />
-            <EditableText 
-              as="p" 
-              regionKey="about.desc" 
-              fallback="I bridge the gap between sports science and practical application. My programs are built on progressive overload, metabolic conditioning, and data-driven nutrition. We don't guess; we measure." 
+            <EditableText
+              as="p"
+              regionKey="about.desc"
+              fallback="I bridge the gap between sports science and practical application. My programs are built on progressive overload, metabolic conditioning, and data-driven nutrition. We don't guess; we measure."
               className="text-xl opacity-60 leading-relaxed block font-light"
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-10 border-t border-white/10">
@@ -230,19 +241,19 @@ export default function Template5({ editableData }: TemplateProps) {
   const ContactView = () => (
     <div className="pt-32 pb-24 min-h-screen animate-in zoom-in-95 duration-500">
       <div className="max-w-4xl mx-auto px-4 text-center">
-        <EditableText 
-          as="h1" 
-          regionKey="contact.title" 
-          fallback="APPLICATION." 
+        <EditableText
+          as="h1"
+          regionKey="contact.title"
+          fallback="APPLICATION."
           className="text-7xl md:text-[10rem] font-black italic tracking-tighter mb-4 block leading-none"
         />
-        <EditableText 
-          as="p" 
-          regionKey="contact.sub" 
-          fallback="I only accept 5 new athletes per month. Apply only if you are ready for extreme commitment." 
+        <EditableText
+          as="p"
+          regionKey="contact.sub"
+          fallback="I only accept 5 new athletes per month. Apply only if you are ready for extreme commitment."
           className="text-lg opacity-40 mb-20 block uppercase tracking-widest"
         />
-        
+
         <form className="text-left space-y-10">
           <div className="grid md:grid-cols-2 gap-12">
             <div className="space-y-2 group">
@@ -258,7 +269,7 @@ export default function Template5({ editableData }: TemplateProps) {
             <label className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 ml-1 group-focus-within:opacity-100 transition-opacity">Primary Objective</label>
             <textarea className="w-full bg-transparent border-b-2 border-white/10 p-4 focus:border-blue-500 transition-all outline-none font-black italic text-xl uppercase h-24 resize-none" />
           </div>
-          <button 
+          <button
             type="button"
             className="w-full py-8 font-black uppercase tracking-widest italic text-2xl hover:brightness-125 transition-all"
             style={{ backgroundColor: theme.primaryColor, color: "#fff" }}
@@ -271,16 +282,16 @@ export default function Template5({ editableData }: TemplateProps) {
   );
 
   return (
-    <main 
+    <main
       className="w-full min-h-screen overflow-x-hidden selection:bg-blue-600 selection:text-white"
-      style={{ 
-        backgroundColor: theme.backgroundColor, 
+      style={{
+        backgroundColor: theme.backgroundColor,
         color: theme.textColor,
-        fontFamily: theme.fontFamily 
+        fontFamily: theme.fontFamily
       }}
     >
-      <script 
-        src="https://upload-widget.cloudinary.com/global/all.js" 
+      <script
+        src="https://upload-widget.cloudinary.com/global/all.js"
         async
       ></script>
 

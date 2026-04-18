@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import Script from "next/script";
@@ -14,7 +14,7 @@ type TemplateProps = {
 
 export const template2Meta = {
   id: "business/template2",
-  name: "Clyra E-commerce Elite",
+  name: "clyraweb E-commerce Elite",
   image:
     "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1600&auto=format&fit=crop",
 };
@@ -25,10 +25,10 @@ export default function Template2({ editableData }: TemplateProps) {
   const updateRegion = useWebsiteBuilderStore((state: any) => state.updateRegion);
 
   // --- Helper to resolve data from Store or Props ---
-  const getVal = (path: string, fallback: string) => {
+  const useGetVal = (path: string, fallback: string) => {
     const hookVal = useRegionValue(path);
     if (hookVal !== undefined && hookVal !== null) return hookVal;
-    
+
     const parts = path.split(".");
     let current = editableData;
     for (const part of parts) {
@@ -44,26 +44,37 @@ export default function Template2({ editableData }: TemplateProps) {
   // --- Cloudinary Integration ---
   const handleImageUpload = (path: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
-      (window as any).cloudinary
-        .createUploadWidget(
+      const activeRegionKey = path;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
           {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
             multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
           },
           (error: any, result: any) => {
             if (!error && result && result.event === "success") {
-              updateRegion(path, result.info.secure_url);
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
+              }
             }
           }
-        )
-        .open();
+        );
+      }
+      (window as any).__cloudinaryWidget.open();
     }
   };
 
   // --- Shared Editable Components ---
   const EditableText = ({ path, fallback, as: Tag = "span", className = "" }: any) => {
-    const val = getVal(path, fallback);
+    const val = useGetVal(path, fallback);
     return (
       <Tag
         contentEditable
@@ -84,7 +95,7 @@ export default function Template2({ editableData }: TemplateProps) {
   };
 
   const EditableImg = ({ path, fallback, className = "", style = {} }: any) => {
-    const src = getVal(path, fallback);
+    const src = useGetVal(path, fallback);
     return (
       <img
         src={src}
@@ -101,15 +112,15 @@ export default function Template2({ editableData }: TemplateProps) {
 
   // --- Layout Components ---
   const Navigation = () => (
-    <nav 
+    <nav
       className="sticky top-0 z-50 w-full border-b backdrop-blur-xl"
       style={{ backgroundColor: `${theme.backgroundColor}ee`, borderColor: `${theme.textColor}15` }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between overflow-hidden">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActivePage("home")}>
-          <EditableImg 
-            path="brand.logo" 
-            fallback="https://images.unsplash.com/photo-1549463591-14cc5bd1f008?w=100&h=100&fit=crop" 
+          <EditableImg
+            path="brand.logo"
+            fallback="https://images.unsplash.com/photo-1549463591-14cc5bd1f008?w=100&h=100&fit=crop"
             className="w-8 h-8 rounded-full object-cover"
           />
           <EditableText path="brand.name" fallback="ESTRELLA" className="font-black tracking-[0.2em] text-lg" />
@@ -121,8 +132,8 @@ export default function Template2({ editableData }: TemplateProps) {
               key={page}
               onClick={() => setActivePage(page)}
               className="text-[10px] uppercase tracking-[0.3em] font-bold transition-all"
-              style={{ 
-                color: theme.textColor, 
+              style={{
+                color: theme.textColor,
                 opacity: activePage === page ? 1 : 0.4,
                 borderBottom: activePage === page ? `2px solid ${theme.primaryColor}` : '2px solid transparent'
               }}
@@ -134,7 +145,7 @@ export default function Template2({ editableData }: TemplateProps) {
 
         <div className="flex items-center gap-6">
           <button className="relative p-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
             <span className="absolute top-0 right-0 text-[8px] w-4 h-4 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: theme.primaryColor }}>0</span>
           </button>
         </div>
@@ -143,7 +154,7 @@ export default function Template2({ editableData }: TemplateProps) {
   );
 
   const Footer = () => (
-    <footer 
+    <footer
       className="w-full border-t py-20 mt-auto px-4 sm:px-6 lg:px-8"
       style={{ backgroundColor: theme.backgroundColor, color: theme.textColor, borderColor: `${theme.textColor}10` }}
     >
@@ -171,24 +182,24 @@ export default function Template2({ editableData }: TemplateProps) {
   const HomeView = () => (
     <div className="w-full animate-in fade-in duration-700">
       <section className="w-full relative h-[85vh] flex items-center justify-center overflow-hidden">
-        <EditableImg 
-          path="home.heroImg" 
-          fallback="https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=2000&auto=format&fit=crop" 
+        <EditableImg
+          path="home.heroImg"
+          fallback="https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=2000&auto=format&fit=crop"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-black/20" />
         <div className="relative z-10 text-center px-4 space-y-8 max-w-4xl">
-          <EditableText 
-            path="home.heroTitle" 
-            fallback="THE 2024 NOIR ARCHIVE" 
-            className="text-white text-5xl md:text-9xl font-black tracking-tighter block leading-none" 
+          <EditableText
+            path="home.heroTitle"
+            fallback="THE 2024 NOIR ARCHIVE"
+            className="text-white text-5xl md:text-9xl font-black tracking-tighter block leading-none"
           />
-          <EditableText 
-            path="home.heroSubtitle" 
-            fallback="A curated selection of seasonal essentials crafted for the avant-garde." 
-            className="text-white text-sm md:text-lg opacity-90 block tracking-[0.2em] uppercase max-w-2xl mx-auto" 
+          <EditableText
+            path="home.heroSubtitle"
+            fallback="A curated selection of seasonal essentials crafted for the avant-garde."
+            className="text-white text-sm md:text-lg opacity-90 block tracking-[0.2em] uppercase max-w-2xl mx-auto"
           />
-          <button 
+          <button
             className="mt-8 px-14 py-5 text-[10px] font-bold tracking-[0.5em] uppercase transition-all hover:scale-105 active:scale-95 shadow-2xl"
             style={{ backgroundColor: '#fff', color: '#000', borderRadius: `${theme.borderRadius}px` }}
           >
@@ -210,9 +221,9 @@ export default function Template2({ editableData }: TemplateProps) {
           {[1, 2, 3].map((i) => (
             <div key={i} className="group cursor-pointer">
               <div className="relative aspect-[3/4] overflow-hidden mb-8" style={{ borderRadius: `${theme.borderRadius}px` }}>
-                <EditableImg 
-                  path={`home.product${i}.img`} 
-                  fallback={`https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80`} 
+                <EditableImg
+                  path={`home.product${i}.img`}
+                  fallback={`https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80`}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                 />
                 <div className="absolute top-6 right-6 bg-white/90 backdrop-blur px-4 py-2 text-[10px] font-black tracking-widest shadow-xl">COLLECTION</div>
@@ -279,7 +290,7 @@ export default function Template2({ editableData }: TemplateProps) {
             <label className="text-[10px] uppercase font-black tracking-widest opacity-40">Your Inquiry</label>
             <textarea rows={6} placeholder="How can we assist your journey?" className="w-full bg-white p-5 border-none shadow-sm outline-none text-sm focus:ring-1 ring-black/5" style={{ borderRadius: `${theme.borderRadius}px` }}></textarea>
           </div>
-          <button 
+          <button
             className="w-full py-6 text-[11px] font-black uppercase tracking-[0.5em] transition-transform active:scale-95 shadow-xl"
             style={{ backgroundColor: theme.primaryColor, color: '#fff', borderRadius: `${theme.borderRadius}px` }}
           >
@@ -291,12 +302,12 @@ export default function Template2({ editableData }: TemplateProps) {
   );
 
   return (
-    <main 
+    <main
       className="flex flex-col min-h-screen w-full overflow-x-hidden selection:bg-black selection:text-white"
-      style={{ 
-        backgroundColor: theme.backgroundColor, 
-        color: theme.textColor, 
-        fontFamily: theme.fontFamily || "Inter, sans-serif" 
+      style={{
+        backgroundColor: theme.backgroundColor,
+        color: theme.textColor,
+        fontFamily: theme.fontFamily || "Inter, sans-serif"
       }}
     >
       {/* Script handled via standard script tag for compatibility if next/script resolution fails */}

@@ -40,7 +40,7 @@ export default function Template32({ editableData }: TemplateProps) {
   const handleImageUpload = (regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
       if (!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME) return;
-      
+
       (window as any).cloudinary
         .createUploadWidget(
           {
@@ -58,7 +58,7 @@ export default function Template32({ editableData }: TemplateProps) {
     }
   };
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+  // --- clyraweb EDITABLE COMPONENTS ---
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -143,9 +143,8 @@ export default function Template32({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-sm font-medium transition-all uppercase tracking-[0.2em] ${
-                activePage === page.toLowerCase() ? "" : "opacity-50 hover:opacity-100"
-              }`}
+              className={`text-sm font-medium transition-all uppercase tracking-[0.2em] ${activePage === page.toLowerCase() ? "" : "opacity-50 hover:opacity-100"
+                }`}
               style={{
                 color: theme.textColor,
                 borderBottom: activePage === page.toLowerCase() ? `2px solid ${theme.primaryColor}` : "2px solid transparent",
@@ -199,7 +198,7 @@ export default function Template32({ editableData }: TemplateProps) {
             className="text-base opacity-75 leading-relaxed block max-w-md mx-auto md:mx-0"
           />
         </div>
-        
+
         <div className="flex flex-col gap-5">
           <h4 className="font-bold uppercase tracking-[0.2em] text-xs opacity-50 mb-2">Explore</h4>
           {["Home", "About", "Contact"].map((p) => (
@@ -216,12 +215,12 @@ export default function Template32({ editableData }: TemplateProps) {
           <EditableText regionKey="footer.address" fallback="1 Luxury Way, Paradise City, PC 90210" className="text-sm block opacity-75 mt-4" />
         </div>
       </div>
-      
+
       <div className="max-w-7xl mx-auto mt-20 pt-8 border-t text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4" style={{ borderColor: `${theme.textColor}10` }}>
         <EditableText regionKey="footer.copy" fallback="© 2026 The Grand Aura. All rights reserved." className="text-xs opacity-50 block uppercase tracking-widest" />
         <div className="text-xs opacity-50 uppercase tracking-widest space-x-6">
-           <span>Privacy Policy</span>
-           <span>Terms of Service</span>
+          <span>Privacy Policy</span>
+          <span>Terms of Service</span>
         </div>
       </div>
     </footer>
@@ -240,14 +239,14 @@ export default function Template32({ editableData }: TemplateProps) {
           />
           <div className="absolute inset-0 bg-black/40 mix-blend-multiply"></div>
         </div>
-        
+
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto space-y-8 flex flex-col items-center">
           <div className="inline-block px-4 py-1 border border-white/30 backdrop-blur-sm mb-4">
-             <EditableText
+            <EditableText
               regionKey="home.heroTagline"
               fallback="★★★★★ 5-STAR LUXURY RESORT"
               className="text-white text-xs font-bold tracking-[0.3em] uppercase"
-             />
+            />
           </div>
           <EditableText
             as="h1"
@@ -271,25 +270,25 @@ export default function Template32({ editableData }: TemplateProps) {
 
         {/* Visual Booking Bar (Purely UI for template) */}
         <div className="absolute bottom-0 left-0 w-full transform translate-y-1/2 px-4 z-20 hidden md:block">
-           <div className="max-w-5xl mx-auto bg-white p-6 shadow-2xl flex flex-wrap gap-4 items-center justify-between" style={{ borderRadius: `${theme.borderRadius}px`, backgroundColor: theme.backgroundColor, color: theme.textColor }}>
-              <div className="flex-1 px-4 border-r border-gray-200 min-w-[150px]">
-                 <span className="text-xs uppercase tracking-widest opacity-50 block mb-1">Check In</span>
-                 <span className="font-semibold">Oct 24, 2026</span>
-              </div>
-              <div className="flex-1 px-4 border-r border-gray-200 min-w-[150px]">
-                 <span className="text-xs uppercase tracking-widest opacity-50 block mb-1">Check Out</span>
-                 <span className="font-semibold">Oct 29, 2026</span>
-              </div>
-              <div className="flex-1 px-4 min-w-[150px]">
-                 <span className="text-xs uppercase tracking-widest opacity-50 block mb-1">Guests</span>
-                 <span className="font-semibold">2 Adults, 1 Room</span>
-              </div>
-              <button 
-                 className="px-8 py-4 uppercase tracking-widest text-xs font-bold flex-shrink-0"
-                 style={{ backgroundColor: theme.textColor, color: theme.backgroundColor, borderRadius: `${theme.borderRadius}px` }}>
-                 Search
-              </button>
-           </div>
+          <div className="max-w-5xl mx-auto bg-white p-6 shadow-2xl flex flex-wrap gap-4 items-center justify-between" style={{ borderRadius: `${theme.borderRadius}px`, backgroundColor: theme.backgroundColor, color: theme.textColor }}>
+            <div className="flex-1 px-4 border-r border-gray-200 min-w-[150px]">
+              <span className="text-xs uppercase tracking-widest opacity-50 block mb-1">Check In</span>
+              <span className="font-semibold">Oct 24, 2026</span>
+            </div>
+            <div className="flex-1 px-4 border-r border-gray-200 min-w-[150px]">
+              <span className="text-xs uppercase tracking-widest opacity-50 block mb-1">Check Out</span>
+              <span className="font-semibold">Oct 29, 2026</span>
+            </div>
+            <div className="flex-1 px-4 min-w-[150px]">
+              <span className="text-xs uppercase tracking-widest opacity-50 block mb-1">Guests</span>
+              <span className="font-semibold">2 Adults, 1 Room</span>
+            </div>
+            <button
+              className="px-8 py-4 uppercase tracking-widest text-xs font-bold flex-shrink-0"
+              style={{ backgroundColor: theme.textColor, color: theme.backgroundColor, borderRadius: `${theme.borderRadius}px` }}>
+              Search
+            </button>
+          </div>
         </div>
       </section>
 
@@ -333,8 +332,8 @@ export default function Template32({ editableData }: TemplateProps) {
                     regionKey={`home.room${num}Img`}
                     fallback={
                       num === 1 ? "https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=1000&auto=format&fit=crop" :
-                      num === 2 ? "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000&auto=format&fit=crop" :
-                      "https://images.unsplash.com/photo-1566665797739-1674de7a421a?q=80&w=1000&auto=format&fit=crop"
+                        num === 2 ? "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000&auto=format&fit=crop" :
+                          "https://images.unsplash.com/photo-1566665797739-1674de7a421a?q=80&w=1000&auto=format&fit=crop"
                     }
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   />
@@ -371,10 +370,10 @@ export default function Template32({ editableData }: TemplateProps) {
     <div className="animate-in slide-in-from-bottom-8 duration-700">
       <Section id="about-hero" bgType="primary">
         <div className="text-center max-w-4xl mx-auto space-y-8 mb-16 pt-12">
-           <EditableText as="span" regionKey="about.sub" fallback="OUR STORY" className="text-xs font-bold uppercase tracking-[0.3em] opacity-60 block" />
-           <EditableText as="h1" regionKey="about.title" fallback="A Legacy of Excellence" className="text-5xl md:text-7xl font-normal block" />
+          <EditableText as="span" regionKey="about.sub" fallback="OUR STORY" className="text-xs font-bold uppercase tracking-[0.3em] opacity-60 block" />
+          <EditableText as="h1" regionKey="about.title" fallback="A Legacy of Excellence" className="text-5xl md:text-7xl font-normal block" />
         </div>
-        
+
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="relative">
             <div className="absolute inset-0 bg-black/5 translate-x-4 translate-y-4" style={{ borderRadius: `${theme.borderRadius * 2}px` }}></div>
@@ -399,16 +398,16 @@ export default function Template32({ editableData }: TemplateProps) {
               fallback="Our architecture blends seamlessly with the natural surroundings, while our interiors celebrate local culture and modern design. Every space is crafted to inspire awe and foster deep relaxation."
               className="text-lg opacity-75 leading-relaxed block font-light"
             />
-            
+
             <div className="grid grid-cols-2 gap-8 pt-8 border-t" style={{ borderColor: `${theme.textColor}20` }}>
-               <div>
-                  <EditableText regionKey="about.stat1" fallback="25+" className="text-4xl font-normal block mb-2" />
-                  <span className="text-xs uppercase tracking-widest opacity-60">Global Locations</span>
-               </div>
-               <div>
-                  <EditableText regionKey="about.stat2" fallback="5★" className="text-4xl font-normal block mb-2" />
-                  <span className="text-xs uppercase tracking-widest opacity-60">Forbes Rating</span>
-               </div>
+              <div>
+                <EditableText regionKey="about.stat1" fallback="25+" className="text-4xl font-normal block mb-2" />
+                <span className="text-xs uppercase tracking-widest opacity-60">Global Locations</span>
+              </div>
+              <div>
+                <EditableText regionKey="about.stat2" fallback="5★" className="text-4xl font-normal block mb-2" />
+                <span className="text-xs uppercase tracking-widest opacity-60">Forbes Rating</span>
+              </div>
             </div>
           </div>
         </div>
@@ -426,7 +425,7 @@ export default function Template32({ editableData }: TemplateProps) {
           </div>
 
           <div className="grid lg:grid-cols-5 gap-12 lg:gap-0 bg-white shadow-2xl overflow-hidden" style={{ borderRadius: `${theme.borderRadius * 2}px`, backgroundColor: theme.secondaryColor }}>
-            
+
             {/* Contact Info Panel */}
             <div className="lg:col-span-2 p-12 flex flex-col justify-between" style={{ backgroundColor: theme.primaryColor, color: "#ffffff" }}>
               <div className="space-y-12">
@@ -434,7 +433,7 @@ export default function Template32({ editableData }: TemplateProps) {
                   <h3 className="text-3xl font-normal mb-8">Contact Information</h3>
                   <p className="opacity-80 font-light leading-relaxed">Our concierge team is available 24/7 to assist you with reservations, special requests, and general inquiries.</p>
                 </div>
-                
+
                 <div className="space-y-8">
                   <div>
                     <h4 className="text-xs font-bold uppercase tracking-widest opacity-60 mb-2">Reservations</h4>
@@ -467,20 +466,20 @@ export default function Template32({ editableData }: TemplateProps) {
                   </div>
                 </div>
                 <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-widest opacity-60">Email Address</label>
-                    <input className="w-full p-4 bg-transparent border-b focus:border-black outline-none transition-colors" style={{ borderColor: `${theme.textColor}30` }} placeholder="john@example.com" />
+                  <label className="text-xs font-bold uppercase tracking-widest opacity-60">Email Address</label>
+                  <input className="w-full p-4 bg-transparent border-b focus:border-black outline-none transition-colors" style={{ borderColor: `${theme.textColor}30` }} placeholder="john@example.com" />
                 </div>
                 <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-widest opacity-60">Message</label>
-                    <textarea rows={4} className="w-full p-4 bg-transparent border-b focus:border-black outline-none transition-colors resize-none" style={{ borderColor: `${theme.textColor}30` }} placeholder="How can we help make your stay perfect?"></textarea>
+                  <label className="text-xs font-bold uppercase tracking-widest opacity-60">Message</label>
+                  <textarea rows={4} className="w-full p-4 bg-transparent border-b focus:border-black outline-none transition-colors resize-none" style={{ borderColor: `${theme.textColor}30` }} placeholder="How can we help make your stay perfect?"></textarea>
                 </div>
-                
+
                 <button className="px-12 py-5 mt-4 font-bold uppercase tracking-widest text-sm transition-transform active:scale-95 shadow-xl hover:shadow-2xl" style={{ backgroundColor: theme.textColor, color: theme.backgroundColor, borderRadius: `${theme.borderRadius}px` }}>
                   <EditableText regionKey="contact.submit" fallback="Send Message" />
                 </button>
               </div>
             </div>
-            
+
           </div>
         </div>
       </Section>

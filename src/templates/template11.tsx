@@ -31,33 +31,37 @@ export default function Template11({ editableData }: TemplateProps) {
   const updateRegion = useWebsiteBuilderStore((state: any) => state.updateRegion);
 
   // --- IMAGE UPLOAD HANDLER ---
-  const handleImageUpload = useCallback(
-    (regionKey: string) => {
-      if (typeof window !== "undefined" && (window as any).cloudinary) {
-        if (!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || !process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) {
-          console.warn("Cloudinary environment variables missing.");
-          return;
-        }
-        (window as any).cloudinary
-          .createUploadWidget(
-            {
-              cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-              uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
-              multiple: false,
-            },
-            (error: any, result: any) => {
-              if (!error && result && result.event === "success") {
-                updateRegion(regionKey, result.info.secure_url);
+  const handleImageUpload = useCallback((regionKey: string) => {
+    if (typeof window !== "undefined" && (window as any).cloudinary) {
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
+          {
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
+            multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
+          },
+          (error: any, result: any) => {
+            if (!error && result && result.event === "success") {
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
               }
             }
-          )
-          .open();
+          }
+        );
       }
-    },
-    [updateRegion]
-  );
+      (window as any).__cloudinaryWidget.open();
+    }
+  }, [updateRegion]);
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -75,7 +79,7 @@ export default function Template11({ editableData }: TemplateProps) {
           e.stopPropagation();
           (e.currentTarget as HTMLElement).focus();
         }}
-        className={`focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all ${className}`}
+        className={`focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition-all ${className}`}
       >
         {content}
       </Tag>
@@ -143,9 +147,8 @@ export default function Template11({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-sm font-bold transition-all ${
-                activePage === page.toLowerCase() ? "scale-105" : "opacity-60 hover:opacity-100"
-              }`}
+              className={`text-sm font-bold transition-all ${activePage === page.toLowerCase() ? "scale-105" : "opacity-60 hover:opacity-100"
+                }`}
               style={{ color: activePage === page.toLowerCase() ? theme.primaryColor : theme.textColor }}
             >
               {page}
@@ -320,7 +323,7 @@ export default function Template11({ editableData }: TemplateProps) {
             className="w-full aspect-[4/5] object-cover shadow-2xl"
             style={{ borderRadius: `${theme.borderRadius * 3}px` }}
           />
-          <div 
+          <div
             className="absolute -bottom-8 -right-8 p-8 shadow-xl max-w-xs hidden sm:block"
             style={{ backgroundColor: theme.backgroundColor, borderRadius: `${theme.borderRadius * 2}px` }}
           >
@@ -362,12 +365,12 @@ export default function Template11({ editableData }: TemplateProps) {
           <EditableText as="h1" regionKey="contact.title" fallback="Get in Touch" className="text-5xl sm:text-6xl font-extrabold tracking-tight block" />
           <EditableText as="p" regionKey="contact.subtitle" fallback="Have questions about enrollment? Our admissions team is here to help you begin your journey." className="text-xl opacity-70 block max-w-2xl mx-auto" />
         </div>
-        
-        <div 
-          className="grid md:grid-cols-5 gap-0 shadow-2xl overflow-hidden" 
+
+        <div
+          className="grid md:grid-cols-5 gap-0 shadow-2xl overflow-hidden"
           style={{ borderRadius: `${theme.borderRadius * 2}px`, backgroundColor: theme.backgroundColor }}
         >
-          <div 
+          <div
             className="md:col-span-2 p-10 sm:p-12 text-white flex flex-col justify-between"
             style={{ backgroundColor: theme.primaryColor }}
           >
@@ -389,10 +392,10 @@ export default function Template11({ editableData }: TemplateProps) {
               </div>
             </div>
             <div className="mt-16 opacity-50 text-sm">
-               <EditableText regionKey="contact.hours" fallback="Operating Hours: Mon-Fri, 9AM - 6PM PST" />
+              <EditableText regionKey="contact.hours" fallback="Operating Hours: Mon-Fri, 9AM - 6PM PST" />
             </div>
           </div>
-          
+
           <div className="md:col-span-3 p-10 sm:p-12">
             <div className="space-y-6">
               <div className="grid sm:grid-cols-2 gap-6">
@@ -432,7 +435,7 @@ export default function Template11({ editableData }: TemplateProps) {
         src="https://upload-widget.cloudinary.com/global/all.js"
         async
       ></script>
-      
+
       <Navbar />
 
       <div className="flex-1 flex flex-col w-full max-w-full overflow-hidden">

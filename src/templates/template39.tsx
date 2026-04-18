@@ -9,7 +9,7 @@ import {
 import { useThemeStore } from "@/store/useThemeStore";
 
 /**
- * PRODUCTION-SAFE TEMPLATE FOR CLYRA
+ * PRODUCTION-SAFE TEMPLATE FOR clyraweb
  * Built with internal routing, dynamic theme support, and Cloudinary integration.
  * Topic: Course Seller (Template 39)
  * * NOTE: Switched from Next.js Script to native script tag for compatibility 
@@ -40,24 +40,35 @@ export default function Template39({ editableData }: TemplateProps) {
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = (regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
-      (window as any).cloudinary
-        .createUploadWidget(
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
           {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
             multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
           },
           (error: any, result: any) => {
             if (!error && result && result.event === "success") {
-              updateRegion(regionKey, result.info.secure_url);
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
+              }
             }
           }
-        )
-        .open();
+        );
+      }
+      (window as any).__cloudinaryWidget.open();
     }
   };
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+  // --- clyraweb EDITABLE COMPONENTS ---
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -143,9 +154,8 @@ export default function Template39({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-sm font-semibold transition-all hover:-translate-y-0.5 ${
-                activePage === page.toLowerCase() ? "" : "opacity-60 hover:opacity-100"
-              }`}
+              className={`text-sm font-semibold transition-all hover:-translate-y-0.5 ${activePage === page.toLowerCase() ? "" : "opacity-60 hover:opacity-100"
+                }`}
               style={{ color: activePage === page.toLowerCase() ? theme.primaryColor : theme.textColor }}
             >
               {page}
@@ -330,8 +340,8 @@ export default function Template39({ editableData }: TemplateProps) {
               style={{ borderRadius: `${theme.borderRadius * 2}px` }}
             />
             <div className="absolute -bottom-6 -right-6 p-6 shadow-xl z-20 backdrop-blur-xl" style={{ backgroundColor: `${theme.secondaryColor}E6`, borderRadius: `${theme.borderRadius}px` }}>
-               <EditableText regionKey="about.stats" fallback="10k+ Students" className="font-black text-2xl block" />
-               <EditableText regionKey="about.statsLabel" fallback="Trained Globally" className="text-sm opacity-70 block" />
+              <EditableText regionKey="about.stats" fallback="10k+ Students" className="font-black text-2xl block" />
+              <EditableText regionKey="about.statsLabel" fallback="Trained Globally" className="text-sm opacity-70 block" />
             </div>
           </div>
           <div className="space-y-6 md:space-y-8 order-1 lg:order-2 text-center lg:text-left">
@@ -343,14 +353,14 @@ export default function Template39({ editableData }: TemplateProps) {
               className="text-lg md:text-xl opacity-70 leading-relaxed block"
             />
             <div className="grid grid-cols-2 gap-6 pt-4 border-t" style={{ borderColor: `${theme.textColor}15` }}>
-               <div>
-                 <EditableText as="h4" regionKey="about.feat1Title" fallback="Expert Led" className="font-bold text-lg block" />
-                 <EditableText as="p" regionKey="about.feat1Desc" fallback="Learn from true professionals." className="text-sm opacity-60 block mt-1" />
-               </div>
-               <div>
-                 <EditableText as="h4" regionKey="about.feat2Title" fallback="Lifetime Access" className="font-bold text-lg block" />
-                 <EditableText as="p" regionKey="about.feat2Desc" fallback="Learn at your own pace." className="text-sm opacity-60 block mt-1" />
-               </div>
+              <div>
+                <EditableText as="h4" regionKey="about.feat1Title" fallback="Expert Led" className="font-bold text-lg block" />
+                <EditableText as="p" regionKey="about.feat1Desc" fallback="Learn from true professionals." className="text-sm opacity-60 block mt-1" />
+              </div>
+              <div>
+                <EditableText as="h4" regionKey="about.feat2Title" fallback="Lifetime Access" className="font-bold text-lg block" />
+                <EditableText as="p" regionKey="about.feat2Desc" fallback="Learn at your own pace." className="text-sm opacity-60 block mt-1" />
+              </div>
             </div>
           </div>
         </div>
@@ -366,7 +376,7 @@ export default function Template39({ editableData }: TemplateProps) {
             <EditableText as="h1" regionKey="contact.title" fallback="Let's Connect" className="text-4xl md:text-6xl font-black tracking-tight block mb-4" />
             <EditableText as="p" regionKey="contact.subtitle" fallback="Have questions about the courses or team packages? Reach out below." className="text-lg opacity-70 block max-w-xl mx-auto" />
           </div>
-          
+
           <div className="grid md:grid-cols-5 gap-8 bg-white shadow-2xl overflow-hidden" style={{ borderRadius: `${theme.borderRadius * 1.5}px`, backgroundColor: theme.backgroundColor }}>
             <div className="md:col-span-2 p-8 md:p-12 text-white flex flex-col justify-between" style={{ backgroundColor: theme.primaryColor }}>
               <div className="space-y-8">
@@ -380,10 +390,10 @@ export default function Template39({ editableData }: TemplateProps) {
                 </div>
               </div>
               <div className="pt-12">
-                 <EditableText regionKey="contact.hours" fallback="Mon-Fri, 9am - 5pm EST" className="text-sm opacity-80 block" />
+                <EditableText regionKey="contact.hours" fallback="Mon-Fri, 9am - 5pm EST" className="text-sm opacity-80 block" />
               </div>
             </div>
-            
+
             <div className="md:col-span-3 p-8 md:p-12 space-y-6">
               <div className="space-y-2">
                 <label className="text-sm font-bold opacity-70">Name</label>
@@ -414,7 +424,7 @@ export default function Template39({ editableData }: TemplateProps) {
     >
       {/* Cloudinary native script for standard web environment compatibility */}
       <script src="https://upload-widget.cloudinary.com/global/all.js" async />
-      
+
       <Navbar />
 
       <div className="flex-grow flex flex-col w-full max-w-full overflow-hidden min-w-0">

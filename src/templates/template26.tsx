@@ -40,20 +40,31 @@ export default function Template26({ editableData }: TemplateProps) {
 
   const handleImageUpload = (regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
-      (window as any).cloudinary
-        .createUploadWidget(
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
           {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
             multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
           },
           (error: any, result: any) => {
             if (!error && result && result.event === "success") {
-              updateRegion(regionKey, result.info.secure_url);
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
+              }
             }
           }
-        )
-        .open();
+        );
+      }
+      (window as any).__cloudinaryWidget.open();
     }
   };
 
@@ -138,9 +149,8 @@ export default function Template26({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-xs font-medium transition-all uppercase tracking-[0.2em] relative after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-full after:h-[1px] after:bg-current after:transition-transform after:duration-300 ${
-                activePage === page.toLowerCase() ? "after:scale-x-100 opacity-100" : "after:scale-x-0 opacity-60 hover:opacity-100 hover:after:scale-x-100"
-              }`}
+              className={`text-xs font-medium transition-all uppercase tracking-[0.2em] relative after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-full after:h-[1px] after:bg-current after:transition-transform after:duration-300 ${activePage === page.toLowerCase() ? "after:scale-x-100 opacity-100" : "after:scale-x-0 opacity-60 hover:opacity-100 hover:after:scale-x-100"
+                }`}
               style={{ color: theme.textColor }}
             >
               {page}
@@ -175,10 +185,10 @@ export default function Template26({ editableData }: TemplateProps) {
     >
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 lg:gap-16">
         <div className="md:col-span-2 space-y-6">
-          <EditableText 
-            regionKey="global.brand" 
-            fallback="MAISON DE DESIGN" 
-            className="font-bold text-2xl tracking-widest uppercase block mb-6" 
+          <EditableText
+            regionKey="global.brand"
+            fallback="MAISON DE DESIGN"
+            className="font-bold text-2xl tracking-widest uppercase block mb-6"
             style={{ fontFamily: theme.fontFamily }}
           />
           <EditableText
@@ -192,9 +202,9 @@ export default function Template26({ editableData }: TemplateProps) {
         <div className="flex flex-col gap-4">
           <h4 className="font-bold uppercase tracking-[0.2em] text-xs opacity-50 mb-4">Studio</h4>
           {["Home", "About", "Contact"].map((p) => (
-            <button 
-              key={p} 
-              onClick={() => setActivePage(p.toLowerCase() as any)} 
+            <button
+              key={p}
+              onClick={() => setActivePage(p.toLowerCase() as any)}
               className="text-sm w-fit text-left hover:opacity-60 transition-opacity"
               style={{ fontFamily: "Inter, sans-serif" }}
             >
@@ -223,11 +233,11 @@ export default function Template26({ editableData }: TemplateProps) {
           />
         </div>
         <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col justify-end h-full mt-32 md:mt-48">
-          <div 
+          <div
             className="max-w-2xl p-8 sm:p-12 md:p-16 backdrop-blur-sm shadow-2xl"
-            style={{ 
+            style={{
               backgroundColor: `${theme.backgroundColor}F2`,
-              borderRadius: `${theme.borderRadius}px` 
+              borderRadius: `${theme.borderRadius}px`
             }}
           >
             <EditableText
@@ -293,7 +303,7 @@ export default function Template26({ editableData }: TemplateProps) {
             style={{ fontFamily: "Inter, sans-serif" }}
           />
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12 flex-wrap">
           {[1, 2, 3].map((num) => (
             <div key={num} className="group cursor-pointer">
@@ -302,8 +312,8 @@ export default function Template26({ editableData }: TemplateProps) {
                   regionKey={`home.projectImg${num}`}
                   fallback={
                     num === 1 ? "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=800&auto=format&fit=crop" :
-                    num === 2 ? "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=800&auto=format&fit=crop" :
-                    "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=800&auto=format&fit=crop"
+                      num === 2 ? "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=800&auto=format&fit=crop" :
+                        "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=800&auto=format&fit=crop"
                   }
                   className="w-full aspect-[3/4] object-cover transition-transform duration-1000 group-hover:scale-105"
                 />
@@ -332,17 +342,17 @@ export default function Template26({ editableData }: TemplateProps) {
       <Section id="about-hero" bgType="primary">
         <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
           <div className="order-2 lg:order-1 space-y-10">
-            <EditableText 
-              regionKey="about.tag" 
-              fallback="OUR STORY" 
-              className="text-xs uppercase tracking-[0.2em] opacity-50 block" 
+            <EditableText
+              regionKey="about.tag"
+              fallback="OUR STORY"
+              className="text-xs uppercase tracking-[0.2em] opacity-50 block"
               style={{ fontFamily: "Inter, sans-serif" }}
             />
-            <EditableText 
-              as="h1" 
-              regionKey="about.title" 
-              fallback="Redefining the Modern Sanctuary." 
-              className="text-5xl md:text-7xl font-bold leading-[1.1] block" 
+            <EditableText
+              as="h1"
+              regionKey="about.title"
+              fallback="Redefining the Modern Sanctuary."
+              className="text-5xl md:text-7xl font-bold leading-[1.1] block"
               style={{ fontFamily: theme.fontFamily }}
             />
             <div className="w-16 h-[1px]" style={{ backgroundColor: theme.textColor }}></div>
@@ -389,8 +399,8 @@ export default function Template26({ editableData }: TemplateProps) {
                 regionKey={`about.teamImg${num}`}
                 fallback={
                   num === 1 ? "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=600&auto=format&fit=crop" :
-                  num === 2 ? "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=600&auto=format&fit=crop" :
-                  "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=600&auto=format&fit=crop"
+                    num === 2 ? "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=600&auto=format&fit=crop" :
+                      "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=600&auto=format&fit=crop"
                 }
                 className="w-full aspect-square object-cover mb-6 grayscale hover:grayscale-0 transition-all duration-500"
                 style={{ borderRadius: `${theme.borderRadius}px` }}
@@ -420,76 +430,76 @@ export default function Template26({ editableData }: TemplateProps) {
         <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 w-full">
           <div className="space-y-12">
             <div>
-              <EditableText 
-                as="h1" 
-                regionKey="contact.title" 
-                fallback="Let's create something beautiful." 
-                className="text-5xl md:text-7xl font-bold leading-[1.1] block mb-6" 
+              <EditableText
+                as="h1"
+                regionKey="contact.title"
+                fallback="Let's create something beautiful."
+                className="text-5xl md:text-7xl font-bold leading-[1.1] block mb-6"
                 style={{ fontFamily: theme.fontFamily }}
               />
-              <EditableText 
-                as="p" 
-                regionKey="contact.subtitle" 
-                fallback="Whether you are building from the ground up or reimagining an existing space, we are here to guide the process." 
-                className="text-lg opacity-70 leading-loose block font-light max-w-md" 
+              <EditableText
+                as="p"
+                regionKey="contact.subtitle"
+                fallback="Whether you are building from the ground up or reimagining an existing space, we are here to guide the process."
+                className="text-lg opacity-70 leading-loose block font-light max-w-md"
                 style={{ fontFamily: "Inter, sans-serif" }}
               />
             </div>
-            
+
             <div className="space-y-8 pt-8 border-t" style={{ borderColor: `${theme.textColor}20` }}>
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-[0.2em] opacity-40 mb-3" style={{ fontFamily: "Inter, sans-serif" }}>Studio Location</h4>
-                <EditableText regionKey="contact.address" fallback="125 Design Avenue, Suite 400" className="text-lg block" style={{ fontFamily: theme.fontFamily }}/>
-                <EditableText regionKey="contact.city" fallback="New York, NY 10001" className="text-lg block" style={{ fontFamily: theme.fontFamily }}/>
+                <EditableText regionKey="contact.address" fallback="125 Design Avenue, Suite 400" className="text-lg block" style={{ fontFamily: theme.fontFamily }} />
+                <EditableText regionKey="contact.city" fallback="New York, NY 10001" className="text-lg block" style={{ fontFamily: theme.fontFamily }} />
               </div>
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-[0.2em] opacity-40 mb-3" style={{ fontFamily: "Inter, sans-serif" }}>Direct Inquiries</h4>
-                <EditableText regionKey="contact.email" fallback="inquiries@maisondesign.com" className="text-lg block mb-1" style={{ fontFamily: theme.fontFamily }}/>
-                <EditableText regionKey="contact.phone" fallback="+1 (555) 123-4567" className="text-lg block" style={{ fontFamily: theme.fontFamily }}/>
+                <EditableText regionKey="contact.email" fallback="inquiries@maisondesign.com" className="text-lg block mb-1" style={{ fontFamily: theme.fontFamily }} />
+                <EditableText regionKey="contact.phone" fallback="+1 (555) 123-4567" className="text-lg block" style={{ fontFamily: theme.fontFamily }} />
               </div>
             </div>
           </div>
 
-          <div 
+          <div
             className="p-8 sm:p-12 shadow-xl h-fit"
-            style={{ 
+            style={{
               backgroundColor: theme.secondaryColor,
-              borderRadius: `${theme.borderRadius}px` 
+              borderRadius: `${theme.borderRadius}px`
             }}
           >
             <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-[0.2em] opacity-50" style={{ fontFamily: "Inter, sans-serif" }}>Name</label>
-                <input 
+                <input
                   type="text"
-                  className="w-full pb-3 bg-transparent border-b outline-none transition-colors" 
-                  style={{ borderColor: `${theme.textColor}30`, color: theme.textColor }} 
-                  placeholder="Jane Doe" 
+                  className="w-full pb-3 bg-transparent border-b outline-none transition-colors"
+                  style={{ borderColor: `${theme.textColor}30`, color: theme.textColor }}
+                  placeholder="Jane Doe"
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-[0.2em] opacity-50" style={{ fontFamily: "Inter, sans-serif" }}>Email</label>
-                <input 
+                <input
                   type="email"
-                  className="w-full pb-3 bg-transparent border-b outline-none transition-colors" 
-                  style={{ borderColor: `${theme.textColor}30`, color: theme.textColor }} 
-                  placeholder="jane@example.com" 
+                  className="w-full pb-3 bg-transparent border-b outline-none transition-colors"
+                  style={{ borderColor: `${theme.textColor}30`, color: theme.textColor }}
+                  placeholder="jane@example.com"
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-[0.2em] opacity-50" style={{ fontFamily: "Inter, sans-serif" }}>Project Details</label>
-                <textarea 
-                  className="w-full pb-3 bg-transparent border-b outline-none transition-colors resize-none h-24" 
-                  style={{ borderColor: `${theme.textColor}30`, color: theme.textColor }} 
-                  placeholder="Tell us about your space..." 
+                <textarea
+                  className="w-full pb-3 bg-transparent border-b outline-none transition-colors resize-none h-24"
+                  style={{ borderColor: `${theme.textColor}30`, color: theme.textColor }}
+                  placeholder="Tell us about your space..."
                 />
               </div>
-              <button 
-                className="w-full py-5 text-xs font-bold uppercase tracking-[0.2em] transition-all hover:opacity-90 mt-4" 
-                style={{ 
-                  backgroundColor: theme.textColor, 
-                  color: theme.backgroundColor, 
-                  borderRadius: `${theme.borderRadius}px` 
+              <button
+                className="w-full py-5 text-xs font-bold uppercase tracking-[0.2em] transition-all hover:opacity-90 mt-4"
+                style={{
+                  backgroundColor: theme.textColor,
+                  color: theme.backgroundColor,
+                  borderRadius: `${theme.borderRadius}px`
                 }}
               >
                 <EditableText regionKey="contact.submitBtn" fallback="SUBMIT INQUIRY" />
@@ -516,7 +526,8 @@ export default function Template26({ editableData }: TemplateProps) {
 
       <Footer />
 
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         html, body { 
           max-width: 100vw; 
           overflow-x: hidden; 

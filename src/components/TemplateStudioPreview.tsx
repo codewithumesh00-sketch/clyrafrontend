@@ -38,11 +38,11 @@ function buildFallbackSchema(
   const safeTitle =
     (content.title as string) ||
     (content.prompt as string) ||
-    "Welcome to ClyraUI 🚀";
+    "Welcome to clyrawebUI 🚀";
 
   const safeSubtitle =
     (content.subtitle as string) ||
-    "Generated with Clyra Studio";
+    "Generated with clyraweb Studio";
 
   const safeButtonText =
     (content.buttonText as string) ||

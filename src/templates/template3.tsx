@@ -9,7 +9,7 @@ import {
 import { useThemeStore } from "@/store/useThemeStore";
 
 /**
- * PRODUCTION-SAFE TEMPLATE FOR CLYRA: PORTFOLIO PRO
+ * PRODUCTION-SAFE TEMPLATE FOR clyraweb: PORTFOLIO PRO
  * Updated to handle module resolution safely in the preview environment.
  */
 
@@ -39,24 +39,35 @@ export default function Template3({ editableData }: TemplateProps) {
   // --- Image Upload Handler (Cloudinary) ---
   const handleImageUpload = (regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
-      (window as any).cloudinary
-        .createUploadWidget(
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
           {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
             multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
           },
           (error: any, result: any) => {
             if (!error && result && result.event === "success") {
-              updateRegion(regionKey, result.info.secure_url);
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
+              }
             }
           }
-        )
-        .open();
+        );
+      }
+      (window as any).__cloudinaryWidget.open();
     }
   };
 
-  // --- Clyra Editable Components ---
+  // --- clyraweb Editable Components ---
   const EditableText = ({
     regionKey,
     fallback,
@@ -141,9 +152,8 @@ export default function Template3({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-xs font-bold uppercase tracking-widest transition-all ${
-                activePage === page.toLowerCase() ? "opacity-100" : "opacity-40 hover:opacity-100"
-              }`}
+              className={`text-xs font-bold uppercase tracking-widest transition-all ${activePage === page.toLowerCase() ? "opacity-100" : "opacity-40 hover:opacity-100"
+                }`}
               style={{ color: theme.textColor }}
             >
               {page}

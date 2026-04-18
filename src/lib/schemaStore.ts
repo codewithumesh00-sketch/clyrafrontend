@@ -24,7 +24,7 @@ const websiteSchemas: Record<string, WebsiteSchema> = {
     page: "home",
     theme: "dark",
     seo: {
-      title: "ClyraUI - AI Website Builder",
+      title: "clyrawebUI - AI Website Builder",
       description: "Create stunning AI-generated websites instantly.",
     },
     layout: {
@@ -36,7 +36,7 @@ const websiteSchemas: Record<string, WebsiteSchema> = {
         type: "hero",
         variant: "v1",
         props: {
-          title: "Welcome to ClyraUI",
+          title: "Welcome to clyrawebUI",
           subtitle: "Build AI-powered websites in minutes",
           buttonText: "Start Building",
         },
@@ -45,7 +45,7 @@ const websiteSchemas: Record<string, WebsiteSchema> = {
         type: "features",
         variant: "v1",
         props: {
-          title: "Why ClyraUI",
+          title: "Why clyrawebUI",
         },
       },
       {
@@ -60,7 +60,7 @@ const websiteSchemas: Record<string, WebsiteSchema> = {
     page: "about",
     theme: "dark",
     seo: {
-      title: "About ClyraUI",
+      title: "About clyrawebUI",
       description: "Learn more about our AI website platform.",
     },
     layout: {
@@ -90,7 +90,7 @@ const websiteSchemas: Record<string, WebsiteSchema> = {
     theme: "light",
     seo: {
       title: "Contact Us",
-      description: "Get in touch with the ClyraUI team.",
+      description: "Get in touch with the clyrawebUI team.",
     },
     layout: {
       navbar: true,

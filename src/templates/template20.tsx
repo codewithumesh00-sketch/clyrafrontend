@@ -30,24 +30,35 @@ export default function Template20({ editableData }: TemplateProps) {
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = (regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
-      (window as any).cloudinary
-        .createUploadWidget(
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
           {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "demo",
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "ml_default",
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
             multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
           },
           (error: any, result: any) => {
             if (!error && result && result.event === "success") {
-              updateRegion(regionKey, result.info.secure_url);
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
+              }
             }
           }
-        )
-        .open();
+        );
+      }
+      (window as any).__cloudinaryWidget.open();
     }
   };
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+  // --- clyraweb EDITABLE COMPONENTS ---
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -133,9 +144,8 @@ export default function Template20({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-xs font-bold transition-all uppercase tracking-widest ${
-                activePage === page.toLowerCase() ? "opacity-100" : "opacity-40 hover:opacity-80"
-              }`}
+              className={`text-xs font-bold transition-all uppercase tracking-widest ${activePage === page.toLowerCase() ? "opacity-100" : "opacity-40 hover:opacity-80"
+                }`}
               style={{ color: activePage === page.toLowerCase() ? theme.primaryColor : theme.textColor }}
             >
               {page}
@@ -297,7 +307,7 @@ export default function Template20({ editableData }: TemplateProps) {
       style={{ fontFamily: theme.fontFamily, backgroundColor: theme.backgroundColor }}
     >
       <script src="https://upload-widget.cloudinary.com/global/all.js" async></script>
-      
+
       <Navbar />
 
       <div className="flex-grow flex flex-col w-full min-w-0">

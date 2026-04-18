@@ -33,7 +33,7 @@ export default function Template25({ editableData }: TemplateProps) {
   const handleImageUpload = useCallback((regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
       if (!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME) return;
-      
+
       (window as any).cloudinary
         .createUploadWidget(
           {
@@ -51,7 +51,7 @@ export default function Template25({ editableData }: TemplateProps) {
     }
   }, [updateRegion]);
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+  // --- clyraweb EDITABLE COMPONENTS ---
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -129,9 +129,8 @@ export default function Template25({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-xs font-light uppercase tracking-[0.2em] transition-all duration-300 ${
-                activePage === page.toLowerCase() ? "opacity-100" : "opacity-50 hover:opacity-100"
-              }`}
+              className={`text-xs font-light uppercase tracking-[0.2em] transition-all duration-300 ${activePage === page.toLowerCase() ? "opacity-100" : "opacity-50 hover:opacity-100"
+                }`}
               style={{ color: theme.textColor }}
             >
               {page}
@@ -167,21 +166,20 @@ export default function Template25({ editableData }: TemplateProps) {
           </button>
         </div>
       </div>
-      
+
       {/* Mobile Nav Links */}
       <div className="md:hidden flex items-center justify-center gap-6 pb-4 border-t border-black/5 mt-2 pt-4">
-         {["Home", "About", "Contact"].map((page) => (
-            <button
-              key={page}
-              onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-[10px] font-light uppercase tracking-[0.2em] transition-colors ${
-                activePage === page.toLowerCase() ? "opacity-100" : "opacity-50"
+        {["Home", "About", "Contact"].map((page) => (
+          <button
+            key={page}
+            onClick={() => setActivePage(page.toLowerCase() as any)}
+            className={`text-[10px] font-light uppercase tracking-[0.2em] transition-colors ${activePage === page.toLowerCase() ? "opacity-100" : "opacity-50"
               }`}
-              style={{ color: theme.textColor }}
-            >
-              {page}
-            </button>
-          ))}
+            style={{ color: theme.textColor }}
+          >
+            {page}
+          </button>
+        ))}
       </div>
     </nav>
   );
@@ -205,7 +203,7 @@ export default function Template25({ editableData }: TemplateProps) {
             className="text-sm font-light leading-relaxed opacity-70 max-w-sm"
           />
         </div>
-        
+
         <div className="md:col-span-2 md:col-start-7 flex flex-col gap-4">
           <h4 className="text-[10px] uppercase tracking-[0.3em] font-semibold opacity-50 mb-2">Explore</h4>
           {["Home", "About", "Contact"].map((p) => (
@@ -221,7 +219,7 @@ export default function Template25({ editableData }: TemplateProps) {
           <EditableText regionKey="footer.email" fallback="concierge@aurajewelry.com" className="text-sm font-light block" />
         </div>
       </div>
-      
+
       <div className="max-w-[1400px] mx-auto mt-24 pt-8 border-t flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-light opacity-50" style={{ borderColor: `${theme.textColor}10` }}>
         <EditableText regionKey="footer.copy" fallback="© 2026 Aura Fine Jewelry. All Rights Reserved." />
         <EditableText regionKey="footer.terms" fallback="Terms of Service • Privacy Policy" />
@@ -268,7 +266,7 @@ export default function Template25({ editableData }: TemplateProps) {
           <EditableText as="h3" regionKey="home.featTitle" fallback="Signature Pieces" className="text-3xl md:text-4xl font-serif tracking-wide block" />
           <EditableText as="p" regionKey="home.featDesc" fallback="Meticulously crafted for the extraordinary moments." className="text-sm font-light opacity-60 uppercase tracking-[0.1em] block" />
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 w-full">
           {[
             { id: '1', title: 'Rings', img: 'https://images.unsplash.com/photo-1605100804763-247f6612d540?q=80&w=800&auto=format&fit=crop' },
@@ -292,23 +290,23 @@ export default function Template25({ editableData }: TemplateProps) {
           ))}
         </div>
       </Section>
-      
+
       {/* Banner Section */}
       <section className="w-full relative h-[60vh] min-h-[400px] flex items-center">
-         <EditableImg
-            regionKey="home.bannerImg"
-            fallback="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=2000&auto=format&fit=crop"
-            className="absolute inset-0 w-full h-full object-cover brightness-75"
-          />
-          <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-8 text-white flex justify-end">
-            <div className="max-w-lg space-y-6 bg-black/30 p-8 md:p-12 backdrop-blur-sm border border-white/10">
-              <EditableText as="h3" regionKey="home.bannerTitle" fallback="The Art of Gifting" className="text-3xl font-serif tracking-wide block" />
-              <EditableText as="p" regionKey="home.bannerDesc" fallback="Find the perfect expression of your devotion with our curated selection of fine jewelry." className="text-sm font-light leading-relaxed opacity-90 block" />
-              <button className="text-xs uppercase tracking-[0.2em] border-b border-white pb-1 hover:opacity-70 transition-opacity mt-4 block">
-                <EditableText regionKey="home.bannerLink" fallback="Shop Gifts" />
-              </button>
-            </div>
+        <EditableImg
+          regionKey="home.bannerImg"
+          fallback="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=2000&auto=format&fit=crop"
+          className="absolute inset-0 w-full h-full object-cover brightness-75"
+        />
+        <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-8 text-white flex justify-end">
+          <div className="max-w-lg space-y-6 bg-black/30 p-8 md:p-12 backdrop-blur-sm border border-white/10">
+            <EditableText as="h3" regionKey="home.bannerTitle" fallback="The Art of Gifting" className="text-3xl font-serif tracking-wide block" />
+            <EditableText as="p" regionKey="home.bannerDesc" fallback="Find the perfect expression of your devotion with our curated selection of fine jewelry." className="text-sm font-light leading-relaxed opacity-90 block" />
+            <button className="text-xs uppercase tracking-[0.2em] border-b border-white pb-1 hover:opacity-70 transition-opacity mt-4 block">
+              <EditableText regionKey="home.bannerLink" fallback="Shop Gifts" />
+            </button>
           </div>
+        </div>
       </section>
     </div>
   );
@@ -387,7 +385,7 @@ export default function Template25({ editableData }: TemplateProps) {
         <div className="bg-white/5 p-8 md:p-12 border flex flex-col justify-center" style={{ borderColor: `${theme.textColor}15`, backgroundColor: theme.secondaryColor }}>
           <div className="space-y-6 w-full">
             <EditableText as="h3" regionKey="contact.formTitle" fallback="Request an Invitation" className="text-2xl font-serif tracking-wide block mb-8" />
-            
+
             <div className="grid grid-cols-2 gap-6">
               <input type="text" placeholder="First Name" className="w-full pb-3 bg-transparent border-b outline-none text-sm font-light focus:border-current transition-colors placeholder-opacity-50" style={{ borderColor: `${theme.textColor}30`, color: theme.textColor }} />
               <input type="text" placeholder="Last Name" className="w-full pb-3 bg-transparent border-b outline-none text-sm font-light focus:border-current transition-colors placeholder-opacity-50" style={{ borderColor: `${theme.textColor}30`, color: theme.textColor }} />
@@ -401,7 +399,7 @@ export default function Template25({ editableData }: TemplateProps) {
                 <option>Repairs & Cleaning</option>
               </select>
             </div>
-            
+
             <button
               className="w-full py-4 mt-8 text-xs uppercase tracking-[0.2em] transition-all duration-300"
               style={{ backgroundColor: theme.textColor, color: theme.backgroundColor }}
@@ -423,7 +421,7 @@ export default function Template25({ editableData }: TemplateProps) {
         src="https://upload-widget.cloudinary.com/global/all.js"
         strategy="afterInteractive"
       />
-      
+
       <Navbar />
 
       <div className="flex flex-col w-full flex-1">

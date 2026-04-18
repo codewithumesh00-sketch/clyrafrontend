@@ -130,15 +130,15 @@ const GlitchText = ({ text, className = "" }: { text: string; className?: string
 };
 
 // Holographic Card
-const HolographicCard = ({ 
-  phase, 
-  isActive, 
-  isComplete, 
-  progress 
-}: { 
-  phase: typeof GENERATION_PHASES[0]; 
-  isActive: boolean; 
-  isComplete: boolean; 
+const HolographicCard = ({
+  phase,
+  isActive,
+  isComplete,
+  progress
+}: {
+  phase: typeof GENERATION_PHASES[0];
+  isActive: boolean;
+  isComplete: boolean;
   progress: number;
 }) => {
   const mouseX = useMotionValue(0);
@@ -163,13 +163,12 @@ const HolographicCard = ({
         mouseX.set(0);
         mouseY.set(0);
       }}
-      className={`relative p-6 rounded-lg border backdrop-blur-sm transition-all duration-500 ${
-        isComplete
+      className={`relative p-6 rounded-lg border backdrop-blur-sm transition-all duration-500 ${isComplete
           ? "bg-emerald-950/30 border-emerald-500/40 shadow-lg shadow-emerald-500/10"
           : isActive
-          ? "bg-amber-950/30 border-amber-500/60 shadow-xl shadow-amber-500/20"
-          : "bg-zinc-950/50 border-zinc-800/50"
-      }`}
+            ? "bg-amber-950/30 border-amber-500/60 shadow-xl shadow-amber-500/20"
+            : "bg-zinc-950/50 border-zinc-800/50"
+        }`}
     >
       {/* Holographic sheen */}
       <motion.div
@@ -187,9 +186,8 @@ const HolographicCard = ({
 
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className={`w-2 h-2 rounded-full ${
-            isComplete ? "bg-emerald-400" : isActive ? "bg-amber-400 animate-pulse" : "bg-zinc-600"
-          }`} />
+          <div className={`w-2 h-2 rounded-full ${isComplete ? "bg-emerald-400" : isActive ? "bg-amber-400 animate-pulse" : "bg-zinc-600"
+            }`} />
           <span className="text-xs font-mono text-zinc-500">{phase.code}</span>
         </div>
         {isActive && (
@@ -202,17 +200,15 @@ const HolographicCard = ({
         )}
       </div>
 
-      <h3 className={`text-sm font-semibold mb-2 ${
-        isComplete ? "text-emerald-200" : isActive ? "text-amber-100" : "text-zinc-400"
-      }`}>
+      <h3 className={`text-sm font-semibold mb-2 ${isComplete ? "text-emerald-200" : isActive ? "text-amber-100" : "text-zinc-400"
+        }`}>
         {phase.label}
       </h3>
 
       <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
         <motion.div
-          className={`h-full rounded-full ${
-            isComplete ? "bg-emerald-500" : isActive ? "bg-gradient-to-r from-amber-400 to-amber-600" : "bg-zinc-700"
-          }`}
+          className={`h-full rounded-full ${isComplete ? "bg-emerald-500" : isActive ? "bg-gradient-to-r from-amber-400 to-amber-600" : "bg-zinc-700"
+            }`}
           initial={{ width: 0 }}
           animate={{ width: isComplete ? "100%" : isActive ? `${progress}%` : "0%" }}
           transition={{ duration: 0.3 }}
@@ -220,12 +216,10 @@ const HolographicCard = ({
       </div>
 
       {/* Corner accents */}
-      <div className={`absolute top-0 left-0 w-4 h-4 border-t border-l rounded-tl ${
-        isActive ? "border-amber-500/50" : isComplete ? "border-emerald-500/50" : "border-zinc-700"
-      }`} />
-      <div className={`absolute bottom-0 right-0 w-4 h-4 border-b border-r rounded-br ${
-        isActive ? "border-amber-500/50" : isComplete ? "border-emerald-500/50" : "border-zinc-700"
-      }`} />
+      <div className={`absolute top-0 left-0 w-4 h-4 border-t border-l rounded-tl ${isActive ? "border-amber-500/50" : isComplete ? "border-emerald-500/50" : "border-zinc-700"
+        }`} />
+      <div className={`absolute bottom-0 right-0 w-4 h-4 border-b border-r rounded-br ${isActive ? "border-amber-500/50" : isComplete ? "border-emerald-500/50" : "border-zinc-700"
+        }`} />
     </motion.div>
   );
 };
@@ -272,14 +266,14 @@ const CPUVisualizer = ({ progress, isActive }: { progress: number; isActive: boo
       <motion.div
         className="relative w-32 h-32 rounded-full bg-gradient-to-br from-zinc-900 to-black border-2 border-zinc-700 flex items-center justify-center overflow-hidden"
         animate={{
-          boxShadow: isActive 
+          boxShadow: isActive
             ? ["0 0 20px rgba(251,191,36,0.3)", "0 0 40px rgba(251,191,36,0.6)", "0 0 20px rgba(251,191,36,0.3)"]
             : "none",
         }}
         transition={{ duration: 2, repeat: Infinity }}
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-amber-500/20 via-transparent to-transparent" />
-        
+
         {/* Progress ring */}
         <svg className="absolute inset-0 w-full h-full -rotate-90">
           <motion.circle
@@ -362,7 +356,7 @@ const SystemTerminal = ({ logs }: { logs: string[] }) => {
   return (
     <div className="relative bg-black/80 rounded-lg border border-zinc-800 p-4 font-mono text-xs h-48 overflow-hidden">
       <MatrixRain />
-      
+
       <div className="absolute top-2 left-4 flex items-center gap-2 text-zinc-600 text-[10px] uppercase tracking-wider">
         <div className="w-2 h-2 rounded-full bg-red-500/50" />
         <div className="w-2 h-2 rounded-full bg-yellow-500/50" />
@@ -424,7 +418,7 @@ const CompletionSequence = ({ onComplete }: { onComplete: () => void }) => {
         <svg className="w-12 h-12 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
         </svg>
-        
+
         {/* Ring */}
         <motion.div
           className="absolute inset-0 rounded-full border-2 border-amber-400"
@@ -493,10 +487,10 @@ const CompletionSequence = ({ onComplete }: { onComplete: () => void }) => {
 // 🎯 MAIN COMPONENT
 // ============================================================================
 
-export default function LegendaryLoader({ 
-  userPrompt = "Build me a luxury e-commerce hero with dark theme and gold accents" 
-}: { 
-  userPrompt?: string; 
+export default function LegendaryLoader({
+  userPrompt = "Build me a luxury e-commerce hero with dark theme and gold accents"
+}: {
+  userPrompt?: string;
 }) {
   const [currentPhaseIndex, setCurrentPhaseIndex] = useState(-1);
   const [phaseProgress, setPhaseProgress] = useState(0);
@@ -521,7 +515,7 @@ export default function LegendaryLoader({
 
       const phase = GENERATION_PHASES[phaseIdx];
       setCurrentPhaseIndex(phaseIdx);
-      
+
       // Add log
       setLogs(prev => [...prev.slice(-5), SYSTEM_LOGS[phaseIdx]]);
 
@@ -531,7 +525,7 @@ export default function LegendaryLoader({
       const interval = setInterval(() => {
         const elapsed = Date.now() - startTime;
         const progress = Math.min((elapsed / duration) * 100, 100);
-        
+
         setPhaseProgress(progress);
         setOverallProgress(((phaseIdx) + progress / 100) / GENERATION_PHASES.length * 100);
 
@@ -557,7 +551,7 @@ export default function LegendaryLoader({
       </div>
 
       {/* Grid overlay */}
-      <div 
+      <div
         className="fixed inset-0 pointer-events-none opacity-10"
         style={{
           backgroundImage: `
@@ -580,7 +574,7 @@ export default function LegendaryLoader({
             <div>
               <h1 className="text-2xl font-bold tracking-tight">
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500">
-                  CLYRA
+                  clyraweb
                 </span>
                 <span className="text-zinc-600 font-light">.CORE</span>
               </h1>

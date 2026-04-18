@@ -30,24 +30,35 @@ export default function Template9({ editableData }: TemplateProps) {
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = (regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
-      (window as any).cloudinary
-        .createUploadWidget(
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
           {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
             multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
           },
           (error: any, result: any) => {
             if (!error && result && result.event === "success") {
-              updateRegion(regionKey, result.info.secure_url);
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
+              }
             }
           }
-        )
-        .open();
+        );
+      }
+      (window as any).__cloudinaryWidget.open();
     }
   };
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+  // --- clyraweb EDITABLE COMPONENTS ---
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -103,7 +114,7 @@ export default function Template9({ editableData }: TemplateProps) {
   );
 
   const Navbar = () => (
-    <nav 
+    <nav
       className="sticky top-0 w-full z-50 border-b backdrop-blur-md"
       style={{ backgroundColor: `${theme.backgroundColor}EE`, borderColor: `${theme.textColor}15` }}
     >
@@ -112,7 +123,7 @@ export default function Template9({ editableData }: TemplateProps) {
           <EditableImg regionKey="global.logo" fallback="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=100" className="w-8 h-8 rounded" />
           <EditableText regionKey="global.brand" fallback="PRIME ESTATES" className="font-bold tracking-widest text-lg whitespace-nowrap" />
         </div>
-        
+
         <div className="hidden md:flex items-center gap-10">
           {["Home", "About", "Contact"].map((p) => (
             <button
@@ -126,7 +137,7 @@ export default function Template9({ editableData }: TemplateProps) {
           ))}
         </div>
 
-        <button 
+        <button
           className="px-6 py-2 text-xs font-bold tracking-widest border transition-all"
           style={{ borderColor: theme.primaryColor, color: theme.primaryColor, borderRadius: `${theme.borderRadius}px` }}
         >
@@ -145,20 +156,20 @@ export default function Template9({ editableData }: TemplateProps) {
               <span className="w-8 h-[1px] bg-current"></span>
               <EditableText regionKey="hero.tag" fallback="Luxury Real Estate" />
             </div>
-            <EditableText 
-              as="h1" 
-              regionKey="hero.title" 
-              fallback="Find Your Sanctuary." 
-              className="text-5xl sm:text-7xl font-light leading-tight block break-words" 
+            <EditableText
+              as="h1"
+              regionKey="hero.title"
+              fallback="Find Your Sanctuary."
+              className="text-5xl sm:text-7xl font-light leading-tight block break-words"
             />
-            <EditableText 
-              as="p" 
-              regionKey="hero.sub" 
-              fallback="Exclusive listings in the world's most desirable locations. Designed for those who appreciate the finer details of architecture." 
-              className="text-lg opacity-70 block max-w-md leading-relaxed" 
+            <EditableText
+              as="p"
+              regionKey="hero.sub"
+              fallback="Exclusive listings in the world's most desirable locations. Designed for those who appreciate the finer details of architecture."
+              className="text-lg opacity-70 block max-w-md leading-relaxed"
             />
             <div className="pt-4">
-              <button 
+              <button
                 className="px-8 py-4 text-white font-bold text-xs tracking-widest shadow-2xl transition-transform active:scale-95"
                 style={{ backgroundColor: theme.primaryColor, borderRadius: `${theme.borderRadius}px` }}
               >
@@ -256,18 +267,18 @@ export default function Template9({ editableData }: TemplateProps) {
   );
 
   return (
-    <div 
+    <div
       className="min-h-screen w-full selection:bg-black selection:text-white overflow-x-hidden"
       style={{ fontFamily: theme.fontFamily, backgroundColor: theme.backgroundColor }}
     >
       {/* Script loading via native script tag for robustness */}
-      <script 
-        src="https://upload-widget.cloudinary.com/global/all.js" 
+      <script
+        src="https://upload-widget.cloudinary.com/global/all.js"
         async
       ></script>
-      
+
       <Navbar />
-      
+
       <main className="w-full min-w-0">
         {activePage === "home" && <HomeView />}
         {activePage === "about" && <AboutView />}

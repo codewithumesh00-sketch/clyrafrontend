@@ -1,8 +1,8 @@
-// 🚀 force fresh production build 2026-04-13-v1
 export async function generateWebsite(prompt, currentContent = {}) {
-  const API_URL =
+  const API_URL = (
     process.env.NEXT_PUBLIC_API_URL ||
-    "https://clyrawebbackend-666777548.europe-west1.run.app/";
+    "http://127.0.0.1:7240"
+  ).replace(/\/$/, "");
 
   try {
     const res = await fetch(`${API_URL}/generate`, {
@@ -17,25 +17,10 @@ export async function generateWebsite(prompt, currentContent = {}) {
       cache: "no-store",
     });
 
-    const text = await res.text();
+    const data = await res.json();
 
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      throw new Error(`Invalid backend JSON: ${text}`);
-    }
-
-    if (!res.ok) {
-      throw new Error(
-        data?.error || `Backend error: ${res.status}`
-      );
-    }
-
-    if (!data.success) {
-      throw new Error(
-        data?.error || "Generation failed"
-      );
+    if (!res.ok || !data.success) {
+      throw new Error(data?.error || "Generation failed");
     }
 
     return data;

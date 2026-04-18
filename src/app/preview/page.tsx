@@ -12,7 +12,7 @@ export default function PreviewPage() {
   const [schema, setSchema] = useState(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem("clyra-preview-schema");
+    const saved = localStorage.getItem("clyraweb-preview-schema");
     if (saved) {
       setSchema(JSON.parse(saved));
     }

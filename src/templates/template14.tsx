@@ -9,7 +9,7 @@ import {
 import { useThemeStore } from "@/store/useThemeStore";
 
 /**
- * PRODUCTION-SAFE TEMPLATE FOR CLYRA
+ * PRODUCTION-SAFE TEMPLATE FOR clyraweb
  * Built with internal routing, dynamic theme support, and Cloudinary integration.
  * Topic: Law Firm (Template 14)
  */
@@ -38,24 +38,35 @@ export default function Template14({ editableData }: TemplateProps) {
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = useCallback((regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
-      (window as any).cloudinary
-        .createUploadWidget(
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
           {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
             multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
           },
           (error: any, result: any) => {
             if (!error && result && result.event === "success") {
-              updateRegion(regionKey, result.info.secure_url);
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
+              }
             }
           }
-        )
-        .open();
+        );
+      }
+      (window as any).__cloudinaryWidget.open();
     }
   }, [updateRegion]);
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+  // --- clyraweb EDITABLE COMPONENTS ---
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -141,9 +152,8 @@ export default function Template14({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-sm font-medium transition-colors uppercase tracking-widest ${
-                activePage === page.toLowerCase() ? "" : "opacity-60 hover:opacity-100"
-              }`}
+              className={`text-sm font-medium transition-colors uppercase tracking-widest ${activePage === page.toLowerCase() ? "" : "opacity-60 hover:opacity-100"
+                }`}
               style={{ color: activePage === page.toLowerCase() ? theme.primaryColor : theme.textColor }}
             >
               {page}
@@ -183,10 +193,10 @@ export default function Template14({ editableData }: TemplateProps) {
               fallback="https://images.unsplash.com/photo-1505664194779-8beaceb93744?w=100&h=100&fit=crop"
               className="w-10 h-10 rounded-sm brightness-0 invert"
             />
-            <EditableText 
-              regionKey="global.brand" 
-              fallback="STERLING & CO." 
-              className="font-serif font-bold text-xl tracking-widest uppercase" 
+            <EditableText
+              regionKey="global.brand"
+              fallback="STERLING & CO."
+              className="font-serif font-bold text-xl tracking-widest uppercase"
             />
           </div>
           <EditableText
@@ -196,7 +206,7 @@ export default function Template14({ editableData }: TemplateProps) {
             className="text-sm opacity-80 leading-relaxed block max-w-md"
           />
         </div>
-        
+
         <div className="flex flex-col gap-4">
           <h4 className="font-serif font-bold uppercase tracking-widest text-sm text-[#D4AF37]">Navigation</h4>
           {["Home", "About", "Contact"].map((p) => (
@@ -205,7 +215,7 @@ export default function Template14({ editableData }: TemplateProps) {
             </button>
           ))}
         </div>
-        
+
         <div className="space-y-4">
           <h4 className="font-serif font-bold uppercase tracking-widest text-sm text-[#D4AF37]">Offices</h4>
           <EditableText regionKey="footer.address" fallback="100 Wall Street, Suite 500, New York, NY 10005" className="text-sm opacity-80 block" />
@@ -214,8 +224,8 @@ export default function Template14({ editableData }: TemplateProps) {
         </div>
       </div>
       <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-white/20 text-center flex flex-col md:flex-row justify-between items-center gap-4">
-         <EditableText regionKey="footer.copy" fallback="© 2024 Sterling & Co. All rights reserved." className="text-xs opacity-50 block" />
-         <EditableText regionKey="footer.disclaimer" fallback="Attorney Advertising. Prior results do not guarantee a similar outcome." className="text-xs opacity-50 block" />
+        <EditableText regionKey="footer.copy" fallback="© 2024 Sterling & Co. All rights reserved." className="text-xs opacity-50 block" />
+        <EditableText regionKey="footer.disclaimer" fallback="Attorney Advertising. Prior results do not guarantee a similar outcome." className="text-xs opacity-50 block" />
       </div>
     </footer>
   );
@@ -288,21 +298,21 @@ export default function Template14({ editableData }: TemplateProps) {
         <div className="grid md:grid-cols-3 gap-8">
           <div className="p-10 border transition-all hover:-translate-y-2 hover:shadow-xl group" style={{ borderColor: `${theme.textColor}15`, borderRadius: `${theme.borderRadius}px`, backgroundColor: theme.secondaryColor }}>
             <div className="w-12 h-12 mb-6 rounded-full flex items-center justify-center bg-white shadow-sm border border-gray-100">
-               <span className="text-[#D4AF37] text-xl">🏛</span>
+              <span className="text-[#D4AF37] text-xl">🏛</span>
             </div>
             <EditableText as="h3" regionKey="practice.1.title" fallback="Corporate Law" className="text-xl font-serif font-bold mb-4 block" />
             <EditableText as="p" regionKey="practice.1.desc" fallback="Comprehensive counsel for mergers, acquisitions, and high-level corporate structuring." className="text-sm opacity-70 leading-relaxed block" />
           </div>
           <div className="p-10 border transition-all hover:-translate-y-2 hover:shadow-xl group" style={{ borderColor: `${theme.textColor}15`, borderRadius: `${theme.borderRadius}px`, backgroundColor: theme.secondaryColor }}>
             <div className="w-12 h-12 mb-6 rounded-full flex items-center justify-center bg-white shadow-sm border border-gray-100">
-               <span className="text-[#D4AF37] text-xl">⚖️</span>
+              <span className="text-[#D4AF37] text-xl">⚖️</span>
             </div>
             <EditableText as="h3" regionKey="practice.2.title" fallback="Civil Litigation" className="text-xl font-serif font-bold mb-4 block" />
             <EditableText as="p" regionKey="practice.2.desc" fallback="Aggressive representation in federal and state courts for complex commercial disputes." className="text-sm opacity-70 leading-relaxed block" />
           </div>
           <div className="p-10 border transition-all hover:-translate-y-2 hover:shadow-xl group" style={{ borderColor: `${theme.textColor}15`, borderRadius: `${theme.borderRadius}px`, backgroundColor: theme.secondaryColor }}>
             <div className="w-12 h-12 mb-6 rounded-full flex items-center justify-center bg-white shadow-sm border border-gray-100">
-               <span className="text-[#D4AF37] text-xl">🛡</span>
+              <span className="text-[#D4AF37] text-xl">🛡</span>
             </div>
             <EditableText as="h3" regionKey="practice.3.title" fallback="Criminal Defense" className="text-xl font-serif font-bold mb-4 block" />
             <EditableText as="p" regionKey="practice.3.desc" fallback="Vigorous defense strategies protecting your freedom, reputation, and future." className="text-sm opacity-70 leading-relaxed block" />
@@ -316,15 +326,15 @@ export default function Template14({ editableData }: TemplateProps) {
     <Section id="about" bgType="secondary">
       <div className="grid lg:grid-cols-2 gap-20 items-center animate-in slide-in-from-bottom-4 duration-700">
         <div className="relative">
-            <EditableImg
-              regionKey="about.img"
-              fallback="https://images.unsplash.com/photo-1556761175-5973dc0f32b7?q=80&w=1000&auto=format&fit=crop"
-              className="w-full aspect-[4/5] object-cover shadow-2xl relative z-10 grayscale hover:grayscale-0 transition-all duration-700"
-              style={{ borderRadius: `${theme.borderRadius}px` }}
-            />
-            <div className="absolute -bottom-8 -right-8 bg-white p-8 shadow-xl z-20 max-w-xs border-l-4 border-[#D4AF37]">
-                <EditableText as="p" regionKey="about.quote" fallback='"Justice is truth in action. We embody both."' className="font-serif italic text-lg text-gray-800 block" />
-            </div>
+          <EditableImg
+            regionKey="about.img"
+            fallback="https://images.unsplash.com/photo-1556761175-5973dc0f32b7?q=80&w=1000&auto=format&fit=crop"
+            className="w-full aspect-[4/5] object-cover shadow-2xl relative z-10 grayscale hover:grayscale-0 transition-all duration-700"
+            style={{ borderRadius: `${theme.borderRadius}px` }}
+          />
+          <div className="absolute -bottom-8 -right-8 bg-white p-8 shadow-xl z-20 max-w-xs border-l-4 border-[#D4AF37]">
+            <EditableText as="p" regionKey="about.quote" fallback='"Justice is truth in action. We embody both."' className="font-serif italic text-lg text-gray-800 block" />
+          </div>
         </div>
         <div className="space-y-8 pl-0 lg:pl-8">
           <EditableText as="h2" regionKey="about.title" fallback="A Legacy of Excellence & Integrity" className="text-4xl md:text-5xl font-serif font-bold leading-tight block text-gray-900" />
@@ -342,14 +352,14 @@ export default function Template14({ editableData }: TemplateProps) {
             className="text-base text-gray-600 leading-relaxed block"
           />
           <div className="grid grid-cols-2 gap-8 pt-6 border-t border-gray-200">
-             <div>
-                <EditableText as="h4" regionKey="about.stat1.val" fallback="$500M+" className="text-3xl font-serif font-bold text-[#D4AF37] block" />
-                <EditableText as="p" regionKey="about.stat1.label" fallback="Recovered for Clients" className="text-xs uppercase tracking-widest font-bold text-gray-500 mt-2 block" />
-             </div>
-             <div>
-                <EditableText as="h4" regionKey="about.stat2.val" fallback="25+" className="text-3xl font-serif font-bold text-[#D4AF37] block" />
-                <EditableText as="p" regionKey="about.stat2.label" fallback="Years of Experience" className="text-xs uppercase tracking-widest font-bold text-gray-500 mt-2 block" />
-             </div>
+            <div>
+              <EditableText as="h4" regionKey="about.stat1.val" fallback="$500M+" className="text-3xl font-serif font-bold text-[#D4AF37] block" />
+              <EditableText as="p" regionKey="about.stat1.label" fallback="Recovered for Clients" className="text-xs uppercase tracking-widest font-bold text-gray-500 mt-2 block" />
+            </div>
+            <div>
+              <EditableText as="h4" regionKey="about.stat2.val" fallback="25+" className="text-3xl font-serif font-bold text-[#D4AF37] block" />
+              <EditableText as="p" regionKey="about.stat2.label" fallback="Years of Experience" className="text-xs uppercase tracking-widest font-bold text-gray-500 mt-2 block" />
+            </div>
           </div>
         </div>
       </div>
@@ -363,7 +373,7 @@ export default function Template14({ editableData }: TemplateProps) {
           <EditableText as="h1" regionKey="contact.title" fallback="Confidential Evaluation" className="text-4xl md:text-5xl font-serif font-bold block mb-6 text-gray-900" />
           <EditableText as="p" regionKey="contact.subtitle" fallback="Contact our offices today to schedule a private consultation with one of our partners." className="text-gray-600 text-lg block" />
         </div>
-        
+
         <div className="grid lg:grid-cols-5 gap-12 bg-white shadow-2xl overflow-hidden" style={{ borderRadius: `${theme.borderRadius}px` }}>
           <div className="lg:col-span-2 p-12 text-white flex flex-col justify-between" style={{ backgroundColor: theme.primaryColor }}>
             <div className="space-y-12">
@@ -415,11 +425,11 @@ export default function Template14({ editableData }: TemplateProps) {
       className="min-h-screen selection:bg-[#D4AF37] selection:text-white flex flex-col"
       style={{ fontFamily: theme.fontFamily, backgroundColor: theme.backgroundColor }}
     >
-      <script 
-        src="https://upload-widget.cloudinary.com/global/all.js" 
-        async 
+      <script
+        src="https://upload-widget.cloudinary.com/global/all.js"
+        async
       />
-      
+
       <Navbar />
 
       <div className="flex-grow w-full flex flex-col min-w-0">

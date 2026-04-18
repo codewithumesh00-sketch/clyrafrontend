@@ -9,7 +9,7 @@ import { useThemeStore } from "@/store/useThemeStore";
 import Script from "next/script";
 
 /**
- * PRODUCTION-SAFE TEMPLATE FOR CLYRA
+ * PRODUCTION-SAFE TEMPLATE FOR clyraweb
  * Built with internal routing, dynamic theme support, and Cloudinary integration.
  * Theme: Mobile App Showcase (Canva-inspired UI/UX)
  */
@@ -55,7 +55,7 @@ export default function Template33({ editableData }: TemplateProps) {
     }
   };
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+  // --- clyraweb EDITABLE COMPONENTS ---
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -142,9 +142,8 @@ export default function Template33({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-sm font-bold transition-all ${
-                activePage === page.toLowerCase() ? "scale-105" : "opacity-60 hover:opacity-100"
-              }`}
+              className={`text-sm font-bold transition-all ${activePage === page.toLowerCase() ? "scale-105" : "opacity-60 hover:opacity-100"
+                }`}
               style={{ color: activePage === page.toLowerCase() ? theme.primaryColor : theme.textColor }}
             >
               {page}
@@ -226,7 +225,7 @@ export default function Template33({ editableData }: TemplateProps) {
         }}
       >
         {/* Abstract Background Blob (Canva style) */}
-        <div 
+        <div
           className="absolute top-0 right-0 w-full md:w-1/2 h-full opacity-10 pointer-events-none"
           style={{ background: `radial-gradient(circle, ${theme.primaryColor} 0%, transparent 70%)` }}
         />
@@ -266,7 +265,7 @@ export default function Template33({ editableData }: TemplateProps) {
           <div className="relative mx-auto w-full max-w-sm lg:max-w-md perspective-1000">
             {/* App Mockup Container */}
             <div className="relative transform rotate-y-[-10deg] rotate-x-[5deg] hover:rotate-0 transition-transform duration-700 ease-out shadow-2xl overflow-hidden"
-                 style={{ borderRadius: `${theme.borderRadius * 1.5}px`, border: `8px solid ${theme.backgroundColor}` }}>
+              style={{ borderRadius: `${theme.borderRadius * 1.5}px`, border: `8px solid ${theme.backgroundColor}` }}>
               <EditableImg
                 regionKey="hero.mockup"
                 fallback="https://images.unsplash.com/photo-1607252656733-fd7421b05b49?q=80&w=800&auto=format&fit=crop"
@@ -303,8 +302,8 @@ export default function Template33({ editableData }: TemplateProps) {
       <Section id="about" bgType="primary">
         <div className="grid lg:grid-cols-2 gap-16 items-center flex-wrap min-w-0 break-words">
           <div className="order-2 lg:order-1 relative">
-             <div className="absolute inset-0 transform translate-x-4 translate-y-4 rounded-3xl opacity-20" style={{ backgroundColor: theme.primaryColor, borderRadius: `${theme.borderRadius * 2}px` }}></div>
-             <EditableImg
+            <div className="absolute inset-0 transform translate-x-4 translate-y-4 rounded-3xl opacity-20" style={{ backgroundColor: theme.primaryColor, borderRadius: `${theme.borderRadius * 2}px` }}></div>
+            <EditableImg
               regionKey="about.img"
               fallback="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000&auto=format&fit=crop"
               className="w-full aspect-square object-cover shadow-xl relative z-10"
@@ -344,7 +343,7 @@ export default function Template33({ editableData }: TemplateProps) {
             <EditableText as="h1" regionKey="contact.title" fallback="We're here to help" className="text-5xl md:text-6xl font-extrabold tracking-tight block" />
             <EditableText as="p" regionKey="contact.subtitle" fallback="Got questions about the app? Reach out to our dedicated support team." className="text-xl opacity-70 block" />
           </div>
-          
+
           <div className="bg-white shadow-2xl overflow-hidden flex flex-col md:flex-row" style={{ borderRadius: `${theme.borderRadius * 1.5}px`, backgroundColor: theme.backgroundColor }}>
             <div className="p-10 md:w-2/5 flex flex-col justify-between" style={{ backgroundColor: theme.primaryColor, color: "#ffffff" }}>
               <div className="space-y-8">
@@ -389,7 +388,7 @@ export default function Template33({ editableData }: TemplateProps) {
         src="https://upload-widget.cloudinary.com/global/all.js"
         strategy="afterInteractive"
       />
-      
+
       <Navbar />
 
       <div className="flex flex-col w-full max-w-full overflow-hidden min-w-0">

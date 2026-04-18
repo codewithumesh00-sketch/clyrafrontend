@@ -32,24 +32,35 @@ export default function Template27({ editableData }: TemplateProps) {
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = (regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
-      (window as any).cloudinary
-        .createUploadWidget(
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
           {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
             multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
           },
           (error: any, result: any) => {
             if (!error && result && result.event === "success") {
-              updateRegion(regionKey, result.info.secure_url);
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
+              }
             }
           }
-        )
-        .open();
+        );
+      }
+      (window as any).__cloudinaryWidget.open();
     }
   };
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+  // --- clyraweb EDITABLE COMPONENTS ---
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -135,9 +146,8 @@ export default function Template27({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-base font-medium transition-all ${
-                activePage === page.toLowerCase() ? "scale-105" : "opacity-60 hover:opacity-100"
-              }`}
+              className={`text-base font-medium transition-all ${activePage === page.toLowerCase() ? "scale-105" : "opacity-60 hover:opacity-100"
+                }`}
               style={{
                 color: activePage === page.toLowerCase() ? theme.primaryColor : theme.textColor,
               }}
@@ -189,7 +199,7 @@ export default function Template27({ editableData }: TemplateProps) {
             className="text-base opacity-75 leading-relaxed max-w-sm mx-auto md:mx-0 block"
           />
         </div>
-        
+
         <div className="flex flex-col gap-4">
           <h4 className="font-bold text-lg mb-2">Explore</h4>
           {["Home", "About", "Contact"].map((p) => (
@@ -246,7 +256,7 @@ export default function Template27({ editableData }: TemplateProps) {
               <EditableText regionKey="hero.btn1" fallback="See Our Menu" />
             </button>
           </div>
-          
+
           <div className="lg:col-span-7 relative h-[500px] sm:h-[600px] w-full">
             {/* Main large image */}
             <EditableImg
@@ -260,9 +270,9 @@ export default function Template27({ editableData }: TemplateProps) {
               regionKey="hero.img2"
               fallback="https://images.unsplash.com/photo-1608198093002-ad4e005484ec?w=600&q=80&fit=crop"
               className="absolute left-0 bottom-0 w-1/2 h-1/2 shadow-xl border-8"
-              style={{ 
+              style={{
                 borderRadius: `${theme.borderRadius}px`,
-                borderColor: theme.backgroundColor 
+                borderColor: theme.backgroundColor
               }}
             />
           </div>
@@ -300,8 +310,8 @@ export default function Template27({ editableData }: TemplateProps) {
                     item === 1
                       ? "https://images.unsplash.com/photo-1550617931-e17a7b70dce2?w=600&q=80&fit=crop"
                       : item === 2
-                      ? "https://images.unsplash.com/photo-1621236378699-8597faf6a176?w=600&q=80&fit=crop"
-                      : "https://images.unsplash.com/photo-1587248720327-66be753d0dd3?w=600&q=80&fit=crop"
+                        ? "https://images.unsplash.com/photo-1621236378699-8597faf6a176?w=600&q=80&fit=crop"
+                        : "https://images.unsplash.com/photo-1587248720327-66be753d0dd3?w=600&q=80&fit=crop"
                   }
                   className="w-full aspect-[4/3] group-hover:scale-105 transition-transform duration-500"
                 />
@@ -339,7 +349,7 @@ export default function Template27({ editableData }: TemplateProps) {
       <Section id="about" className="py-20">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="order-2 lg:order-1 relative">
-            <div 
+            <div
               className="absolute inset-0 opacity-20 -translate-x-6 translate-y-6"
               style={{ backgroundColor: theme.primaryColor, borderRadius: `${theme.borderRadius * 2}px` }}
             />
@@ -404,8 +414,8 @@ export default function Template27({ editableData }: TemplateProps) {
 
             <div className="space-y-8">
               <div className="flex gap-4">
-                <div 
-                  className="w-12 h-12 flex items-center justify-center shrink-0" 
+                <div
+                  className="w-12 h-12 flex items-center justify-center shrink-0"
                   style={{ backgroundColor: theme.secondaryColor, borderRadius: theme.borderRadius }}
                 >
                   📍
@@ -417,8 +427,8 @@ export default function Template27({ editableData }: TemplateProps) {
               </div>
 
               <div className="flex gap-4">
-                <div 
-                  className="w-12 h-12 flex items-center justify-center shrink-0" 
+                <div
+                  className="w-12 h-12 flex items-center justify-center shrink-0"
                   style={{ backgroundColor: theme.secondaryColor, borderRadius: theme.borderRadius }}
                 >
                   ⏰
@@ -431,36 +441,36 @@ export default function Template27({ editableData }: TemplateProps) {
             </div>
           </div>
 
-          <div 
+          <div
             className="p-8 sm:p-12 shadow-2xl"
-            style={{ 
-              backgroundColor: "#ffffff", 
-              borderRadius: `${theme.borderRadius * 1.5}px` 
+            style={{
+              backgroundColor: "#ffffff",
+              borderRadius: `${theme.borderRadius * 1.5}px`
             }}
           >
             <h3 className="text-3xl font-bold mb-8">Special Orders</h3>
             <div className="space-y-6">
-              <input 
-                className="w-full p-4 bg-transparent border-b-2 outline-none transition-colors" 
-                style={{ borderColor: `${theme.textColor}20` }} 
-                placeholder="Your Name" 
+              <input
+                className="w-full p-4 bg-transparent border-b-2 outline-none transition-colors"
+                style={{ borderColor: `${theme.textColor}20` }}
+                placeholder="Your Name"
               />
-              <input 
-                className="w-full p-4 bg-transparent border-b-2 outline-none transition-colors" 
-                style={{ borderColor: `${theme.textColor}20` }} 
-                placeholder="Email Address" 
+              <input
+                className="w-full p-4 bg-transparent border-b-2 outline-none transition-colors"
+                style={{ borderColor: `${theme.textColor}20` }}
+                placeholder="Email Address"
               />
-              <textarea 
-                className="w-full p-4 bg-transparent border-b-2 outline-none transition-colors resize-none h-32" 
-                style={{ borderColor: `${theme.textColor}20` }} 
-                placeholder="Tell us about your event or special request..." 
+              <textarea
+                className="w-full p-4 bg-transparent border-b-2 outline-none transition-colors resize-none h-32"
+                style={{ borderColor: `${theme.textColor}20` }}
+                placeholder="Tell us about your event or special request..."
               />
-              <button 
-                className="w-full py-5 font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:-translate-y-1" 
-                style={{ 
-                  backgroundColor: theme.primaryColor, 
-                  color: "#fff", 
-                  borderRadius: `${theme.borderRadius}px` 
+              <button
+                className="w-full py-5 font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:-translate-y-1"
+                style={{
+                  backgroundColor: theme.primaryColor,
+                  color: "#fff",
+                  borderRadius: `${theme.borderRadius}px`
                 }}
               >
                 <EditableText regionKey="contact.submit" fallback="Send Message" />
@@ -481,7 +491,7 @@ export default function Template27({ editableData }: TemplateProps) {
         src="https://upload-widget.cloudinary.com/global/all.js"
         async
       ></script>
-      
+
       <Navbar />
 
       <div className="flex flex-col w-full min-w-0">

@@ -20,7 +20,7 @@ type Store = {
 const getSavedBlocks = (): Block[] => {
   if (typeof window === "undefined") return [];
 
-  const saved = localStorage.getItem("clyra-blocks");
+  const saved = localStorage.getItem("clyraweb-blocks");
 
   try {
     return saved ? JSON.parse(saved) : [];
@@ -31,7 +31,7 @@ const getSavedBlocks = (): Block[] => {
 
 const saveBlocks = (blocks: Block[]) => {
   if (typeof window !== "undefined") {
-    localStorage.setItem("clyra-blocks", JSON.stringify(blocks));
+    localStorage.setItem("clyraweb-blocks", JSON.stringify(blocks));
   }
 };
 
@@ -39,18 +39,18 @@ export const useEditorBlocks = create<Store>((set) => ({
   blocks: getSavedBlocks(),
 
   addBlock: (block) =>
-    
+
     set((state) => {
       const updated = [...state.blocks, block];
       saveBlocks(updated);
       return { blocks: updated };
     }),
-addSection: (newBlocks) =>
-  set((state) => {
-    const updated = [...state.blocks, ...newBlocks];
-    saveBlocks(updated);
-    return { blocks: updated };
-  }),
+  addSection: (newBlocks) =>
+    set((state) => {
+      const updated = [...state.blocks, ...newBlocks];
+      saveBlocks(updated);
+      return { blocks: updated };
+    }),
   removeBlock: (id) =>
     set((state) => {
       const updated = state.blocks.filter((b) => b.id !== id);

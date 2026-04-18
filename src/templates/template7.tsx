@@ -31,24 +31,35 @@ export default function Template7({
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = (regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
-      (window as any).cloudinary
-        .createUploadWidget(
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
           {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
             multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
           },
           (error: any, result: any) => {
             if (!error && result && result.event === "success") {
-              updateRegion(regionKey, result.info.secure_url);
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
+              }
             }
           }
-        )
-        .open();
+        );
+      }
+      (window as any).__cloudinaryWidget.open();
     }
   };
 
-  // --- CLYRA EDITABLE WRAPPERS ---
+  // --- clyraweb EDITABLE WRAPPERS ---
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -94,35 +105,34 @@ export default function Template7({
 
   // --- UI COMPONENTS ---
   const Navbar = () => (
-    <nav 
+    <nav
       className="sticky top-0 w-full z-50 border-b backdrop-blur-md"
-      style={{ 
+      style={{
         backgroundColor: `${theme.backgroundColor}F2`,
-        borderColor: `${theme.textColor}15` 
+        borderColor: `${theme.textColor}15`
       }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         <div className="flex items-center gap-4 min-w-0">
-          <EditableImg 
-            regionKey="global.logo" 
+          <EditableImg
+            regionKey="global.logo"
             fallback="https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&h=100&fit=crop"
             className="w-8 h-8 rounded"
           />
-          <EditableText 
-            regionKey="global.brand" 
-            fallback="FLOW DESIGN" 
+          <EditableText
+            regionKey="global.brand"
+            fallback="FLOW DESIGN"
             className="font-black text-lg tracking-tighter uppercase whitespace-nowrap"
           />
         </div>
-        
+
         <div className="hidden md:flex items-center gap-8">
           {(["home", "about", "contact"] as const).map((page) => (
             <button
               key={page}
               onClick={() => setActivePage(page)}
-              className={`text-[11px] font-bold uppercase tracking-[0.2em] transition-all ${
-                activePage === page ? "opacity-100" : "opacity-40 hover:opacity-100"
-              }`}
+              className={`text-[11px] font-bold uppercase tracking-[0.2em] transition-all ${activePage === page ? "opacity-100" : "opacity-40 hover:opacity-100"
+                }`}
               style={{ color: theme.textColor }}
             >
               {page}
@@ -130,12 +140,12 @@ export default function Template7({
           ))}
         </div>
 
-        <button 
+        <button
           className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest transition-transform active:scale-95"
-          style={{ 
-            backgroundColor: theme.primaryColor, 
+          style={{
+            backgroundColor: theme.primaryColor,
             color: "#fff",
-            borderRadius: `${theme.borderRadius}px` 
+            borderRadius: `${theme.borderRadius}px`
           }}
         >
           <EditableText regionKey="global.navCta" fallback="Start Project" />
@@ -149,31 +159,31 @@ export default function Template7({
       <section className="px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           <div className="space-y-10">
-            <EditableText 
-              as="h1" 
-              regionKey="home.heroTitle" 
-              fallback="Digital experiences that drive velocity." 
+            <EditableText
+              as="h1"
+              regionKey="home.heroTitle"
+              fallback="Digital experiences that drive velocity."
               className="text-6xl md:text-8xl font-black leading-[0.9] tracking-tighter block"
             />
-            <EditableText 
-              as="p" 
-              regionKey="home.heroSub" 
-              fallback="A strategic design partner for high-growth tech teams. We ship design systems and products in record time." 
+            <EditableText
+              as="p"
+              regionKey="home.heroSub"
+              fallback="A strategic design partner for high-growth tech teams. We ship design systems and products in record time."
               className="text-xl opacity-60 leading-relaxed block max-w-lg"
             />
-            <button 
+            <button
               className="px-10 py-5 text-sm font-black uppercase tracking-[0.2em]"
-              style={{ 
-                backgroundColor: theme.primaryColor, 
+              style={{
+                backgroundColor: theme.primaryColor,
                 color: "#fff",
-                borderRadius: `${theme.borderRadius}px` 
+                borderRadius: `${theme.borderRadius}px`
               }}
             >
               <EditableText regionKey="home.heroCta" fallback="View Work" />
             </button>
           </div>
-          <EditableImg 
-            regionKey="home.heroImg" 
+          <EditableImg
+            regionKey="home.heroImg"
             fallback="https://images.unsplash.com/photo-1558655146-d09347e92766?q=80&w=1600&auto=format&fit=crop"
             className="w-full aspect-[4/5] object-cover shadow-2xl"
             style={{ borderRadius: `${theme.borderRadius * 2}px` }}
@@ -186,16 +196,16 @@ export default function Template7({
           <div className="grid md:grid-cols-3 gap-12">
             {[1, 2, 3].map((i) => (
               <div key={i} className="space-y-4">
-                <EditableText 
-                  as="h3" 
-                  regionKey={`home.featureTitle${i}`} 
-                  fallback={i === 1 ? "Product Design" : i === 2 ? "Brand Strategy" : "Development"} 
+                <EditableText
+                  as="h3"
+                  regionKey={`home.featureTitle${i}`}
+                  fallback={i === 1 ? "Product Design" : i === 2 ? "Brand Strategy" : "Development"}
                   className="text-2xl font-black tracking-tight block"
                 />
-                <EditableText 
-                  as="p" 
-                  regionKey={`home.featureDesc${i}`} 
-                  fallback="End-to-end solutions tailored for the modern web ecosystem." 
+                <EditableText
+                  as="p"
+                  regionKey={`home.featureDesc${i}`}
+                  fallback="End-to-end solutions tailored for the modern web ecosystem."
                   className="text-sm opacity-50 leading-relaxed block"
                 />
               </div>
@@ -210,22 +220,22 @@ export default function Template7({
     <section className="px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
       <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-start">
         <div className="sticky top-32 space-y-8">
-          <EditableText 
-            as="h2" 
-            regionKey="about.title" 
-            fallback="Velocity is our only metric." 
+          <EditableText
+            as="h2"
+            regionKey="about.title"
+            fallback="Velocity is our only metric."
             className="text-5xl md:text-7xl font-black tracking-tighter block"
           />
-          <EditableText 
-            as="p" 
-            regionKey="about.desc" 
-            fallback="Flow Agency was built to solve one problem: the lag between strategy and shipping. We operate as an integrated part of your product team." 
+          <EditableText
+            as="p"
+            regionKey="about.desc"
+            fallback="Flow Agency was built to solve one problem: the lag between strategy and shipping. We operate as an integrated part of your product team."
             className="text-xl opacity-70 leading-relaxed block"
           />
         </div>
         <div className="space-y-12">
-          <EditableImg 
-            regionKey="about.img1" 
+          <EditableImg
+            regionKey="about.img1"
             fallback="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1600&auto=format&fit=crop"
             className="w-full aspect-video object-cover"
             style={{ borderRadius: `${theme.borderRadius}px` }}
@@ -239,20 +249,20 @@ export default function Template7({
     <section className="px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
       <div className="max-w-4xl mx-auto space-y-16">
         <div className="text-center space-y-6">
-          <EditableText 
-            as="h2" 
-            regionKey="contact.title" 
-            fallback="Ready to flow?" 
+          <EditableText
+            as="h2"
+            regionKey="contact.title"
+            fallback="Ready to flow?"
             className="text-6xl md:text-8xl font-black tracking-tighter block"
           />
-          <EditableText 
-            as="p" 
-            regionKey="contact.sub" 
-            fallback="Drop us a line and we'll get back to you within 4 business hours." 
+          <EditableText
+            as="p"
+            regionKey="contact.sub"
+            fallback="Drop us a line and we'll get back to you within 4 business hours."
             className="text-lg opacity-50 block"
           />
         </div>
-        
+
         <div className="grid md:grid-cols-2 gap-12 bg-white/5 p-12 border border-black/5" style={{ borderRadius: `${theme.borderRadius * 2}px` }}>
           <div className="space-y-8">
             <div className="space-y-2">
@@ -261,18 +271,18 @@ export default function Template7({
             </div>
           </div>
           <div className="flex flex-col gap-4">
-            <input 
-              type="text" 
+            <input
+              type="text"
               placeholder="Full Name"
               className="w-full p-4 bg-transparent border-b outline-none focus:border-black transition-colors"
               style={{ borderColor: `${theme.textColor}20` }}
             />
-            <button 
+            <button
               className="w-full py-5 font-black uppercase tracking-widest text-xs"
-              style={{ 
-                backgroundColor: theme.primaryColor, 
+              style={{
+                backgroundColor: theme.primaryColor,
                 color: "#fff",
-                borderRadius: `${theme.borderRadius}px` 
+                borderRadius: `${theme.borderRadius}px`
               }}
             >
               <EditableText regionKey="contact.btn" fallback="Send Inquiry" />
@@ -286,16 +296,16 @@ export default function Template7({
   return (
     <main
       className="w-full min-h-screen overflow-hidden break-words selection:bg-black selection:text-white"
-      style={{ 
-        fontFamily: theme.fontFamily, 
+      style={{
+        fontFamily: theme.fontFamily,
         backgroundColor: theme.backgroundColor,
         color: theme.textColor
       }}
     >
       {/* Fallback to raw script for environments where next/script cannot be resolved */}
-      <script 
-        src="https://upload-widget.cloudinary.com/global/all.js" 
-        async 
+      <script
+        src="https://upload-widget.cloudinary.com/global/all.js"
+        async
       ></script>
 
       <Navbar />
@@ -306,7 +316,7 @@ export default function Template7({
         {activePage === "contact" && <Contact />}
       </div>
 
-      <footer 
+      <footer
         className="px-4 sm:px-6 lg:px-8 py-20 border-t"
         style={{ borderColor: `${theme.textColor}10` }}
       >

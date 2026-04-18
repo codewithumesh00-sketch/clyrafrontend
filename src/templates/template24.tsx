@@ -9,7 +9,7 @@ import {
 import { useThemeStore } from "@/store/useThemeStore";
 
 /**
- * PRODUCTION-SAFE TEMPLATE FOR CLYRA
+ * PRODUCTION-SAFE TEMPLATE FOR clyraweb
  * Built with internal routing, dynamic theme support, and Cloudinary integration.
  * Theme: High-End Fashion Brand (Editorial / Canva-style Moodboard Aesthetic)
  */
@@ -38,24 +38,35 @@ export default function Template24({ editableData }: TemplateProps) {
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = (regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
-      (window as any).cloudinary
-        .createUploadWidget(
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
           {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
             multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
           },
           (error: any, result: any) => {
             if (!error && result && result.event === "success") {
-              updateRegion(regionKey, result.info.secure_url);
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
+              }
             }
           }
-        )
-        .open();
+        );
+      }
+      (window as any).__cloudinaryWidget.open();
     }
   };
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+  // --- clyraweb EDITABLE COMPONENTS ---
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -129,9 +140,8 @@ export default function Template24({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase())}
-              className={`text-xs uppercase tracking-[0.2em] transition-all duration-300 ${
-                activePage === page.toLowerCase() ? "font-bold" : "opacity-60 hover:opacity-100"
-              }`}
+              className={`text-xs uppercase tracking-[0.2em] transition-all duration-300 ${activePage === page.toLowerCase() ? "font-bold" : "opacity-60 hover:opacity-100"
+                }`}
               style={{ color: theme.textColor }}
             >
               {page}
@@ -143,7 +153,7 @@ export default function Template24({ editableData }: TemplateProps) {
         <div className="flex-1 flex justify-center items-center min-w-0">
           <EditableText
             regionKey="global.brand"
-            fallback="MAISON CLYRA"
+            fallback="MAISON clyraweb"
             className="font-black text-2xl md:text-3xl tracking-widest whitespace-nowrap uppercase"
           />
         </div>
@@ -163,21 +173,20 @@ export default function Template24({ editableData }: TemplateProps) {
           </button>
         </div>
       </div>
-      
+
       {/* Mobile Menu Links (Visible only on small screens) */}
       <div className="md:hidden flex justify-center gap-6 pb-4 pt-2 px-4 overflow-x-auto">
-         {["Home", "About", "Contact"].map((page) => (
-            <button
-              key={page}
-              onClick={() => setActivePage(page.toLowerCase())}
-              className={`text-[10px] uppercase tracking-[0.15em] whitespace-nowrap ${
-                activePage === page.toLowerCase() ? "font-bold border-b border-current pb-1" : "opacity-60"
+        {["Home", "About", "Contact"].map((page) => (
+          <button
+            key={page}
+            onClick={() => setActivePage(page.toLowerCase())}
+            className={`text-[10px] uppercase tracking-[0.15em] whitespace-nowrap ${activePage === page.toLowerCase() ? "font-bold border-b border-current pb-1" : "opacity-60"
               }`}
-              style={{ color: theme.textColor }}
-            >
-              {page}
-            </button>
-          ))}
+            style={{ color: theme.textColor }}
+          >
+            {page}
+          </button>
+        ))}
       </div>
     </nav>
   );
@@ -193,7 +202,7 @@ export default function Template24({ editableData }: TemplateProps) {
     >
       <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-12 text-center md:text-left mb-16">
         <div className="md:col-span-2 space-y-6">
-          <EditableText regionKey="global.brand" fallback="MAISON CLYRA" className="font-black text-2xl tracking-widest uppercase block" />
+          <EditableText regionKey="global.brand" fallback="MAISON clyraweb" className="font-black text-2xl tracking-widest uppercase block" />
           <EditableText
             as="p"
             regionKey="footer.desc"
@@ -201,7 +210,7 @@ export default function Template24({ editableData }: TemplateProps) {
             className="text-sm opacity-70 leading-loose max-w-md mx-auto md:mx-0 block"
           />
         </div>
-        
+
         <div className="space-y-6">
           <h4 className="font-bold uppercase tracking-[0.2em] text-xs">Collections</h4>
           <div className="flex flex-col gap-3 text-sm opacity-70">
@@ -214,7 +223,7 @@ export default function Template24({ editableData }: TemplateProps) {
         <div className="space-y-6">
           <h4 className="font-bold uppercase tracking-[0.2em] text-xs">Client Care</h4>
           <div className="flex flex-col gap-3 text-sm opacity-70">
-            <EditableText regionKey="footer.contact1" fallback="concierge@maisonclyra.com" className="block" />
+            <EditableText regionKey="footer.contact1" fallback="concierge@maisonclyraweb.com" className="block" />
             <EditableText regionKey="footer.contact2" fallback="+1 (800) 123-4567" className="block" />
             <button onClick={() => setActivePage("contact")} className="hover:opacity-100 uppercase tracking-widest text-xs mt-2 text-left w-fit mx-auto md:mx-0">
               Contact Us →
@@ -222,9 +231,9 @@ export default function Template24({ editableData }: TemplateProps) {
           </div>
         </div>
       </div>
-      
+
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t" style={{ borderColor: `${theme.textColor}10` }}>
-        <EditableText regionKey="footer.copy" fallback="© 2024 Maison Clyra. All Rights Reserved." className="text-xs opacity-50 uppercase tracking-wider" />
+        <EditableText regionKey="footer.copy" fallback="© 2024 Maison clyraweb. All Rights Reserved." className="text-xs opacity-50 uppercase tracking-wider" />
         <div className="flex gap-4 text-xs opacity-50 uppercase tracking-wider">
           <span>Instagram</span>
           <span>Pinterest</span>
@@ -241,7 +250,7 @@ export default function Template24({ editableData }: TemplateProps) {
       <Section id="hero" fullWidth={true}>
         <div className="relative w-full h-[85vh] min-h-[600px] flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 w-full h-full">
-             <EditableImg
+            <EditableImg
               regionKey="hero.bgImg"
               fallback="https://images.unsplash.com/photo-1509631179647-0c11583e82fa?q=80&w=2000&auto=format&fit=crop"
               className="w-full h-full object-cover"
@@ -249,7 +258,7 @@ export default function Template24({ editableData }: TemplateProps) {
             {/* Subtle Overlay */}
             <div className="absolute inset-0 bg-black/20 mix-blend-multiply"></div>
           </div>
-          
+
           <div className="relative z-10 text-center px-6 max-w-4xl mx-auto text-white flex flex-col items-center">
             <EditableText
               as="h4"
@@ -311,30 +320,30 @@ export default function Template24({ editableData }: TemplateProps) {
             { id: 3, img: "https://images.unsplash.com/photo-1502163140606-888448ae8cfe?q=80&w=800&auto=format&fit=crop", text: "Look 03" },
           ].map((item, idx) => (
             <div key={idx} className={`group cursor-pointer ${idx === 1 ? 'md:mt-12' : ''}`}>
-               <div className="overflow-hidden relative" style={{ borderRadius: `${theme.borderRadius}px` }}>
-                 <EditableImg
-                    regionKey={`lookbook.img${item.id}`}
-                    fallback={item.img}
-                    className="w-full aspect-[4/5] object-cover transition-transform duration-1000 group-hover:scale-105"
-                 />
-               </div>
-               <div className="pt-6 text-center">
-                  <EditableText
-                    regionKey={`lookbook.text${item.id}`}
-                    fallback={item.text}
-                    className="text-xs uppercase tracking-[0.2em] font-medium"
-                  />
-               </div>
+              <div className="overflow-hidden relative" style={{ borderRadius: `${theme.borderRadius}px` }}>
+                <EditableImg
+                  regionKey={`lookbook.img${item.id}`}
+                  fallback={item.img}
+                  className="w-full aspect-[4/5] object-cover transition-transform duration-1000 group-hover:scale-105"
+                />
+              </div>
+              <div className="pt-6 text-center">
+                <EditableText
+                  regionKey={`lookbook.text${item.id}`}
+                  fallback={item.text}
+                  className="text-xs uppercase tracking-[0.2em] font-medium"
+                />
+              </div>
             </div>
           ))}
         </div>
         <div className="mt-20 text-center">
           <button
-              className="px-10 py-4 text-xs font-bold uppercase tracking-[0.2em] transition-colors border border-current hover:bg-black hover:text-white"
-              style={{ borderRadius: `${theme.borderRadius}px` }}
-            >
-              <EditableText regionKey="lookbook.btn" fallback="View Full Archive" />
-            </button>
+            className="px-10 py-4 text-xs font-bold uppercase tracking-[0.2em] transition-colors border border-current hover:bg-black hover:text-white"
+            style={{ borderRadius: `${theme.borderRadius}px` }}
+          >
+            <EditableText regionKey="lookbook.btn" fallback="View Full Archive" />
+          </button>
         </div>
       </Section>
     </div>
@@ -345,8 +354,8 @@ export default function Template24({ editableData }: TemplateProps) {
       {/* About Header */}
       <Section id="about-header" bgType="primary">
         <div className="max-w-4xl mx-auto text-center space-y-8 pt-12 pb-8">
-           <EditableText as="h4" regionKey="about.subtitle" fallback="OUR STORY" className="text-xs font-bold uppercase tracking-[0.3em] opacity-50 block" />
-           <EditableText as="h1" regionKey="about.title" fallback="REDEFINING MODERN LUXURY" className="text-4xl md:text-6xl font-light uppercase tracking-tighter leading-tight block" />
+          <EditableText as="h4" regionKey="about.subtitle" fallback="OUR STORY" className="text-xs font-bold uppercase tracking-[0.3em] opacity-50 block" />
+          <EditableText as="h1" regionKey="about.title" fallback="REDEFINING MODERN LUXURY" className="text-4xl md:text-6xl font-light uppercase tracking-tighter leading-tight block" />
         </div>
       </Section>
 
@@ -354,21 +363,21 @@ export default function Template24({ editableData }: TemplateProps) {
       <Section id="about-story" bgType="primary" fullWidth={true}>
         <div className="flex flex-col lg:flex-row w-full min-h-[70vh]">
           <div className="w-full lg:w-1/2 p-8 md:p-16 lg:p-24 flex items-center justify-center bg-gray-50" style={{ backgroundColor: theme.secondaryColor }}>
-             <div className="max-w-lg space-y-8">
-                <EditableText as="h3" regionKey="about.sectionTitle" fallback="CRAFTSMANSHIP & VISION" className="text-2xl font-light uppercase tracking-widest block" />
-                <EditableText 
-                  as="p" 
-                  regionKey="about.desc1" 
-                  fallback="Founded on the principles of minimalist beauty and structural integrity. Every garment is a testament to our dedication to quality, utilizing only ethically sourced materials and partnering with master artisans globally." 
-                  className="text-lg opacity-80 leading-loose block" 
-                />
-                <EditableText 
-                  as="p" 
-                  regionKey="about.desc2" 
-                  fallback="We don't just follow trends; we observe the intersection of art, architecture, and daily life to create pieces that remain relevant long after the season ends." 
-                  className="text-lg opacity-80 leading-loose block" 
-                />
-             </div>
+            <div className="max-w-lg space-y-8">
+              <EditableText as="h3" regionKey="about.sectionTitle" fallback="CRAFTSMANSHIP & VISION" className="text-2xl font-light uppercase tracking-widest block" />
+              <EditableText
+                as="p"
+                regionKey="about.desc1"
+                fallback="Founded on the principles of minimalist beauty and structural integrity. Every garment is a testament to our dedication to quality, utilizing only ethically sourced materials and partnering with master artisans globally."
+                className="text-lg opacity-80 leading-loose block"
+              />
+              <EditableText
+                as="p"
+                regionKey="about.desc2"
+                fallback="We don't just follow trends; we observe the intersection of art, architecture, and daily life to create pieces that remain relevant long after the season ends."
+                className="text-lg opacity-80 leading-loose block"
+              />
+            </div>
           </div>
           <div className="w-full lg:w-1/2 relative min-h-[50vh] lg:min-h-full">
             <EditableImg
@@ -382,18 +391,18 @@ export default function Template24({ editableData }: TemplateProps) {
 
       {/* Brand Values */}
       <Section id="about-values">
-         <div className="grid md:grid-cols-3 gap-12 text-center py-12">
-            {[
-              { id: 1, title: "SUSTAINABILITY", desc: "Committed to eco-conscious production and circular fashion models." },
-              { id: 2, title: "ARTISANRY", desc: "Collaborating with generational craftspeople to ensure unmatched quality." },
-              { id: 3, title: "TIMELESSNESS", desc: "Designing outside the seasonal calendar for enduring relevance." }
-            ].map((val, idx) => (
-              <div key={idx} className="space-y-4">
-                 <EditableText as="h4" regionKey={`about.valTitle${val.id}`} fallback={val.title} className="text-sm font-bold uppercase tracking-[0.2em] block" />
-                 <EditableText as="p" regionKey={`about.valDesc${val.id}`} fallback={val.desc} className="text-sm opacity-60 leading-relaxed block px-4" />
-              </div>
-            ))}
-         </div>
+        <div className="grid md:grid-cols-3 gap-12 text-center py-12">
+          {[
+            { id: 1, title: "SUSTAINABILITY", desc: "Committed to eco-conscious production and circular fashion models." },
+            { id: 2, title: "ARTISANRY", desc: "Collaborating with generational craftspeople to ensure unmatched quality." },
+            { id: 3, title: "TIMELESSNESS", desc: "Designing outside the seasonal calendar for enduring relevance." }
+          ].map((val, idx) => (
+            <div key={idx} className="space-y-4">
+              <EditableText as="h4" regionKey={`about.valTitle${val.id}`} fallback={val.title} className="text-sm font-bold uppercase tracking-[0.2em] block" />
+              <EditableText as="p" regionKey={`about.valDesc${val.id}`} fallback={val.desc} className="text-sm opacity-60 leading-relaxed block px-4" />
+            </div>
+          ))}
+        </div>
       </Section>
     </div>
   );
@@ -402,7 +411,7 @@ export default function Template24({ editableData }: TemplateProps) {
     <Section id="contact">
       <div className="min-h-[70vh] flex flex-col justify-center animate-in zoom-in-95 duration-700 max-w-6xl mx-auto w-full py-12">
         <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-start">
-          
+
           {/* Left: Info */}
           <div className="space-y-12">
             <div>
@@ -417,7 +426,7 @@ export default function Template24({ editableData }: TemplateProps) {
               </div>
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-[0.2em] opacity-40 mb-3">Client Concierge</h4>
-                <EditableText regionKey="contact.email" fallback="concierge@maisonclyra.com" className="font-medium text-lg block mb-1" />
+                <EditableText regionKey="contact.email" fallback="concierge@maisonclyraweb.com" className="font-medium text-lg block mb-1" />
                 <EditableText regionKey="contact.phone" fallback="+33 1 23 45 67 89" className="font-medium text-lg block" />
               </div>
             </div>
@@ -428,27 +437,27 @@ export default function Template24({ editableData }: TemplateProps) {
             <div className="space-y-8">
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-[0.1em] opacity-60">Full Name</label>
-                <input 
-                  type="text" 
-                  className="w-full pb-3 bg-transparent border-b outline-none transition-colors focus:border-current" 
-                  style={{ borderColor: `${theme.textColor}30` }} 
+                <input
+                  type="text"
+                  className="w-full pb-3 bg-transparent border-b outline-none transition-colors focus:border-current"
+                  style={{ borderColor: `${theme.textColor}30` }}
                   placeholder="Jane Doe"
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-[0.1em] opacity-60">Email Address</label>
-                <input 
-                  type="email" 
-                  className="w-full pb-3 bg-transparent border-b outline-none transition-colors focus:border-current" 
-                  style={{ borderColor: `${theme.textColor}30` }} 
+                <input
+                  type="email"
+                  className="w-full pb-3 bg-transparent border-b outline-none transition-colors focus:border-current"
+                  style={{ borderColor: `${theme.textColor}30` }}
                   placeholder="jane@example.com"
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-[0.1em] opacity-60">Inquiry Type</label>
-                <select 
-                   className="w-full pb-3 bg-transparent border-b outline-none transition-colors focus:border-current appearance-none cursor-pointer" 
-                   style={{ borderColor: `${theme.textColor}30`, color: theme.textColor }}
+                <select
+                  className="w-full pb-3 bg-transparent border-b outline-none transition-colors focus:border-current appearance-none cursor-pointer"
+                  style={{ borderColor: `${theme.textColor}30`, color: theme.textColor }}
                 >
                   <option>Customer Service</option>
                   <option>Press & PR</option>
@@ -457,15 +466,15 @@ export default function Template24({ editableData }: TemplateProps) {
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-[0.1em] opacity-60">Message</label>
-                <textarea 
+                <textarea
                   rows={3}
-                  className="w-full pb-3 bg-transparent border-b outline-none transition-colors focus:border-current resize-none" 
-                  style={{ borderColor: `${theme.textColor}30` }} 
+                  className="w-full pb-3 bg-transparent border-b outline-none transition-colors focus:border-current resize-none"
+                  style={{ borderColor: `${theme.textColor}30` }}
                   placeholder="How can we assist you?"
                 />
               </div>
-              <button 
-                className="w-full py-5 font-bold uppercase tracking-[0.2em] text-xs transition-colors" 
+              <button
+                className="w-full py-5 font-bold uppercase tracking-[0.2em] text-xs transition-colors"
                 style={{ backgroundColor: theme.primaryColor, color: theme.backgroundColor, borderRadius: `${theme.borderRadius}px` }}
               >
                 <EditableText regionKey="contact.submitBtn" fallback="Submit Inquiry" />
@@ -484,11 +493,11 @@ export default function Template24({ editableData }: TemplateProps) {
       style={{ fontFamily: theme.fontFamily, backgroundColor: theme.backgroundColor }}
     >
       {/* Cloudinary Script Loading for Drag & Drop / Double Click Image Upload */}
-      <script 
-        src="https://upload-widget.cloudinary.com/global/all.js" 
-        async 
+      <script
+        src="https://upload-widget.cloudinary.com/global/all.js"
+        async
       ></script>
-      
+
       <Navbar />
 
       <div className="flex flex-col w-full">

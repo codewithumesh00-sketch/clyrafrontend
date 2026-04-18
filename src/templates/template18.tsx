@@ -9,7 +9,7 @@ import {
 import { useThemeStore } from "@/store/useThemeStore";
 
 /**
- * PRODUCTION-SAFE TEMPLATE FOR CLYRA
+ * PRODUCTION-SAFE TEMPLATE FOR clyraweb
  * Built with internal routing, dynamic theme support, and Cloudinary integration.
  */
 
@@ -37,24 +37,35 @@ export default function Template18({ editableData }: TemplateProps) {
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = (regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
-      (window as any).cloudinary
-        .createUploadWidget(
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
           {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
             multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
           },
           (error: any, result: any) => {
             if (!error && result && result.event === "success") {
-              updateRegion(regionKey, result.info.secure_url);
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
+              }
             }
           }
-        )
-        .open();
+        );
+      }
+      (window as any).__cloudinaryWidget.open();
     }
   };
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+  // --- clyraweb EDITABLE COMPONENTS ---
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -134,15 +145,14 @@ export default function Template18({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as "home" | "about" | "contact")}
-              className={`text-xs font-bold transition-all uppercase tracking-[0.2em] relative py-2 ${
-                activePage === page.toLowerCase() ? "opacity-100" : "opacity-40 hover:opacity-100"
-              }`}
+              className={`text-xs font-bold transition-all uppercase tracking-[0.2em] relative py-2 ${activePage === page.toLowerCase() ? "opacity-100" : "opacity-40 hover:opacity-100"
+                }`}
               style={{ color: theme.textColor }}
             >
               {page}
               {activePage === page.toLowerCase() && (
-                <span 
-                  className="absolute bottom-0 left-0 w-full h-[2px] transform origin-left transition-transform" 
+                <span
+                  className="absolute bottom-0 left-0 w-full h-[2px] transform origin-left transition-transform"
                   style={{ backgroundColor: theme.primaryColor }}
                 />
               )}
@@ -224,7 +234,7 @@ export default function Template18({ editableData }: TemplateProps) {
               className="text-lg sm:text-xl opacity-60 leading-relaxed block max-w-2xl"
             />
           </div>
-          
+
           <div className="w-full relative group overflow-hidden" style={{ borderRadius: `${theme.borderRadius * 2}px` }}>
             <EditableImg
               regionKey="hero.mainImg"
@@ -311,13 +321,13 @@ export default function Template18({ editableData }: TemplateProps) {
             </div>
           </div>
           <div className="lg:col-span-7">
-             <div className="relative overflow-hidden" style={{ borderRadius: `${theme.borderRadius * 2}px` }}>
-                <EditableImg
-                  regionKey="about.img"
-                  fallback="https://images.unsplash.com/photo-1554046920-90dcac824bd6?q=80&w=1600&auto=format&fit=crop"
-                  className="w-full aspect-[4/5] object-cover"
-                />
-             </div>
+            <div className="relative overflow-hidden" style={{ borderRadius: `${theme.borderRadius * 2}px` }}>
+              <EditableImg
+                regionKey="about.img"
+                fallback="https://images.unsplash.com/photo-1554046920-90dcac824bd6?q=80&w=1600&auto=format&fit=crop"
+                className="w-full aspect-[4/5] object-cover"
+              />
+            </div>
           </div>
         </div>
       </Section>
@@ -381,11 +391,11 @@ export default function Template18({ editableData }: TemplateProps) {
       style={{ fontFamily: theme.fontFamily, backgroundColor: theme.backgroundColor, color: theme.textColor }}
     >
       {/* Cloudinary Script Loading for Drag & Drop Functionality */}
-      <script 
-        src="https://upload-widget.cloudinary.com/global/all.js" 
-        async 
+      <script
+        src="https://upload-widget.cloudinary.com/global/all.js"
+        async
       ></script>
-      
+
       <Navbar />
 
       <div className="flex flex-col w-full min-w-0 max-w-full">

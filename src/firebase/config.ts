@@ -11,12 +11,12 @@ const firebaseConfig = {
     "AIzaSyABt5vdsk6Wsuj96robB4bYmCn5AWIylyQ",
   authDomain:
     process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ||
-    "clyraui.firebaseapp.com",
+    "clyrawebui.firebaseapp.com",
   projectId:
-    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "clyraui",
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "clyrawebui",
   storageBucket:
     process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
-    "clyraui.firebasestorage.app",
+    "clyrawebui.firebasestorage.app",
   messagingSenderId:
     process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ||
     "489677679886",

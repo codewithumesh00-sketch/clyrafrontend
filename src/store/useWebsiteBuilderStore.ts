@@ -1,4 +1,4 @@
-// D:\clyraui\frontend\src\store\useWebsiteBuilderStore.ts
+// D:\clyrawebui\frontend\src\store\useWebsiteBuilderStore.ts
 "use client";
 
 import { create } from "zustand";
@@ -159,6 +159,20 @@ export type TemplateSchema = {
 export type SelectedRegion = string | null;
 
 /* ================================
+   ✅ SAVED PROJECTS INTERFACE
+================================ */
+export interface SavedProject {
+  id: string;
+  title: string;
+  template: string;
+  status: "draft" | "deployed" | "failed";
+  deployUrl?: string;
+  createdAt: string;
+  deployedAt?: string;
+  schema: TemplateSchema;
+}
+
+/* ================================
    ✅ STORE INTERFACE
 ================================ */
 
@@ -183,17 +197,42 @@ type TemplateBuilderStore = {
   clearHistory: () => void;
   loadTemplate: (category: TemplateCategory, templateId: string) => void;
   resetToDefault: () => void;
+
+  // 🚀 Deploy Tracking
+  deployHistory: { id: string; date: string; status: "success" | "failed"; url?: string }[];
+  deployProgress: number;
+  deployLogs: string[];
+  currentStep: string;
+  isPublishing: boolean;
+
+  setIsPublishing: (status: boolean) => void;
+  setDeployStep: (step: string) => void;
+  setDeployProgress: (progress: number) => void;
+  addDeployLog: (log: string) => void;
+  clearDeployLogs: () => void;
+  addDeployHistory: (item: { id: string; date: string; status: "success" | "failed"; url?: string }) => void;
+  clearDeployHistory: () => void;
+  // 📂 Saved Projects (Dashboard)
+  savedProjects: SavedProject[];
+  currentProjectId: string | null;
+  addProject: (project: SavedProject) => void;
+  updateProject: (id: string, updates: Partial<SavedProject>) => void;
+  setCurrentProjectId: (id: string | null) => void;
+  loadProjects: () => void;
 };
 
 /* ================================
    ✅ STORAGE UTILS — CLEAN SYNC
 ================================ */
-const STORAGE_KEY = "clyra-template-schema";
+const STORAGE_KEY = "clyraweb-template-schema";
 
 const saveSchemaToStorage = (schema: TemplateSchema) => {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(schema));
+    // Support for the dashboard's live preview synchronization
+    localStorage.setItem("clyraweb-live-schema", JSON.stringify(schema));
+    window.dispatchEvent(new Event("clyraweb-schema-updated"));
   } catch (error) {
     console.warn("Failed to save schema:", error);
   }
@@ -261,7 +300,7 @@ const getDefaultSchema = (
         { platform: "twitter", url: "https://twitter.com" },
         { platform: "instagram", url: "https://instagram.com" },
       ],
-      copyright: "© 2026 Clyra. All rights reserved.",
+      copyright: "© 2026 clyraweb. All rights reserved.",
     },
     hero: {
       title: "Define Your Elegance.",
@@ -306,16 +345,15 @@ export const useWebsiteBuilderStore = create<TemplateBuilderStore>()(
       maxHistorySize: 50,
 
       // ✅ Set full schema
-      setSchema: (schema) => {
+      setSchema: (newSchema) => {
         set((state) => {
-          if (JSON.stringify(state.schema) === JSON.stringify(schema)) {
-            return state;
-          }
-          saveSchemaToStorage(schema);
+          saveSchemaToStorage(newSchema);
           return {
-            schema,
+            schema: newSchema,
             history: [...state.history, state.schema].slice(-state.maxHistorySize),
             future: [],
+            selectedRegion: null,
+            currentPage: "home",
           };
         });
       },
@@ -416,12 +454,68 @@ export const useWebsiteBuilderStore = create<TemplateBuilderStore>()(
         const { category, templateId } = get().schema;
         get().loadTemplate(category, templateId);
       },
+
+      // 🚀 Deploy Tracking
+      deployHistory: [],
+      deployProgress: 0,
+      deployLogs: [],
+      currentStep: "Idle",
+      isPublishing: false,
+
+      setIsPublishing: (status) => set({ isPublishing: status }),
+      setDeployStep: (step) => set({ currentStep: step }),
+      setDeployProgress: (progress) => set({ deployProgress: progress }),
+      addDeployLog: (log) =>
+        set((state) => ({ deployLogs: [...state.deployLogs, log] })),
+      clearDeployLogs: () => set({ deployLogs: [], deployProgress: 0, currentStep: "Idle" }),
+      addDeployHistory: (item) =>
+        set((state) => ({ deployHistory: [item, ...state.deployHistory] })),
+      clearDeployHistory: () => set({ deployHistory: [] }),
+      // 📂 Saved Projects (Dashboard)
+      savedProjects: [],
+      currentProjectId: null,
+      setCurrentProjectId: (id) => set({ currentProjectId: id }),
+      addProject: (project) => {
+        set((state) => {
+          const newProjects = [project, ...state.savedProjects];
+          if (typeof window !== "undefined") {
+            localStorage.setItem("clyraweb-projects", JSON.stringify(newProjects));
+          }
+          return { savedProjects: newProjects, currentProjectId: project.id };
+        });
+      },
+      updateProject: (id, updates) => {
+        set((state) => {
+          const newProjects = state.savedProjects.map((p) =>
+            p.id === id ? { ...p, ...updates } : p
+          );
+          if (typeof window !== "undefined") {
+            localStorage.setItem("clyraweb-projects", JSON.stringify(newProjects));
+          }
+          return { savedProjects: newProjects };
+        });
+      },
+      loadProjects: () => {
+        if (typeof window !== "undefined") {
+          const stored = localStorage.getItem("clyraweb-projects");
+          if (stored) {
+            try {
+              set({ savedProjects: JSON.parse(stored) });
+            } catch (e) {
+              console.error("Failed to parse clyraweb-projects", e);
+            }
+          }
+        }
+      },
     }),
     {
-      name: "clyra-template-builder-storage",
+      name: "clyraweb-template-builder-storage",
       partialize: (state) => ({
         schema: state.schema,
         currentPage: state.currentPage,
+        deployHistory: state.deployHistory,
+        currentProjectId: state.currentProjectId,
+        // We do not partialize savedProjects because they asked to use "clyraweb-projects" localStorage key specifically.
       }),
     }
   )

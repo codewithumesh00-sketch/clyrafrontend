@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import Script from "next/script";
@@ -10,7 +10,7 @@ import { useThemeStore } from "@/store/useThemeStore";
 
 export const template1Meta = {
   id: "business/template1",
-  name: "Clyra Modern Ecommerce",
+  name: "clyraweb Modern Ecommerce",
   image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1600&auto=format&fit=crop",
 };
 
@@ -27,27 +27,37 @@ export default function Template1({ editableData }: TemplateProps) {
   const { theme } = useThemeStore();
   const updateRegion = useWebsiteBuilderStore((state: any) => state.updateRegion);
 
-  // --- IMAGE UPLOAD HANDLER ---
+  // --- clyraweb IMAGE UPLOAD HANDLER (Optimized) ---
   const handleImageUpload = (regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
-      (window as any).cloudinary
-        .createUploadWidget(
+      (window as any).__clyraweb_active_upload_region = regionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
           {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "demo",
+            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "docs_upload_example_us_preset",
             multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
           },
           (error: any, result: any) => {
             if (!error && result && result.event === "success") {
-              updateRegion(regionKey, result.info.secure_url);
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
+              }
             }
           }
-        )
-        .open();
+        );
+      }
+      (window as any).__cloudinaryWidget.open();
     }
   };
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+  // --- clyraweb EDITABLE COMPONENTS ---
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -122,7 +132,7 @@ export default function Template1({ editableData }: TemplateProps) {
           />
           <EditableText
             regionKey="global.brand"
-            fallback="CLYRA LUX"
+            fallback="clyraweb LUX"
             className="font-bold text-xl tracking-tighter whitespace-nowrap"
           />
         </div>
@@ -132,9 +142,8 @@ export default function Template1({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase())}
-              className={`text-sm font-semibold transition-colors uppercase tracking-widest ${
-                activePage === page.toLowerCase() ? "" : "opacity-50 hover:opacity-100"
-              }`}
+              className={`text-sm font-semibold transition-colors uppercase tracking-widest ${activePage === page.toLowerCase() ? "" : "opacity-50 hover:opacity-100"
+                }`}
               style={{ color: activePage === page.toLowerCase() ? theme.primaryColor : theme.textColor }}
             >
               {page}
@@ -175,7 +184,7 @@ export default function Template1({ editableData }: TemplateProps) {
               fallback="https://images.unsplash.com/photo-1549463591-14cc5bd1f008?w=100&h=100&fit=crop"
               className="w-8 h-8 rounded-full"
             />
-            <EditableText regionKey="global.brand" fallback="CLYRA LUX" className="font-bold" />
+            <EditableText regionKey="global.brand" fallback="clyraweb LUX" className="font-bold" />
           </div>
           <EditableText
             as="p"
@@ -194,8 +203,8 @@ export default function Template1({ editableData }: TemplateProps) {
         </div>
         <div className="space-y-4">
           <h4 className="font-bold uppercase tracking-widest text-xs opacity-40">Contact</h4>
-          <EditableText regionKey="footer.email" fallback="sales@clyra-lux.com" className="text-sm block" />
-          <EditableText regionKey="footer.copy" fallback="© 2024 Clyra. Built for Scale." className="text-xs opacity-30 block pt-4" />
+          <EditableText regionKey="footer.email" fallback="sales@clyraweb-lux.com" className="text-sm block" />
+          <EditableText regionKey="footer.copy" fallback="© 2024 clyraweb. Built for Scale." className="text-xs opacity-30 block pt-4" />
         </div>
       </div>
     </footer>
@@ -253,7 +262,7 @@ export default function Template1({ editableData }: TemplateProps) {
           <EditableText
             as="p"
             regionKey="about.desc"
-            fallback="At Clyra, we believe commerce is an art form. We combine the precision of predictive algorithms with the soul of human craftsmanship."
+            fallback="At clyraweb, we believe commerce is an art form. We combine the precision of predictive algorithms with the soul of human craftsmanship."
             className="text-lg opacity-70 leading-relaxed block"
           />
         </div>
@@ -273,7 +282,7 @@ export default function Template1({ editableData }: TemplateProps) {
             </div>
             <div>
               <h4 className="text-xs font-black uppercase opacity-40 tracking-widest mb-2">Email</h4>
-              <EditableText regionKey="contact.email" fallback="vip@clyra.com" className="font-bold block" />
+              <EditableText regionKey="contact.email" fallback="vip@clyraweb.com" className="font-bold block" />
             </div>
           </div>
           <div className="space-y-4">
@@ -293,11 +302,11 @@ export default function Template1({ editableData }: TemplateProps) {
       style={{ fontFamily: theme.fontFamily, backgroundColor: theme.backgroundColor }}
     >
       {/* Cloudinary Script Loading */}
-      <script 
-        src="https://upload-widget.cloudinary.com/global/all.js" 
-        async 
+      <script
+        src="https://upload-widget.cloudinary.com/global/all.js"
+        async
       ></script>
-      
+
       <Navbar />
 
       <div className="flex flex-col w-full">

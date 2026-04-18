@@ -26,31 +26,40 @@ const getNestedValue = (obj: any, path: string) => {
 
 export default function Template12({ editableData }: TemplateProps) {
   const [activePage, setActivePage] = useState<"home" | "about" | "contact">("home");
-  
+
   const { theme } = useThemeStore();
   const updateRegion = useWebsiteBuilderStore((state: any) => state.updateRegion);
 
-  const handleImageUpload = useCallback(
-    (regionKey: string) => {
-      if (typeof window !== "undefined" && (window as any).cloudinary) {
-        (window as any).cloudinary
-          .createUploadWidget(
-            {
-              cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-              uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
-              multiple: false,
-            },
-            (error: any, result: any) => {
-              if (!error && result && result.event === "success") {
-                updateRegion(regionKey, result.info.secure_url);
+  const handleImageUpload = useCallback((regionKey: string) => {
+    if (typeof window !== "undefined" && (window as any).cloudinary) {
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
+          {
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
+            multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
+          },
+          (error: any, result: any) => {
+            if (!error && result && result.event === "success") {
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
               }
             }
-          )
-          .open();
+          }
+        );
       }
-    },
-    [updateRegion]
-  );
+      (window as any).__cloudinaryWidget.open();
+    }
+  }, [updateRegion]);
+
 
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
@@ -69,7 +78,7 @@ export default function Template12({ editableData }: TemplateProps) {
           e.stopPropagation();
           (e.currentTarget as HTMLElement).focus();
         }}
-        className={`focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:ring-blue-400 rounded transition-all cursor-text empty:before:content-['Type_here...'] empty:before:opacity-30 ${className}`}
+        className={`focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition-all ${className}`}
       >
         {content}
       </Tag>
@@ -140,16 +149,15 @@ export default function Template12({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-sm font-bold transition-all uppercase tracking-widest relative group ${
-                activePage === page.toLowerCase() ? "opacity-100" : "opacity-50 hover:opacity-100"
-              }`}
+              className={`text-sm font-bold transition-all uppercase tracking-widest relative group ${activePage === page.toLowerCase() ? "opacity-100" : "opacity-50 hover:opacity-100"
+                }`}
               style={{ color: theme.textColor }}
             >
               {page}
               {activePage === page.toLowerCase() && (
-                <span 
-                  className="absolute -bottom-2 left-0 w-full h-0.5 rounded-full" 
-                  style={{ backgroundColor: theme.primaryColor }} 
+                <span
+                  className="absolute -bottom-2 left-0 w-full h-0.5 rounded-full"
+                  style={{ backgroundColor: theme.primaryColor }}
                 />
               )}
             </button>
@@ -227,7 +235,7 @@ export default function Template12({ editableData }: TemplateProps) {
             className="w-full aspect-[4/3] md:aspect-[21/9] object-cover shadow-2xl"
             style={{ borderRadius: `${theme.borderRadius * 2}px` }}
           />
-          <div 
+          <div
             className="absolute -bottom-10 left-4 right-4 md:left-12 md:right-auto md:w-[500px] p-8 md:p-12 backdrop-blur-xl bg-white/95 shadow-2xl border border-white/20"
             style={{ borderRadius: `${theme.borderRadius}px` }}
           >
@@ -270,8 +278,8 @@ export default function Template12({ editableData }: TemplateProps) {
                   regionKey={`home.card${i}.img`}
                   fallback={
                     i === 1 ? "https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=800&fit=crop" :
-                    i === 2 ? "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=800&fit=crop" :
-                    "https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?w=800&fit=crop"
+                      i === 2 ? "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=800&fit=crop" :
+                        "https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?w=800&fit=crop"
                   }
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
@@ -316,17 +324,17 @@ export default function Template12({ editableData }: TemplateProps) {
         <EditableText as="h2" regionKey="contact.title" fallback="Ready to Explore?" className="text-5xl font-black tracking-tight block mb-12" />
         <div className="grid md:grid-cols-2 gap-8 text-left bg-white p-10 shadow-2xl" style={{ borderRadius: `${theme.borderRadius}px` }}>
           <div className="space-y-6">
-             <EditableText regionKey="contact.address" fallback="145 Explorer Blvd, Suite 200" className="font-bold block" />
-             <EditableText regionKey="contact.email" fallback="booking@wanderlust.com" className="opacity-60 block" />
+            <EditableText regionKey="contact.address" fallback="145 Explorer Blvd, Suite 200" className="font-bold block" />
+            <EditableText regionKey="contact.email" fallback="booking@wanderlust.com" className="opacity-60 block" />
           </div>
           <div className="space-y-4">
-             <input className="w-full p-4 bg-gray-50 border-0 outline-none rounded-lg" placeholder="Email" />
-             <button 
-              className="w-full py-4 font-black uppercase tracking-widest text-xs" 
+            <input className="w-full p-4 bg-gray-50 border-0 outline-none rounded-lg" placeholder="Email" />
+            <button
+              className="w-full py-4 font-black uppercase tracking-widest text-xs"
               style={{ backgroundColor: theme.primaryColor, color: "#fff", borderRadius: `${theme.borderRadius}px` }}
-             >
-               <EditableText regionKey="contact.submit" fallback="Send Inquiry" />
-             </button>
+            >
+              <EditableText regionKey="contact.submit" fallback="Send Inquiry" />
+            </button>
           </div>
         </div>
       </div>
@@ -339,11 +347,11 @@ export default function Template12({ editableData }: TemplateProps) {
       style={{ fontFamily: theme.fontFamily, backgroundColor: theme.backgroundColor }}
     >
       {/* Cloudinary Script Loading using standard HTML tag for environment compatibility */}
-      <script 
-        src="https://upload-widget.cloudinary.com/global/all.js" 
-        async 
+      <script
+        src="https://upload-widget.cloudinary.com/global/all.js"
+        async
       ></script>
-      
+
       <Navbar />
 
       <div className="flex flex-col w-full overflow-hidden">
@@ -354,7 +362,8 @@ export default function Template12({ editableData }: TemplateProps) {
 
       <Footer />
 
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         [contenteditable]:focus { outline: none; background: rgba(0,0,0,0.02); }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slide-in-from-bottom-4 { from { transform: translateY(1rem); opacity: 0; } to { transform: translateY(0); opacity: 1; } }

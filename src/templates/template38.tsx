@@ -31,20 +31,31 @@ export default function Template38({ editableData }: TemplateProps) {
 
   const handleImageUpload = (regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
-      (window as any).cloudinary
-        .createUploadWidget(
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
           {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
             multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
           },
           (error: any, result: any) => {
             if (!error && result && result.event === "success") {
-              updateRegion(regionKey, result.info.secure_url);
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
+              }
             }
           }
-        )
-        .open();
+        );
+      }
+      (window as any).__cloudinaryWidget.open();
     }
   };
 
@@ -132,9 +143,8 @@ export default function Template38({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-sm font-bold uppercase tracking-widest transition-colors ${
-                activePage === page.toLowerCase() ? "" : "opacity-40 hover:opacity-100"
-              }`}
+              className={`text-sm font-bold uppercase tracking-widest transition-colors ${activePage === page.toLowerCase() ? "" : "opacity-40 hover:opacity-100"
+                }`}
               style={{ color: activePage === page.toLowerCase() ? theme.primaryColor : theme.textColor }}
             >
               {page}
@@ -245,18 +255,18 @@ export default function Template38({ editableData }: TemplateProps) {
               />
             </div>
           </div>
-          
+
           <div className="lg:col-span-4 flex flex-col gap-8 lg:border-l lg:pl-12" style={{ borderColor: `${theme.textColor}15` }}>
             <div className="flex items-center gap-3 border-b pb-4" style={{ borderColor: `${theme.textColor}15` }}>
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: theme.primaryColor }}></div>
               <h3 className="font-black uppercase tracking-widest text-sm">Editor's Picks</h3>
             </div>
-            
+
             <div className="flex flex-col gap-2">
               <EditableText regionKey="home.side1.tag" fallback="TECHNOLOGY" className="text-[10px] font-black uppercase tracking-widest opacity-50" />
               <EditableText as="h4" regionKey="home.side1.title" fallback="Artificial Intelligence Regulations Proposed in New Bill" className="font-bold text-lg leading-snug hover:underline cursor-pointer" />
             </div>
-            
+
             <div className="flex flex-col gap-2">
               <EditableText regionKey="home.side2.tag" fallback="ECONOMY" className="text-[10px] font-black uppercase tracking-widest opacity-50" />
               <EditableText as="h4" regionKey="home.side2.title" fallback="Inflation Rates Drop Surprisingly in Q3 Review" className="font-bold text-lg leading-snug hover:underline cursor-pointer" />
@@ -275,7 +285,7 @@ export default function Template38({ editableData }: TemplateProps) {
           <h2 className="text-3xl font-black tracking-tighter">Latest Stories</h2>
           <span className="text-xs font-bold uppercase tracking-widest cursor-pointer hover:underline" style={{ color: theme.primaryColor }}>View All</span>
         </div>
-        
+
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10">
           <div className="flex flex-col gap-4 group cursor-pointer">
             <div className="overflow-hidden aspect-video w-full" style={{ borderRadius: `${theme.borderRadius}px` }}>
@@ -329,11 +339,11 @@ export default function Template38({ editableData }: TemplateProps) {
   const AboutView = () => (
     <Section id="about" className="animate-in slide-in-from-bottom-4 duration-700">
       <div className="max-w-4xl mx-auto flex flex-col gap-12 text-center">
-        <EditableText 
-          as="h1" 
-          regionKey="about.title" 
-          fallback="Our Mission: Truth Uncompromised." 
-          className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tighter leading-tight" 
+        <EditableText
+          as="h1"
+          regionKey="about.title"
+          fallback="Our Mission: Truth Uncompromised."
+          className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tighter leading-tight"
         />
         <div className="w-full aspect-[21/9] overflow-hidden" style={{ borderRadius: `${theme.borderRadius}px` }}>
           <EditableImg
@@ -373,7 +383,7 @@ export default function Template38({ editableData }: TemplateProps) {
           <EditableText as="h1" regionKey="contact.title" fallback="Connect With Our Newsroom" className="text-5xl sm:text-6xl font-black tracking-tighter block mb-6" />
           <EditableText as="p" regionKey="contact.subtitle" fallback="Have a breaking story, a press release, or feedback? Reach out." className="text-lg opacity-70" />
         </div>
-        
+
         <div className="grid lg:grid-cols-2 gap-12 items-start">
           <div className="p-8 sm:p-12 shadow-2xl bg-white/5 backdrop-blur-md" style={{ borderRadius: `${theme.borderRadius}px`, border: `1px solid ${theme.textColor}10`, backgroundColor: theme.backgroundColor }}>
             <h3 className="text-2xl font-black mb-6">Send a Tip</h3>
@@ -386,7 +396,7 @@ export default function Template38({ editableData }: TemplateProps) {
               </button>
             </div>
           </div>
-          
+
           <div className="flex flex-col gap-10 lg:pl-8">
             <div className="space-y-2 border-b pb-8" style={{ borderColor: `${theme.textColor}15` }}>
               <h4 className="text-xs font-black uppercase opacity-50 tracking-widest">Global Headquarters</h4>
@@ -420,7 +430,7 @@ export default function Template38({ editableData }: TemplateProps) {
         src="https://upload-widget.cloudinary.com/global/all.js"
         async
       />
-      
+
       <Navbar />
 
       <div className="flex-1 w-full flex flex-col">

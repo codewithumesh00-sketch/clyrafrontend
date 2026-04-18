@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Clyra",
+  title: "clyraweb",
   description: "AI website builder by Umesh",
 };
 

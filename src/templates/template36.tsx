@@ -9,7 +9,7 @@ import {
 import { useThemeStore } from "@/store/useThemeStore";
 
 /**
- * PRODUCTION-SAFE TEMPLATE FOR CLYRA
+ * PRODUCTION-SAFE TEMPLATE FOR clyraweb
  * Fixed dependency issues by using safe dynamic checks for the store environment.
  */
 
@@ -36,29 +36,37 @@ export default function Template36({ editableData }: TemplateProps) {
   const updateRegion = useWebsiteBuilderStore((state: any) => state.updateRegion);
 
   // --- IMAGE UPLOAD HANDLER ---
-  const handleImageUpload = useCallback(
-    (regionKey: string) => {
-      if (typeof window !== "undefined" && (window as any).cloudinary) {
-        (window as any).cloudinary
-          .createUploadWidget(
-            {
-              cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "demo",
-              uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "unsigned",
-              multiple: false,
-            },
-            (error: any, result: any) => {
-              if (!error && result && result.event === "success") {
-                updateRegion(regionKey, result.info.secure_url);
+  const handleImageUpload = useCallback((regionKey: string) => {
+    if (typeof window !== "undefined" && (window as any).cloudinary) {
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
+          {
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
+            multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
+          },
+          (error: any, result: any) => {
+            if (!error && result && result.event === "success") {
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
               }
             }
-          )
-          .open();
+          }
+        );
       }
-    },
-    [updateRegion]
-  );
+      (window as any).__cloudinaryWidget.open();
+    }
+  }, [updateRegion]);
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -76,8 +84,7 @@ export default function Template36({ editableData }: TemplateProps) {
           e.stopPropagation();
           (e.currentTarget as HTMLElement).focus();
         }}
-        className={`focus:outline-none focus:ring-2 focus:ring-opacity-50 rounded transition-all outline-none ${className}`}
-        style={{ '--tw-ring-color': theme.primaryColor } as React.CSSProperties}
+        className={`focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition-all ${className}`}
       >
         {content}
       </Tag>
@@ -145,11 +152,10 @@ export default function Template36({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-sm transition-all duration-300 uppercase tracking-widest ${
-                activePage === page.toLowerCase()
+              className={`text-sm transition-all duration-300 uppercase tracking-widest ${activePage === page.toLowerCase()
                   ? "font-medium scale-105"
                   : "font-light opacity-60 hover:opacity-100 hover:scale-105"
-              }`}
+                }`}
               style={{
                 color: theme.textColor,
                 borderBottom: activePage === page.toLowerCase() ? `2px solid ${theme.primaryColor}` : "2px solid transparent",
@@ -204,12 +210,12 @@ export default function Template36({ editableData }: TemplateProps) {
             className="text-base font-light opacity-70 max-w-md leading-relaxed block"
           />
         </div>
-        
+
         <div className="flex flex-wrap justify-center gap-8">
           {["Home", "About", "Contact"].map((p) => (
-            <button 
-              key={p} 
-              onClick={() => setActivePage(p.toLowerCase() as any)} 
+            <button
+              key={p}
+              onClick={() => setActivePage(p.toLowerCase() as any)}
               className="text-sm font-light tracking-widest uppercase opacity-70 hover:opacity-100 transition-opacity"
             >
               {p}
@@ -219,7 +225,7 @@ export default function Template36({ editableData }: TemplateProps) {
 
         <div className="flex flex-col items-center gap-2 pt-12 border-t w-full max-w-md" style={{ borderColor: `${theme.textColor}15` }}>
           <EditableText regionKey="footer.email" fallback="hello@aurayoga.studio" className="text-sm font-light tracking-wider block" />
-          <EditableText regionKey="footer.copy" fallback="© 2026 Aura Yoga. Designed with Clyra." className="text-xs font-light opacity-40 block mt-4" />
+          <EditableText regionKey="footer.copy" fallback="© 2026 Aura Yoga. Designed with clyraweb." className="text-xs font-light opacity-40 block mt-4" />
         </div>
       </div>
     </footer>
@@ -269,7 +275,7 @@ export default function Template36({ editableData }: TemplateProps) {
           </div>
           <div className="relative order-1 lg:order-2 w-full flex justify-center">
             <div className="relative w-full max-w-md lg:max-w-full aspect-[4/5] md:aspect-[3/4]">
-              <div 
+              <div
                 className="absolute inset-0 translate-x-4 translate-y-4 md:translate-x-8 md:translate-y-8 rounded-t-full rounded-b-full opacity-20"
                 style={{ backgroundColor: theme.primaryColor }}
               ></div>
@@ -285,12 +291,12 @@ export default function Template36({ editableData }: TemplateProps) {
 
       <Section id="features" bgType="secondary">
         <div className="text-center mb-16 md:mb-24">
-           <EditableText
-              as="h2"
-              regionKey="features.title"
-              fallback="Our Practices"
-              className="text-3xl md:text-4xl font-light tracking-wide block"
-            />
+          <EditableText
+            as="h2"
+            regionKey="features.title"
+            fallback="Our Practices"
+            className="text-3xl md:text-4xl font-light tracking-wide block"
+          />
         </div>
         <div className="grid md:grid-cols-3 gap-12 lg:gap-16">
           {[
@@ -315,28 +321,28 @@ export default function Template36({ editableData }: TemplateProps) {
     <Section id="about" className="animate-fade-in-up min-h-[85vh] flex items-center py-24">
       <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
         <div className="relative w-full max-w-lg mx-auto lg:max-w-none">
-           <div className="aspect-square relative rounded-full overflow-hidden shadow-2xl border-8" style={{ borderColor: theme.secondaryColor }}>
-              <EditableImg
-                regionKey="about.img"
-                fallback="https://images.unsplash.com/photo-1593811167562-9cef47bfc4d7?q=80&w=1200&auto=format&fit=crop"
-                className="w-full h-full object-cover"
-              />
-           </div>
-           <div className="absolute -bottom-8 -right-8 w-32 h-32 rounded-full opacity-30 blur-2xl" style={{ backgroundColor: theme.primaryColor }}></div>
+          <div className="aspect-square relative rounded-full overflow-hidden shadow-2xl border-8" style={{ borderColor: theme.secondaryColor }}>
+            <EditableImg
+              regionKey="about.img"
+              fallback="https://images.unsplash.com/photo-1593811167562-9cef47bfc4d7?q=80&w=1200&auto=format&fit=crop"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="absolute -bottom-8 -right-8 w-32 h-32 rounded-full opacity-30 blur-2xl" style={{ backgroundColor: theme.primaryColor }}></div>
         </div>
         <div className="space-y-8 text-center lg:text-left">
-          <EditableText 
-            as="h4" 
-            regionKey="about.kicker" 
-            fallback="OUR PHILOSOPHY" 
-            className="text-sm font-medium tracking-[0.3em] uppercase block opacity-60" 
+          <EditableText
+            as="h4"
+            regionKey="about.kicker"
+            fallback="OUR PHILOSOPHY"
+            className="text-sm font-medium tracking-[0.3em] uppercase block opacity-60"
             style={{ color: theme.primaryColor }}
           />
-          <EditableText 
-            as="h2" 
-            regionKey="about.title" 
-            fallback="A Sanctuary for the Soul." 
-            className="text-4xl md:text-5xl font-light tracking-tight block leading-tight" 
+          <EditableText
+            as="h2"
+            regionKey="about.title"
+            fallback="A Sanctuary for the Soul."
+            className="text-4xl md:text-5xl font-light tracking-tight block leading-tight"
           />
           <EditableText
             as="p"
@@ -359,23 +365,23 @@ export default function Template36({ editableData }: TemplateProps) {
     <Section id="contact" className="animate-fade-in-scale py-24 min-h-[85vh] flex items-center">
       <div className="max-w-5xl mx-auto w-full">
         <div className="text-center mb-16 space-y-4">
-          <EditableText 
-            as="h4" 
-            regionKey="contact.kicker" 
-            fallback="REACH OUT" 
-            className="text-sm font-medium tracking-[0.3em] uppercase block opacity-60" 
+          <EditableText
+            as="h4"
+            regionKey="contact.kicker"
+            fallback="REACH OUT"
+            className="text-sm font-medium tracking-[0.3em] uppercase block opacity-60"
             style={{ color: theme.primaryColor }}
           />
-          <EditableText 
-            as="h1" 
-            regionKey="contact.title" 
-            fallback="Connect With Us" 
-            className="text-5xl md:text-6xl font-light tracking-tight block" 
+          <EditableText
+            as="h1"
+            regionKey="contact.title"
+            fallback="Connect With Us"
+            className="text-5xl md:text-6xl font-light tracking-tight block"
           />
         </div>
 
-        <div 
-          className="grid md:grid-cols-5 gap-0 overflow-hidden shadow-2xl" 
+        <div
+          className="grid md:grid-cols-5 gap-0 overflow-hidden shadow-2xl"
           style={{ borderRadius: `${theme.borderRadius * 2}px`, backgroundColor: theme.secondaryColor }}
         >
           <div className="md:col-span-2 p-10 md:p-14 text-left flex flex-col justify-between" style={{ backgroundColor: theme.primaryColor, color: "#FFFFFF" }}>
@@ -419,7 +425,7 @@ export default function Template36({ editableData }: TemplateProps) {
     >
       {/* Script loading via native tag for better environment compatibility */}
       <script src="https://upload-widget.cloudinary.com/global/all.js" async />
-      
+
       <Navbar />
 
       <div className="flex flex-col w-full min-w-0">

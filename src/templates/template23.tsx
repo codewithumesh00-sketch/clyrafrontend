@@ -31,20 +31,31 @@ export default function Template23({ editableData }: TemplateProps) {
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = (regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
-      (window as any).cloudinary
-        .createUploadWidget(
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
           {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
             multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
           },
           (error: any, result: any) => {
             if (!error && result && result.event === "success") {
-              updateRegion(regionKey, result.info.secure_url);
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
+              }
             }
           }
-        )
-        .open();
+        );
+      }
+      (window as any).__cloudinaryWidget.open();
     }
   };
 
@@ -102,21 +113,21 @@ export default function Template23({ editableData }: TemplateProps) {
   );
 
   const Navbar = () => (
-    <nav 
+    <nav
       className="fixed top-0 w-full z-50 transition-all border-b border-white/5 backdrop-blur-xl"
       style={{ backgroundColor: `${theme?.backgroundColor || "#000000"}CC`, color: theme?.textColor || "#ffffff" }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between overflow-hidden">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <EditableImg 
-            regionKey="global.logo" 
-            fallback="https://images.unsplash.com/photo-1589903308904-1010c2294adc?w=100&h=100&fit=crop" 
+          <EditableImg
+            regionKey="global.logo"
+            fallback="https://images.unsplash.com/photo-1589903308904-1010c2294adc?w=100&h=100&fit=crop"
             className="w-8 h-8 rounded-full border border-white/20"
           />
-          <EditableText 
-            regionKey="global.brand" 
-            fallback="SONIC ECHO" 
-            className="font-black text-lg tracking-widest whitespace-nowrap" 
+          <EditableText
+            regionKey="global.brand"
+            fallback="SONIC ECHO"
+            className="font-black text-lg tracking-widest whitespace-nowrap"
           />
         </div>
 
@@ -125,9 +136,8 @@ export default function Template23({ editableData }: TemplateProps) {
             <button
               key={p}
               onClick={() => setActivePage(p.toLowerCase() as any)}
-              className={`text-[10px] font-black uppercase tracking-[0.3em] transition-all hover:text-white ${
-                activePage === p.toLowerCase() ? "opacity-100" : "opacity-40"
-              }`}
+              className={`text-[10px] font-black uppercase tracking-[0.3em] transition-all hover:text-white ${activePage === p.toLowerCase() ? "opacity-100" : "opacity-40"
+                }`}
             >
               {p}
             </button>
@@ -135,7 +145,7 @@ export default function Template23({ editableData }: TemplateProps) {
         </div>
 
         <div className="flex-shrink-0">
-          <button 
+          <button
             className="px-6 py-2 text-[10px] font-black tracking-widest uppercase border border-white/20 hover:bg-white hover:text-black transition-all"
             style={{ borderRadius: `${theme?.borderRadius || 0}px` }}
           >
@@ -174,7 +184,7 @@ export default function Template23({ editableData }: TemplateProps) {
               style={{ borderRadius: `${theme?.borderRadius || 0}px` }}
             />
             <div className="absolute -bottom-6 -left-6 bg-white text-black p-8 hidden lg:block" style={{ borderRadius: `${theme?.borderRadius || 0}px` }}>
-               <EditableText regionKey="home.statLabel" fallback="48-BIT AUDIO" className="text-[10px] font-black tracking-tighter" />
+              <EditableText regionKey="home.statLabel" fallback="48-BIT AUDIO" className="text-[10px] font-black tracking-tighter" />
             </div>
           </div>
         </div>
@@ -198,9 +208,9 @@ export default function Template23({ editableData }: TemplateProps) {
       <Section>
         <div className="grid lg:grid-cols-2 gap-20 items-center">
           <div className="order-2 lg:order-1">
-            <EditableImg 
-              regionKey="about.img" 
-              fallback="https://images.unsplash.com/photo-1559523161-0fc0d8b38a7a?q=80&w=1000&auto=format&fit=crop" 
+            <EditableImg
+              regionKey="about.img"
+              fallback="https://images.unsplash.com/photo-1559523161-0fc0d8b38a7a?q=80&w=1000&auto=format&fit=crop"
               className="w-full aspect-square object-cover"
               style={{ borderRadius: `${theme?.borderRadius || 0}px` }}
             />
@@ -232,7 +242,7 @@ export default function Template23({ editableData }: TemplateProps) {
             <EditableText as="h1" regionKey="contact.title" fallback="GET IN THE BOOTH" className="text-7xl font-black italic uppercase" />
             <EditableText as="p" regionKey="contact.sub" fallback="Ready to launch your series? Let's build your audio identity." className="text-xl opacity-50 block" />
           </div>
-          
+
           <div className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <input type="text" placeholder="NAME" className="w-full bg-white/5 border border-white/10 p-6 text-xs font-black tracking-widest outline-none focus:border-white transition-all uppercase" />
@@ -249,12 +259,12 @@ export default function Template23({ editableData }: TemplateProps) {
   );
 
   return (
-    <main 
+    <main
       className="w-full min-h-screen selection:bg-white selection:text-black overflow-x-hidden"
-      style={{ 
-        backgroundColor: theme?.backgroundColor || "#000000", 
+      style={{
+        backgroundColor: theme?.backgroundColor || "#000000",
         color: theme?.textColor || "#ffffff",
-        fontFamily: theme?.fontFamily || "'Inter', sans-serif" 
+        fontFamily: theme?.fontFamily || "'Inter', sans-serif"
       }}
     >
       <script src="https://upload-widget.cloudinary.com/global/all.js" async></script>
@@ -270,12 +280,12 @@ export default function Template23({ editableData }: TemplateProps) {
       <footer className="w-full py-20 border-t border-white/5 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center gap-2">
-             <EditableText regionKey="global.brand" fallback="SONIC ECHO" className="font-black text-xs tracking-widest" />
+            <EditableText regionKey="global.brand" fallback="SONIC ECHO" className="font-black text-xs tracking-widest" />
           </div>
-          <EditableText 
-            regionKey="footer.copy" 
-            fallback="©2024 ARCHIVED RECORDINGS. ALL RIGHTS RESERVED." 
-            className="text-[10px] font-black opacity-30 tracking-widest" 
+          <EditableText
+            regionKey="footer.copy"
+            fallback="©2024 ARCHIVED RECORDINGS. ALL RIGHTS RESERVED."
+            className="text-[10px] font-black opacity-30 tracking-widest"
           />
         </div>
       </footer>

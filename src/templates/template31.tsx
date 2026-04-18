@@ -9,7 +9,7 @@ import { useThemeStore } from "@/store/useThemeStore";
 import Script from "next/script";
 
 /**
- * PRODUCTION-SAFE TEMPLATE FOR CLYRA
+ * PRODUCTION-SAFE TEMPLATE FOR clyraweb
  * Built with internal routing, dynamic theme support, and Cloudinary integration.
  * Theme: Canva-inspired Wedding Planner (Elegant, Serif typography, Soft layouts)
  */
@@ -39,24 +39,35 @@ export default function Template31({ editableData }: TemplateProps) {
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = (regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
-      (window as any).cloudinary
-        .createUploadWidget(
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
           {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
             multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
           },
           (error: any, result: any) => {
             if (!error && result && result.event === "success") {
-              updateRegion(regionKey, result.info.secure_url);
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
+              }
             }
           }
-        )
-        .open();
+        );
+      }
+      (window as any).__cloudinaryWidget.open();
     }
   };
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+  // --- clyraweb EDITABLE COMPONENTS ---
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -142,9 +153,8 @@ export default function Template31({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-xs font-medium transition-all uppercase tracking-[0.2em] relative after:content-[''] after:absolute after:-bottom-2 after:left-1/2 after:w-0 after:h-[1px] after:bg-current after:transition-all after:duration-300 hover:after:w-full hover:after:left-0 ${
-                activePage === page.toLowerCase() ? "opacity-100 after:w-full after:left-0" : "opacity-60 hover:opacity-100"
-              }`}
+              className={`text-xs font-medium transition-all uppercase tracking-[0.2em] relative after:content-[''] after:absolute after:-bottom-2 after:left-1/2 after:w-0 after:h-[1px] after:bg-current after:transition-all after:duration-300 hover:after:w-full hover:after:left-0 ${activePage === page.toLowerCase() ? "opacity-100 after:w-full after:left-0" : "opacity-60 hover:opacity-100"
+                }`}
               style={{ color: theme.textColor }}
             >
               {page}
@@ -179,11 +189,11 @@ export default function Template31({ editableData }: TemplateProps) {
     >
       <div className="max-w-6xl mx-auto grid md:grid-cols-12 gap-12 text-center md:text-left">
         <div className="md:col-span-5 space-y-6">
-          <EditableText 
-            as="h3" 
-            regionKey="global.brand" 
-            fallback="AURA WEDDINGS" 
-            className="font-serif text-3xl tracking-widest uppercase block" 
+          <EditableText
+            as="h3"
+            regionKey="global.brand"
+            fallback="AURA WEDDINGS"
+            className="font-serif text-3xl tracking-widest uppercase block"
           />
           <EditableText
             as="p"
@@ -192,13 +202,13 @@ export default function Template31({ editableData }: TemplateProps) {
             className="text-sm opacity-70 leading-loose block max-w-sm mx-auto md:mx-0 font-light"
           />
         </div>
-        
+
         <div className="md:col-span-3 flex flex-col gap-5">
           <h4 className="font-serif italic text-lg opacity-80">Navigate</h4>
           {["Home", "About", "Contact"].map((p) => (
-            <button 
-              key={p} 
-              onClick={() => setActivePage(p.toLowerCase() as any)} 
+            <button
+              key={p}
+              onClick={() => setActivePage(p.toLowerCase() as any)}
               className="hover:opacity-100 opacity-60 text-sm tracking-widest uppercase w-fit mx-auto md:mx-0 transition-opacity"
             >
               {p}
@@ -208,25 +218,25 @@ export default function Template31({ editableData }: TemplateProps) {
 
         <div className="md:col-span-4 space-y-5">
           <h4 className="font-serif italic text-lg opacity-80">Connect</h4>
-          <EditableText 
-            regionKey="footer.email" 
-            fallback="hello@auraweddings.com" 
-            className="text-sm tracking-widest uppercase block opacity-60 hover:opacity-100 transition-opacity cursor-pointer" 
+          <EditableText
+            regionKey="footer.email"
+            fallback="hello@auraweddings.com"
+            className="text-sm tracking-widest uppercase block opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
           />
-          <EditableText 
-            regionKey="footer.social" 
-            fallback="Instagram / Pinterest" 
-            className="text-sm tracking-widest uppercase block opacity-60 hover:opacity-100 transition-opacity cursor-pointer" 
+          <EditableText
+            regionKey="footer.social"
+            fallback="Instagram / Pinterest"
+            className="text-sm tracking-widest uppercase block opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
           />
         </div>
       </div>
       <div className="max-w-6xl mx-auto mt-24 pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-4" style={{ borderColor: `${theme.textColor}10` }}>
-        <EditableText 
-          regionKey="footer.copy" 
-          fallback="© 2026 Aura Weddings. All rights reserved." 
-          className="text-xs opacity-40 uppercase tracking-widest block" 
+        <EditableText
+          regionKey="footer.copy"
+          fallback="© 2026 Aura Weddings. All rights reserved."
+          className="text-xs opacity-40 uppercase tracking-widest block"
         />
-        <span className="text-xs opacity-40 uppercase tracking-widest">Designed on Clyra</span>
+        <span className="text-xs opacity-40 uppercase tracking-widest">Designed on clyraweb</span>
       </div>
     </footer>
   );
@@ -284,7 +294,7 @@ export default function Template31({ editableData }: TemplateProps) {
           <EditableText as="h2" regionKey="home.servicesTitle" fallback="Our Approach" className="text-4xl md:text-5xl font-serif block" />
           <div className="w-16 h-[1px] mx-auto mt-6" style={{ backgroundColor: theme.textColor, opacity: 0.2 }} />
         </div>
-        
+
         <div className="grid md:grid-cols-3 gap-12 lg:gap-16">
           {[
             { id: "s1", title: "Full Planning", img: "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop" },
@@ -323,13 +333,13 @@ export default function Template31({ editableData }: TemplateProps) {
       <Section id="about" bgType="secondary">
         <div className="grid lg:grid-cols-12 gap-16 lg:gap-24 items-center">
           <div className="lg:col-span-5 relative order-2 lg:order-1">
-             <div className="absolute top-8 -left-8 w-full h-full border z-0" style={{ borderColor: theme.primaryColor, borderRadius: '200px 200px 0 0' }} />
-             <EditableImg
-                regionKey="about.img"
-                fallback="https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=1000&auto=format&fit=crop"
-                className="w-full aspect-[3/4] object-cover relative z-10"
-                style={{ borderRadius: '200px 200px 0 0' }}
-              />
+            <div className="absolute top-8 -left-8 w-full h-full border z-0" style={{ borderColor: theme.primaryColor, borderRadius: '200px 200px 0 0' }} />
+            <EditableImg
+              regionKey="about.img"
+              fallback="https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=1000&auto=format&fit=crop"
+              className="w-full aspect-[3/4] object-cover relative z-10"
+              style={{ borderRadius: '200px 200px 0 0' }}
+            />
           </div>
           <div className="lg:col-span-7 space-y-8 order-1 lg:order-2 text-center lg:text-left">
             <EditableText as="h2" regionKey="about.title" fallback="The Visionaries Behind the Veil" className="text-4xl md:text-6xl font-serif leading-tight block" />
@@ -356,19 +366,19 @@ export default function Template31({ editableData }: TemplateProps) {
     <div className="animate-zoom-in">
       <Section id="contact" bgType="primary" className="min-h-[80vh] flex items-center">
         <div className="max-w-3xl mx-auto w-full text-center">
-          <EditableText 
-            as="h1" 
-            regionKey="contact.title" 
-            fallback="Let's Begin Your Journey" 
-            className="text-4xl md:text-6xl font-serif block mb-6 text-balance" 
+          <EditableText
+            as="h1"
+            regionKey="contact.title"
+            fallback="Let's Begin Your Journey"
+            className="text-4xl md:text-6xl font-serif block mb-6 text-balance"
           />
-          <EditableText 
-            as="p" 
-            regionKey="contact.subtitle" 
-            fallback="Please share a few details about your upcoming celebration. We take on a limited number of events each year to ensure the highest level of dedication." 
-            className="text-sm md:text-base opacity-60 leading-relaxed max-w-xl mx-auto block mb-16 font-light" 
+          <EditableText
+            as="p"
+            regionKey="contact.subtitle"
+            fallback="Please share a few details about your upcoming celebration. We take on a limited number of events each year to ensure the highest level of dedication."
+            className="text-sm md:text-base opacity-60 leading-relaxed max-w-xl mx-auto block mb-16 font-light"
           />
-          
+
           <div className="bg-white/40 backdrop-blur-md p-8 md:p-14 border shadow-sm" style={{ borderRadius: `${theme.borderRadius}px`, borderColor: `${theme.textColor}10` }}>
             <div className="grid md:grid-cols-2 gap-8 md:gap-12 text-left mb-12">
               <div>
@@ -382,32 +392,32 @@ export default function Template31({ editableData }: TemplateProps) {
                 <EditableText regionKey="contact.phone" fallback="+1 (555) 123-4567" className="font-medium text-sm block" />
               </div>
             </div>
-            
+
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-6">
-                <input 
-                  className="w-full pb-3 bg-transparent border-b outline-none text-sm transition-colors focus:border-current" 
-                  style={{ borderColor: `${theme.textColor}30` }} 
-                  placeholder="Your Name" 
+                <input
+                  className="w-full pb-3 bg-transparent border-b outline-none text-sm transition-colors focus:border-current"
+                  style={{ borderColor: `${theme.textColor}30` }}
+                  placeholder="Your Name"
                 />
-                <input 
-                  className="w-full pb-3 bg-transparent border-b outline-none text-sm transition-colors focus:border-current" 
-                  style={{ borderColor: `${theme.textColor}30` }} 
-                  placeholder="Partner's Name" 
+                <input
+                  className="w-full pb-3 bg-transparent border-b outline-none text-sm transition-colors focus:border-current"
+                  style={{ borderColor: `${theme.textColor}30` }}
+                  placeholder="Partner's Name"
                 />
               </div>
-              <input 
-                className="w-full pb-3 bg-transparent border-b outline-none text-sm transition-colors focus:border-current" 
-                style={{ borderColor: `${theme.textColor}30` }} 
-                placeholder="Email Address" 
+              <input
+                className="w-full pb-3 bg-transparent border-b outline-none text-sm transition-colors focus:border-current"
+                style={{ borderColor: `${theme.textColor}30` }}
+                placeholder="Email Address"
               />
-              <input 
-                className="w-full pb-3 bg-transparent border-b outline-none text-sm transition-colors focus:border-current" 
-                style={{ borderColor: `${theme.textColor}30` }} 
-                placeholder="Anticipated Date & Location" 
+              <input
+                className="w-full pb-3 bg-transparent border-b outline-none text-sm transition-colors focus:border-current"
+                style={{ borderColor: `${theme.textColor}30` }}
+                placeholder="Anticipated Date & Location"
               />
-              <button 
-                className="w-full py-5 mt-4 font-medium uppercase tracking-[0.2em] text-xs transition-opacity hover:opacity-90 shadow-sm" 
+              <button
+                className="w-full py-5 mt-4 font-medium uppercase tracking-[0.2em] text-xs transition-opacity hover:opacity-90 shadow-sm"
                 style={{ backgroundColor: theme.primaryColor, color: "#fff", borderRadius: `${theme.borderRadius}px` }}
               >
                 <EditableText regionKey="contact.submit" fallback="Submit Inquiry" />
@@ -424,11 +434,11 @@ export default function Template31({ editableData }: TemplateProps) {
       className="min-h-screen w-full flex flex-col font-sans"
       style={{ fontFamily: theme.fontFamily, backgroundColor: theme.backgroundColor }}
     >
-      <Script 
-        src="https://upload-widget.cloudinary.com/global/all.js" 
-        strategy="afterInteractive" 
+      <Script
+        src="https://upload-widget.cloudinary.com/global/all.js"
+        strategy="afterInteractive"
       />
-      
+
       <Navbar />
 
       <div className="flex-grow w-full flex flex-col">

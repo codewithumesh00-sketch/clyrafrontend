@@ -50,7 +50,7 @@ export const useThemeStore = create<ThemeStore>()(
         }),
     }),
     {
-      name: "clyra-theme-store",
+      name: "clyraweb-theme-store",
     }
   )
 );

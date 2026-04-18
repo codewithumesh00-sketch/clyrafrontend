@@ -30,28 +30,35 @@ export default function Template16({ editableData }: TemplateProps) {
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = (regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
-      if (!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || !process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) {
-        console.warn("Cloudinary env variables missing.");
-        return;
-      }
-      (window as any).cloudinary
-        .createUploadWidget(
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
           {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
             multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
           },
           (error: any, result: any) => {
             if (!error && result && result.event === "success") {
-              updateRegion(regionKey, result.info.secure_url);
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
+              }
             }
           }
-        )
-        .open();
+        );
+      }
+      (window as any).__cloudinaryWidget.open();
     }
   };
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+  // --- clyraweb EDITABLE COMPONENTS ---
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -137,9 +144,8 @@ export default function Template16({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-sm font-bold transition-all ${
-                activePage === page.toLowerCase() ? "scale-105" : "opacity-60 hover:opacity-100"
-              }`}
+              className={`text-sm font-bold transition-all ${activePage === page.toLowerCase() ? "scale-105" : "opacity-60 hover:opacity-100"
+                }`}
               style={{ color: activePage === page.toLowerCase() ? theme.primaryColor : theme.textColor }}
             >
               {page}
@@ -190,7 +196,7 @@ export default function Template16({ editableData }: TemplateProps) {
             className="text-sm opacity-60 leading-relaxed block max-w-sm mx-auto md:mx-0"
           />
         </div>
-        
+
         <div className="flex flex-col gap-5">
           <h4 className="font-black tracking-widest text-xs opacity-40 uppercase">Explore</h4>
           {["Home", "About", "Contact"].map((p) => (
@@ -217,7 +223,7 @@ export default function Template16({ editableData }: TemplateProps) {
         <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
           <div className="flex-1 space-y-8 z-10 w-full">
             <div className="inline-block px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-4 shadow-sm border"
-                 style={{ backgroundColor: theme.secondaryColor, color: theme.primaryColor, borderColor: `${theme.textColor}10` }}>
+              style={{ backgroundColor: theme.secondaryColor, color: theme.primaryColor, borderColor: `${theme.textColor}10` }}>
               <EditableText regionKey="hero.badge" fallback="Premium Fleet 2024" />
             </div>
             <EditableText
@@ -264,7 +270,7 @@ export default function Template16({ editableData }: TemplateProps) {
           <EditableText as="h2" regionKey="fleet.title" fallback="Featured Vehicles" className="text-4xl md:text-5xl font-black tracking-tighter block mb-6" />
           <EditableText as="p" regionKey="fleet.desc" fallback="Select from our meticulously maintained fleet of high-performance and luxury vehicles." className="text-lg opacity-60 block" />
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
             { id: "1", fallbackImg: "https://images.unsplash.com/photo-1503376760367-1154ce8a9cb5?w=800&fit=crop", name: "Porsche 911 Carrera", price: "$350 / day" },
@@ -317,7 +323,7 @@ export default function Template16({ editableData }: TemplateProps) {
             fallback="Whether you're looking for an exotic thrill for the weekend, a refined luxury sedan for business, or a capable SUV for an adventure, our curated collection is ready."
             className="text-lg opacity-60 leading-relaxed block"
           />
-          
+
           <div className="grid grid-cols-2 gap-8 pt-8">
             <div>
               <EditableText as="h3" regionKey="about.stat1.val" fallback="50+" className="text-4xl font-black block mb-2" style={{ color: theme.primaryColor }} />
@@ -395,7 +401,7 @@ export default function Template16({ editableData }: TemplateProps) {
         src="https://upload-widget.cloudinary.com/global/all.js"
         strategy="afterInteractive"
       />
-      
+
       <Navbar />
 
       <div className="flex flex-col w-full min-h-[calc(100vh-6rem)]">

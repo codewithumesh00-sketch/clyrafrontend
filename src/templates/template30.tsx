@@ -31,24 +31,35 @@ export default function Template30({ editableData }: TemplateProps) {
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = (regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
-      (window as any).cloudinary
-        .createUploadWidget(
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
           {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
             multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
           },
           (error: any, result: any) => {
             if (!error && result && result.event === "success") {
-              updateRegion(regionKey, result.info.secure_url);
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
+              }
             }
           }
-        )
-        .open();
+        );
+      }
+      (window as any).__cloudinaryWidget.open();
     }
   };
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+  // --- clyraweb EDITABLE COMPONENTS ---
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -149,9 +160,8 @@ export default function Template30({ editableData }: TemplateProps) {
               <button
                 key={page}
                 onClick={() => setActivePage(page.toLowerCase() as any)}
-                className={`text-sm font-semibold transition-all ${
-                  activePage === page.toLowerCase() ? "scale-105" : "opacity-60 hover:opacity-100"
-                }`}
+                className={`text-sm font-semibold transition-all ${activePage === page.toLowerCase() ? "scale-105" : "opacity-60 hover:opacity-100"
+                  }`}
                 style={{ color: activePage === page.toLowerCase() ? theme.primaryColor : theme.textColor }}
               >
                 {page}
@@ -226,11 +236,11 @@ export default function Template30({ editableData }: TemplateProps) {
       <Section id="home">
         {/* Bento Box Layout */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-[minmax(180px,auto)]">
-          
+
           {/* Main Hero Card */}
           <Card className="md:col-span-8 md:row-span-2 p-8 lg:p-12 flex flex-col justify-center relative overflow-hidden group">
             {/* Abstract Canva-like background blob */}
-            <div 
+            <div
               className="absolute top-0 right-0 w-64 h-64 opacity-10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 transition-transform duration-700 group-hover:scale-150"
               style={{ backgroundColor: theme.primaryColor }}
             />
@@ -270,71 +280,71 @@ export default function Template30({ editableData }: TemplateProps) {
 
           {/* Profile Photo Card */}
           <Card className="md:col-span-4 md:row-span-2 p-2 relative group cursor-pointer">
-             <EditableImg
-                regionKey="home.profile.img"
-                fallback="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=1000&fit=crop"
-                className="w-full h-full min-h-[300px] md:min-h-full object-cover"
-                style={{ borderRadius: `${theme.borderRadius - 8}px` }}
-              />
-              {/* Canva style floating badge */}
-              <div 
-                className="absolute bottom-6 left-6 right-6 backdrop-blur-md p-4 flex items-center justify-between border"
-                style={{ 
-                  backgroundColor: `${theme.secondaryColor}CC`, 
-                  borderRadius: `${theme.borderRadius - 8}px`,
-                  borderColor: `${theme.textColor}15`
-                }}
-              >
-                <div className="flex flex-col">
-                  <EditableText regionKey="home.profile.badgeTitle" fallback="Experience" className="text-xs font-bold uppercase opacity-60" />
-                  <EditableText regionKey="home.profile.badgeValue" fallback="8+ Years" className="text-lg font-black" />
-                </div>
-                <div 
-                  className="w-10 h-10 flex items-center justify-center text-white"
-                  style={{ backgroundColor: theme.primaryColor, borderRadius: '50%' }}
-                >
-                  ✦
-                </div>
+            <EditableImg
+              regionKey="home.profile.img"
+              fallback="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=1000&fit=crop"
+              className="w-full h-full min-h-[300px] md:min-h-full object-cover"
+              style={{ borderRadius: `${theme.borderRadius - 8}px` }}
+            />
+            {/* Canva style floating badge */}
+            <div
+              className="absolute bottom-6 left-6 right-6 backdrop-blur-md p-4 flex items-center justify-between border"
+              style={{
+                backgroundColor: `${theme.secondaryColor}CC`,
+                borderRadius: `${theme.borderRadius - 8}px`,
+                borderColor: `${theme.textColor}15`
+              }}
+            >
+              <div className="flex flex-col">
+                <EditableText regionKey="home.profile.badgeTitle" fallback="Experience" className="text-xs font-bold uppercase opacity-60" />
+                <EditableText regionKey="home.profile.badgeValue" fallback="8+ Years" className="text-lg font-black" />
               </div>
+              <div
+                className="w-10 h-10 flex items-center justify-center text-white"
+                style={{ backgroundColor: theme.primaryColor, borderRadius: '50%' }}
+              >
+                ✦
+              </div>
+            </div>
           </Card>
 
           {/* Skills Bento Box */}
           <Card className="md:col-span-4 p-8 flex flex-col justify-center">
-             <EditableText as="h3" regionKey="home.skills.title" fallback="Core Toolbox" className="text-xl font-bold mb-4" />
-             <div className="flex flex-wrap gap-2">
-                {["Figma", "React", "TypeScript", "Framer", "CSS"].map((skill, i) => (
-                  <span 
-                    key={i} 
-                    className="px-3 py-1.5 text-xs font-bold tracking-wider rounded-full border"
-                    style={{ borderColor: `${theme.textColor}20`, color: theme.textColor }}
-                  >
-                    {skill}
-                  </span>
-                ))}
-             </div>
+            <EditableText as="h3" regionKey="home.skills.title" fallback="Core Toolbox" className="text-xl font-bold mb-4" />
+            <div className="flex flex-wrap gap-2">
+              {["Figma", "React", "TypeScript", "Framer", "CSS"].map((skill, i) => (
+                <span
+                  key={i}
+                  className="px-3 py-1.5 text-xs font-bold tracking-wider rounded-full border"
+                  style={{ borderColor: `${theme.textColor}20`, color: theme.textColor }}
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
           </Card>
 
           {/* Stat Box */}
           <Card className="md:col-span-4 p-8 flex flex-col justify-center text-center" style={{ backgroundColor: theme.primaryColor, color: '#fff' }}>
-             <EditableText as="h2" regionKey="home.stat.number" fallback="150+" className="text-5xl font-black mb-2" />
-             <EditableText as="p" regionKey="home.stat.desc" fallback="Projects Delivered Worldwide" className="text-sm font-medium opacity-80" />
+            <EditableText as="h2" regionKey="home.stat.number" fallback="150+" className="text-5xl font-black mb-2" />
+            <EditableText as="p" regionKey="home.stat.desc" fallback="Projects Delivered Worldwide" className="text-sm font-medium opacity-80" />
           </Card>
 
           {/* Philosophy / Quote Box */}
           <Card className="md:col-span-4 p-8 flex flex-col justify-center relative overflow-hidden">
-             <div className="text-6xl absolute top-4 left-4 opacity-10 font-serif">"</div>
-             <EditableText 
-               as="p" 
-               regionKey="home.quote.text" 
-               fallback="Design is not just what it looks like and feels like. Design is how it works." 
-               className="text-lg font-medium italic relative z-10 leading-relaxed" 
-             />
-             <EditableText 
-               as="p" 
-               regionKey="home.quote.author" 
-               fallback="— Steve Jobs" 
-               className="text-sm font-bold opacity-50 mt-4 relative z-10" 
-             />
+            <div className="text-6xl absolute top-4 left-4 opacity-10 font-serif">"</div>
+            <EditableText
+              as="p"
+              regionKey="home.quote.text"
+              fallback="Design is not just what it looks like and feels like. Design is how it works."
+              className="text-lg font-medium italic relative z-10 leading-relaxed"
+            />
+            <EditableText
+              as="p"
+              regionKey="home.quote.author"
+              fallback="— Steve Jobs"
+              className="text-sm font-bold opacity-50 mt-4 relative z-10"
+            />
           </Card>
         </div>
       </Section>
@@ -348,7 +358,7 @@ export default function Template30({ editableData }: TemplateProps) {
           {/* Header Canvas Area */}
           <div className="w-full flex flex-col lg:flex-row gap-8 items-center">
             <div className="flex-1 space-y-6">
-              <div 
+              <div
                 className="inline-block px-4 py-1.5 text-xs font-bold uppercase tracking-widest rounded-full"
                 style={{ backgroundColor: `${theme.primaryColor}20`, color: theme.primaryColor }}
               >
@@ -369,7 +379,7 @@ export default function Template30({ editableData }: TemplateProps) {
             </div>
             <div className="flex-1 w-full relative">
               <Card className="w-full p-2 rotate-2 hover:rotate-0 transition-transform duration-500">
-                 <EditableImg
+                <EditableImg
                   regionKey="about.img"
                   fallback="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=1600&auto=format&fit=crop"
                   className="w-full aspect-[4/3] object-cover"
@@ -377,11 +387,11 @@ export default function Template30({ editableData }: TemplateProps) {
                 />
               </Card>
               {/* Decorative overlapping Canva element */}
-              <Card 
+              <Card
                 className="absolute -bottom-8 -left-8 p-6 w-48 -rotate-6 shadow-2xl backdrop-blur-xl border"
                 style={{ borderColor: `${theme.textColor}10`, backgroundColor: `${theme.secondaryColor}E6` }}
               >
-                 <EditableText as="p" regionKey="about.sticker" fallback="Certified Expert 2026" className="text-sm font-black text-center" />
+                <EditableText as="p" regionKey="about.sticker" fallback="Certified Expert 2026" className="text-sm font-black text-center" />
               </Card>
             </div>
           </div>
@@ -390,7 +400,7 @@ export default function Template30({ editableData }: TemplateProps) {
           <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-6">
             {[1, 2, 3, 4].map((item) => (
               <Card key={item} className="p-8 flex gap-6 items-start">
-                <div 
+                <div
                   className="w-12 h-12 flex-shrink-0 flex items-center justify-center text-xl font-bold"
                   style={{ backgroundColor: `${theme.primaryColor}15`, color: theme.primaryColor, borderRadius: '50%' }}
                 >
@@ -413,15 +423,15 @@ export default function Template30({ editableData }: TemplateProps) {
     <div className="animate-in zoom-in-95 duration-500 pt-32 pb-20 flex items-center justify-center min-h-[80vh]">
       <Section id="contact">
         <div className="max-w-4xl mx-auto w-full relative">
-           {/* Decorative Background Canvas blobs */}
-           <div 
-              className="absolute top-0 left-0 w-96 h-96 opacity-20 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/4 pointer-events-none"
-              style={{ backgroundColor: theme.primaryColor }}
-            />
-            <div 
-              className="absolute bottom-0 right-0 w-96 h-96 opacity-10 rounded-full blur-3xl translate-y-1/2 translate-x-1/4 pointer-events-none"
-              style={{ backgroundColor: theme.textColor }}
-            />
+          {/* Decorative Background Canvas blobs */}
+          <div
+            className="absolute top-0 left-0 w-96 h-96 opacity-20 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/4 pointer-events-none"
+            style={{ backgroundColor: theme.primaryColor }}
+          />
+          <div
+            className="absolute bottom-0 right-0 w-96 h-96 opacity-10 rounded-full blur-3xl translate-y-1/2 translate-x-1/4 pointer-events-none"
+            style={{ backgroundColor: theme.textColor }}
+          />
 
           <Card className="w-full p-10 md:p-16 relative z-10 backdrop-blur-2xl border" style={{ borderColor: `${theme.textColor}10`, backgroundColor: `${theme.secondaryColor}F2` }}>
             <div className="grid md:grid-cols-2 gap-16 items-center">
@@ -430,7 +440,7 @@ export default function Template30({ editableData }: TemplateProps) {
                   <EditableText as="h1" regionKey="contact.title" fallback="Let's Talk." className="text-5xl md:text-7xl font-black tracking-tighter block mb-4" />
                   <EditableText as="p" regionKey="contact.subtitle" fallback="Open for freelance opportunities, consulting, and exciting collaborations." className="text-lg opacity-70 block" />
                 </div>
-                
+
                 <div className="space-y-6">
                   <div className="flex flex-col">
                     <span className="text-xs font-bold uppercase opacity-40 tracking-widest mb-1">Email Me</span>
@@ -444,26 +454,26 @@ export default function Template30({ editableData }: TemplateProps) {
               </div>
 
               <div className="flex flex-col gap-4">
-                <input 
-                  type="text" 
-                  placeholder="Your Name" 
-                  className="w-full p-5 bg-transparent border-b outline-none font-medium text-lg transition-colors focus:border-opacity-100" 
-                  style={{ borderColor: `${theme.textColor}30`, color: theme.textColor }} 
+                <input
+                  type="text"
+                  placeholder="Your Name"
+                  className="w-full p-5 bg-transparent border-b outline-none font-medium text-lg transition-colors focus:border-opacity-100"
+                  style={{ borderColor: `${theme.textColor}30`, color: theme.textColor }}
                 />
-                <input 
-                  type="email" 
-                  placeholder="Email Address" 
-                  className="w-full p-5 bg-transparent border-b outline-none font-medium text-lg transition-colors focus:border-opacity-100" 
-                  style={{ borderColor: `${theme.textColor}30`, color: theme.textColor }} 
+                <input
+                  type="email"
+                  placeholder="Email Address"
+                  className="w-full p-5 bg-transparent border-b outline-none font-medium text-lg transition-colors focus:border-opacity-100"
+                  style={{ borderColor: `${theme.textColor}30`, color: theme.textColor }}
                 />
-                <textarea 
-                  placeholder="Tell me about your project" 
+                <textarea
+                  placeholder="Tell me about your project"
                   rows={4}
-                  className="w-full p-5 bg-transparent border-b outline-none font-medium text-lg transition-colors focus:border-opacity-100 resize-none" 
-                  style={{ borderColor: `${theme.textColor}30`, color: theme.textColor }} 
+                  className="w-full p-5 bg-transparent border-b outline-none font-medium text-lg transition-colors focus:border-opacity-100 resize-none"
+                  style={{ borderColor: `${theme.textColor}30`, color: theme.textColor }}
                 />
-                <button 
-                  className="w-full py-5 mt-4 font-black uppercase tracking-widest text-sm transition-transform active:scale-95 shadow-xl" 
+                <button
+                  className="w-full py-5 mt-4 font-black uppercase tracking-widest text-sm transition-transform active:scale-95 shadow-xl"
                   style={{ backgroundColor: theme.primaryColor, color: "#fff", borderRadius: `9999px` }}
                 >
                   <EditableText regionKey="contact.submit" fallback="Send Message" />
@@ -481,11 +491,11 @@ export default function Template30({ editableData }: TemplateProps) {
       className="min-h-screen selection:bg-blue-500 selection:text-white relative overflow-hidden"
       style={{ fontFamily: theme.fontFamily, backgroundColor: theme.backgroundColor }}
     >
-      <Script 
-        src="https://upload-widget.cloudinary.com/global/all.js" 
-        strategy="afterInteractive" 
+      <Script
+        src="https://upload-widget.cloudinary.com/global/all.js"
+        strategy="afterInteractive"
       />
-      
+
       <Navbar />
 
       <div className="flex flex-col w-full relative z-10">

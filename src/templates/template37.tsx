@@ -9,7 +9,7 @@ import { useThemeStore } from "@/store/useThemeStore";
 import Script from "next/script";
 
 /**
- * PRODUCTION-SAFE TEMPLATE FOR CLYRA
+ * PRODUCTION-SAFE TEMPLATE FOR clyraweb
  * Built with internal routing, dynamic theme support, and Cloudinary integration.
  */
 
@@ -57,7 +57,7 @@ export default function Template37({ editableData }: TemplateProps) {
     }
   };
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+  // --- clyraweb EDITABLE COMPONENTS ---
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -150,9 +150,8 @@ export default function Template37({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`px-6 py-2.5 text-sm font-semibold rounded-full transition-all ${
-                activePage === page.toLowerCase() ? "shadow-sm" : "opacity-60 hover:opacity-100"
-              }`}
+              className={`px-6 py-2.5 text-sm font-semibold rounded-full transition-all ${activePage === page.toLowerCase() ? "shadow-sm" : "opacity-60 hover:opacity-100"
+                }`}
               style={{
                 backgroundColor: activePage === page.toLowerCase() ? theme.secondaryColor : "transparent",
                 color: theme.textColor,
@@ -323,7 +322,7 @@ export default function Template37({ editableData }: TemplateProps) {
     <Section id="about" bgType="primary" className="animate-in slide-in-from-bottom-4 duration-700">
       <div className="grid lg:grid-cols-2 gap-16 items-center">
         <div className="order-2 lg:order-1 relative">
-           <div className="absolute -inset-4 rounded-[2rem] opacity-30 blur-2xl -z-10" style={{ backgroundColor: theme.primaryColor }}></div>
+          <div className="absolute -inset-4 rounded-[2rem] opacity-30 blur-2xl -z-10" style={{ backgroundColor: theme.primaryColor }}></div>
           <EditableImg
             regionKey="about.heroImg"
             fallback="https://images.unsplash.com/photo-1554774853-719586f82d77?w=800&h=1000&fit=crop"
@@ -345,7 +344,7 @@ export default function Template37({ editableData }: TemplateProps) {
             fallback="My approach is rooted in empathy, aesthetics, and data. Every pixel matters, and every user journey is crafted with intent. When I'm not designing, I'm exploring modern architecture or brewing the perfect pour-over coffee."
             className="text-lg opacity-60 leading-relaxed block"
           />
-          
+
           <div className="pt-8 border-t" style={{ borderColor: `${theme.textColor}15` }}>
             <h4 className="text-sm font-bold uppercase tracking-widest opacity-50 mb-6">Tools of the Trade</h4>
             <div className="flex flex-wrap gap-3">
@@ -367,7 +366,7 @@ export default function Template37({ editableData }: TemplateProps) {
         <div className="space-y-8">
           <EditableText as="h1" regionKey="contact.title" fallback="Let's create something beautiful together." className="text-5xl md:text-7xl font-black tracking-tight leading-[1.1] block" />
           <EditableText as="p" regionKey="contact.subtitle" fallback="Currently accepting new projects for Q3. Fill out the form or reach out directly via email." className="text-lg opacity-70 leading-relaxed block" />
-          
+
           <div className="space-y-6 pt-8">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full flex items-center justify-center shadow-inner" style={{ backgroundColor: theme.backgroundColor }}>
@@ -422,7 +421,7 @@ export default function Template37({ editableData }: TemplateProps) {
         src="https://upload-widget.cloudinary.com/global/all.js"
         strategy="afterInteractive"
       />
-      
+
       <Navbar />
 
       <div className="flex flex-col w-full min-w-0 flex-1">

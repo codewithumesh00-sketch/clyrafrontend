@@ -4,23 +4,23 @@ import {
   useRegionValue,
 } from "@/store/useWebsiteBuilderStore";
 import { useThemeStore } from "@/store/useThemeStore";
-import { 
-  Utensils, 
-  Clock, 
-  MapPin, 
-  ChevronRight, 
-  Star, 
-  Instagram, 
-  Facebook, 
-  Twitter, 
-  Menu as MenuIcon, 
+import {
+  Utensils,
+  Clock,
+  MapPin,
+  ChevronRight,
+  Star,
+  Instagram,
+  Facebook,
+  Twitter,
+  Menu as MenuIcon,
   X,
   Award,
   Users
 } from 'lucide-react';
 export const template4Meta = {
   id: "business/template1",
-  name: "Clyra Modern Ecommerce",
+  name: "clyraweb Modern Ecommerce",
   image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1600&auto=format&fit=crop",
 };
 /**
@@ -74,25 +74,25 @@ const App = () => {
   }, []);
 
   const categories = ['All', ...new Set(data.menu.map(item => item.category))];
-  const filteredMenu = activeCategory === 'All' 
-    ? data.menu 
+  const filteredMenu = activeCategory === 'All'
+    ? data.menu
     : data.menu.filter(item => item.category === activeCategory);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-[#D4AF37] selection:text-black font-serif">
-      
+
       {/* Navigation */}
       <nav className={`fixed w-full z-50 transition-all duration-500 ${scrolled ? 'bg-black/90 py-4 backdrop-blur-md border-b border-[#D4AF37]/20' : 'bg-transparent py-8'}`}>
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
           <div className="text-2xl font-bold tracking-[0.2em] text-[#D4AF37]">
             {data.navbar.brand}
           </div>
-          
+
           <div className="hidden md:flex gap-10">
             {data.navbar.links.map(link => (
-              <a 
-                key={link.id} 
-                href={`#${link.id}`} 
+              <a
+                key={link.id}
+                href={`#${link.id}`}
                 className="text-sm uppercase tracking-widest hover:text-[#D4AF37] transition-colors"
               >
                 {link.label}
@@ -114,10 +114,10 @@ const App = () => {
       {isMenuOpen && (
         <div className="fixed inset-0 z-40 bg-black flex flex-col items-center justify-center gap-8 md:hidden">
           {data.navbar.links.map(link => (
-            <a 
-              key={link.id} 
-              href={`#${link.id}`} 
-              className="text-2xl uppercase tracking-widest" 
+            <a
+              key={link.id}
+              href={`#${link.id}`}
+              className="text-2xl uppercase tracking-widest"
               onClick={() => setIsMenuOpen(false)}
             >
               {link.label}
@@ -132,14 +132,14 @@ const App = () => {
       {/* Hero Section */}
       <section id="home" className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
-          <img 
-            src={data.hero.image} 
-            alt="Hero" 
+          <img
+            src={data.hero.image}
+            alt="Hero"
             className="w-full h-full object-cover scale-105 animate-slow-zoom"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-[#0a0a0a]"></div>
         </div>
-        
+
         <div className="relative z-10 text-center px-6 max-w-4xl">
           <p className="text-[#D4AF37] uppercase tracking-[0.4em] mb-6 animate-fade-in-up text-sm font-sans">Fine Dining Experience</p>
           <h1 className="text-5xl md:text-8xl font-light mb-8 leading-tight animate-fade-in-up delay-100">
@@ -212,10 +212,10 @@ const App = () => {
             {filteredMenu.map(item => (
               <div key={item.id} className="group cursor-pointer">
                 <div className="relative overflow-hidden mb-6 aspect-square">
-                  <img 
-                    src={item.image} 
-                    alt={item.name} 
-                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700" 
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
                   />
                   <div className="absolute top-4 right-4 bg-black/80 px-4 py-2 text-[#D4AF37] font-bold border border-[#D4AF37]/30 backdrop-blur-md">
                     {item.price}
@@ -239,9 +239,9 @@ const App = () => {
           <div className="relative">
             <div className="absolute -top-10 -left-10 w-40 h-40 border-t border-l border-[#D4AF37]/30"></div>
             <div className="absolute -bottom-10 -right-10 w-40 h-40 border-b border-r border-[#D4AF37]/30"></div>
-            <img 
-              src={data.chef.image} 
-              alt="Chef" 
+            <img
+              src={data.chef.image}
+              alt="Chef"
               className="w-full aspect-[4/5] object-cover relative z-10 shadow-2xl"
             />
           </div>
@@ -272,7 +272,7 @@ const App = () => {
       <section className="py-32 bg-[#0a0a0a]">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <div className="flex justify-center gap-2 mb-8">
-            {[1,2,3,4,5].map(i => <Star key={i} size={20} fill="#D4AF37" color="#D4AF37" />)}
+            {[1, 2, 3, 4, 5].map(i => <Star key={i} size={20} fill="#D4AF37" color="#D4AF37" />)}
           </div>
           <blockquote className="text-2xl md:text-4xl italic font-light mb-10 leading-relaxed">
             "An unparalleled dining experience. The attention to detail in every bite of the Wagyu was something I've only found in the finest kitchens of Paris."
@@ -295,7 +295,7 @@ const App = () => {
               <Twitter className="text-gray-500 hover:text-[#D4AF37] cursor-pointer" />
             </div>
           </div>
-          
+
           <div>
             <h4 className="text-[#D4AF37] uppercase tracking-widest text-xs font-sans mb-6">Location</h4>
             <div className="flex gap-3 text-gray-400 mb-4 font-sans text-sm">
@@ -325,7 +325,8 @@ const App = () => {
       </footer>
 
       {/* Tailwind and Animations Support */}
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes fade-in-up {
           from { opacity: 0; transform: translateY(30px); }
           to { opacity: 1; transform: translateY(0); }

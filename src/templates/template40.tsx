@@ -24,31 +24,36 @@ export default function Template40({ editableData }: TemplateProps) {
   const { theme } = useThemeStore();
   const updateRegion = useWebsiteBuilderStore((state: any) => state.updateRegion);
 
-  const handleImageUpload = useCallback(
-    (regionKey: string) => {
-      if (typeof window !== "undefined" && (window as any).cloudinary) {
-        if (!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || !process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) {
-          console.warn("Cloudinary environment variables missing.");
-          return;
-        }
-        (window as any).cloudinary
-          .createUploadWidget(
-            {
-              cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-              uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
-              multiple: false,
-            },
-            (error: any, result: any) => {
-              if (!error && result && result.event === "success") {
-                updateRegion(regionKey, result.info.secure_url);
+  const handleImageUpload = useCallback((regionKey: string) => {
+    if (typeof window !== "undefined" && (window as any).cloudinary) {
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
+          {
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
+            multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
+          },
+          (error: any, result: any) => {
+            if (!error && result && result.event === "success") {
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
               }
             }
-          )
-          .open();
+          }
+        );
       }
-    },
-    [updateRegion]
-  );
+      (window as any).__cloudinaryWidget.open();
+    }
+  }, [updateRegion]);
+
 
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
@@ -67,7 +72,7 @@ export default function Template40({ editableData }: TemplateProps) {
           e.stopPropagation();
           (e.currentTarget as HTMLElement).focus();
         }}
-        className={`focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition-all break-words ${className}`}
+        className={`focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition-all ${className}`}
       >
         {content}
       </Tag>
@@ -134,9 +139,8 @@ export default function Template40({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-sm font-bold transition-all capitalize px-4 py-2 rounded-full ${
-                activePage === page.toLowerCase() ? "shadow-md" : "opacity-60 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/5"
-              }`}
+              className={`text-sm font-bold transition-all capitalize px-4 py-2 rounded-full ${activePage === page.toLowerCase() ? "shadow-md" : "opacity-60 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/5"
+                }`}
               style={{
                 backgroundColor: activePage === page.toLowerCase() ? theme.backgroundColor : "transparent",
                 color: theme.textColor,
@@ -160,7 +164,7 @@ export default function Template40({ editableData }: TemplateProps) {
             <EditableText regionKey="global.navCta" fallback="Invest Now" />
           </button>
           <div className="md:hidden flex gap-2">
-             {["Home", "About", "Contact"].map((page) => (
+            {["Home", "About", "Contact"].map((page) => (
               <button
                 key={page}
                 onClick={() => setActivePage(page.toLowerCase() as any)}
@@ -225,7 +229,7 @@ export default function Template40({ editableData }: TemplateProps) {
       {/* Hero Pitch Section */}
       <Section id="pitch-hero" bgType="primary">
         <div className="flex flex-col items-center text-center max-w-4xl mx-auto space-y-8 min-w-0">
-          <div 
+          <div
             className="px-4 py-2 font-bold text-xs uppercase tracking-widest mb-4 inline-block"
             style={{ backgroundColor: `${theme.primaryColor}20`, color: theme.primaryColor, borderRadius: '100px' }}
           >
@@ -260,7 +264,7 @@ export default function Template40({ editableData }: TemplateProps) {
             </button>
           </div>
         </div>
-        
+
         <div className="mt-20 relative w-full rounded-2xl overflow-hidden shadow-2xl">
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent z-10 pointer-events-none"></div>
           <EditableImg
@@ -276,7 +280,7 @@ export default function Template40({ editableData }: TemplateProps) {
       <Section id="problem-solution" bgType="secondary">
         <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 min-w-0">
           {/* Problem Card */}
-          <div 
+          <div
             className="p-8 sm:p-12 shadow-sm border transition-all hover:shadow-xl"
             style={{ backgroundColor: theme.backgroundColor, borderRadius: `${theme.borderRadius * 2}px`, borderColor: `${theme.textColor}10` }}
           >
@@ -284,11 +288,11 @@ export default function Template40({ editableData }: TemplateProps) {
               ⚠️
             </div>
             <EditableText as="h3" regionKey="home.problemTitle" fallback="The Problem" className="text-3xl font-black mb-4 block" />
-            <EditableText 
-              as="p" 
-              regionKey="home.problemDesc" 
-              fallback="Legacy systems are fragmented, costing enterprises an average of $2M annually in operational inefficiencies and manual data entry." 
-              className="text-lg opacity-70 leading-relaxed block" 
+            <EditableText
+              as="p"
+              regionKey="home.problemDesc"
+              fallback="Legacy systems are fragmented, costing enterprises an average of $2M annually in operational inefficiencies and manual data entry."
+              className="text-lg opacity-70 leading-relaxed block"
             />
             <div className="mt-8 p-6 rounded-xl" style={{ backgroundColor: `${theme.textColor}05` }}>
               <EditableText as="h4" regionKey="home.problemStat" fallback="85% of companies report bottlenecking." className="font-bold text-xl block" />
@@ -296,11 +300,11 @@ export default function Template40({ editableData }: TemplateProps) {
           </div>
 
           {/* Solution Card */}
-          <div 
+          <div
             className="p-8 sm:p-12 shadow-sm border transition-all hover:shadow-xl relative overflow-hidden"
             style={{ backgroundColor: theme.backgroundColor, borderRadius: `${theme.borderRadius * 2}px`, borderColor: `${theme.textColor}10` }}
           >
-            <div 
+            <div
               className="absolute top-0 right-0 w-64 h-64 opacity-10 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 pointer-events-none"
               style={{ backgroundColor: theme.primaryColor }}
             ></div>
@@ -308,13 +312,13 @@ export default function Template40({ editableData }: TemplateProps) {
               💡
             </div>
             <EditableText as="h3" regionKey="home.solutionTitle" fallback="Our Solution" className="text-3xl font-black mb-4 block" />
-            <EditableText 
-              as="p" 
-              regionKey="home.solutionDesc" 
-              fallback="A unified, AI-driven platform that automates workflows seamlessly, cutting deployment times by 90% and reducing overhead instantly." 
-              className="text-lg opacity-70 leading-relaxed block" 
+            <EditableText
+              as="p"
+              regionKey="home.solutionDesc"
+              fallback="A unified, AI-driven platform that automates workflows seamlessly, cutting deployment times by 90% and reducing overhead instantly."
+              className="text-lg opacity-70 leading-relaxed block"
             />
-             <div className="mt-8 p-6 rounded-xl" style={{ backgroundColor: `${theme.primaryColor}15`, color: theme.primaryColor }}>
+            <div className="mt-8 p-6 rounded-xl" style={{ backgroundColor: `${theme.primaryColor}15`, color: theme.primaryColor }}>
               <EditableText as="h4" regionKey="home.solutionStat" fallback="10x Faster Deployments Guaranteed." className="font-bold text-xl block" />
             </div>
           </div>
@@ -323,31 +327,31 @@ export default function Template40({ editableData }: TemplateProps) {
 
       {/* Traction / Market Section */}
       <Section id="traction" bgType="primary">
-         <div className="text-center mb-16 max-w-3xl mx-auto min-w-0">
+        <div className="text-center mb-16 max-w-3xl mx-auto min-w-0">
           <EditableText as="h2" regionKey="home.tractionTitle" fallback="Why Now? Traction & Market" className="text-4xl sm:text-5xl font-black tracking-tighter block mb-6" />
-          <EditableText 
-            as="p" 
-            regionKey="home.tractionSubtitle" 
-            fallback="The timing is perfect. We have hit product-market fit and are ready to scale rapidly." 
-            className="text-xl opacity-70 leading-relaxed block" 
+          <EditableText
+            as="p"
+            regionKey="home.tractionSubtitle"
+            fallback="The timing is perfect. We have hit product-market fit and are ready to scale rapidly."
+            className="text-xl opacity-70 leading-relaxed block"
           />
         </div>
-        
+
         <div className="grid sm:grid-cols-3 gap-8 min-w-0">
           {[1, 2, 3].map((num) => (
             <div key={num} className="text-center p-8 rounded-2xl" style={{ backgroundColor: theme.secondaryColor }}>
-              <EditableText 
-                as="h3" 
-                regionKey={`home.stat${num}Value`} 
-                fallback={num === 1 ? "$5M+" : num === 2 ? "120%" : "45+"} 
-                className="text-5xl sm:text-6xl font-black block mb-4" 
+              <EditableText
+                as="h3"
+                regionKey={`home.stat${num}Value`}
+                fallback={num === 1 ? "$5M+" : num === 2 ? "120%" : "45+"}
+                className="text-5xl sm:text-6xl font-black block mb-4"
                 style={{ color: theme.primaryColor }}
               />
-              <EditableText 
-                as="p" 
-                regionKey={`home.stat${num}Label`} 
-                fallback={num === 1 ? "ARR in Year 1" : num === 2 ? "MoM Growth" : "Enterprise Clients"} 
-                className="text-lg font-bold opacity-80 block uppercase tracking-wide" 
+              <EditableText
+                as="p"
+                regionKey={`home.stat${num}Label`}
+                fallback={num === 1 ? "ARR in Year 1" : num === 2 ? "MoM Growth" : "Enterprise Clients"}
+                className="text-lg font-bold opacity-80 block uppercase tracking-wide"
               />
             </div>
           ))}
@@ -386,12 +390,12 @@ export default function Template40({ editableData }: TemplateProps) {
 
       <Section id="team" bgType="secondary">
         <div className="text-center mb-16 min-w-0">
-           <EditableText as="h2" regionKey="about.teamTitle" fallback="The Founding Team" className="text-4xl sm:text-5xl font-black tracking-tighter block mb-6" />
+          <EditableText as="h2" regionKey="about.teamTitle" fallback="The Founding Team" className="text-4xl sm:text-5xl font-black tracking-tighter block mb-6" />
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 min-w-0">
           {[1, 2, 3].map((num) => (
-             <div 
-              key={num} 
+            <div
+              key={num}
               className="p-6 rounded-2xl text-center shadow-sm border transition-transform hover:-translate-y-2"
               style={{ backgroundColor: theme.backgroundColor, borderColor: `${theme.textColor}10` }}
             >
@@ -417,35 +421,35 @@ export default function Template40({ editableData }: TemplateProps) {
         <div className="max-w-5xl mx-auto min-w-0">
           <div className="text-center mb-16">
             <EditableText as="h1" regionKey="contact.title" fallback="Join The Seed Round" className="text-5xl sm:text-7xl font-black tracking-tighter block mb-6" />
-            <EditableText 
-              as="p" 
-              regionKey="contact.subtitle" 
-              fallback="We are raising $4M to accelerate go-to-market and expand our engineering team." 
-              className="text-xl sm:text-2xl opacity-70 leading-relaxed block max-w-2xl mx-auto" 
+            <EditableText
+              as="p"
+              regionKey="contact.subtitle"
+              fallback="We are raising $4M to accelerate go-to-market and expand our engineering team."
+              className="text-xl sm:text-2xl opacity-70 leading-relaxed block max-w-2xl mx-auto"
             />
           </div>
 
-          <div 
-            className="grid md:grid-cols-2 gap-0 shadow-2xl overflow-hidden" 
+          <div
+            className="grid md:grid-cols-2 gap-0 shadow-2xl overflow-hidden"
             style={{ borderRadius: `${theme.borderRadius * 3}px`, backgroundColor: theme.backgroundColor, border: `1px solid ${theme.textColor}15` }}
           >
             {/* Round Details */}
             <div className="p-8 sm:p-12 space-y-8" style={{ backgroundColor: theme.secondaryColor }}>
               <EditableText as="h3" regionKey="contact.detailsTitle" fallback="Investment Terms" className="text-3xl font-black block mb-8" />
-              
+
               {[1, 2, 3].map((num) => (
                 <div key={num} className="border-b pb-6" style={{ borderColor: `${theme.textColor}10` }}>
                   <h4 className="text-xs font-black uppercase opacity-50 tracking-widest mb-2">
                     <EditableText regionKey={`contact.termLabel${num}`} fallback={num === 1 ? "Target" : num === 2 ? "Instrument" : "Lead Investor"} />
                   </h4>
-                  <EditableText 
-                    regionKey={`contact.termValue${num}`} 
-                    fallback={num === 1 ? "$4.0M USD" : num === 2 ? "SAFE (Post-Money)" : "Sequoia Capital (Committed)"} 
-                    className="font-bold text-xl block" 
+                  <EditableText
+                    regionKey={`contact.termValue${num}`}
+                    fallback={num === 1 ? "$4.0M USD" : num === 2 ? "SAFE (Post-Money)" : "Sequoia Capital (Committed)"}
+                    className="font-bold text-xl block"
                   />
                 </div>
               ))}
-              
+
               <div className="pt-4">
                 <p className="text-sm opacity-60 italic">Confidential Pitch Deck and Data Room access provided upon verified request.</p>
               </div>
@@ -454,23 +458,23 @@ export default function Template40({ editableData }: TemplateProps) {
             {/* Contact Form */}
             <div className="p-8 sm:p-12 space-y-6 flex flex-col justify-center">
               <EditableText as="h3" regionKey="contact.formTitle" fallback="Request Data Room" className="text-3xl font-black block mb-4" />
-              <input 
-                className="w-full p-4 bg-transparent border-2 outline-none font-medium transition-colors focus:border-current" 
-                style={{ borderColor: `${theme.textColor}20`, borderRadius: `${theme.borderRadius}px`, color: theme.textColor }} 
-                placeholder="Full Name" 
+              <input
+                className="w-full p-4 bg-transparent border-2 outline-none font-medium transition-colors focus:border-current"
+                style={{ borderColor: `${theme.textColor}20`, borderRadius: `${theme.borderRadius}px`, color: theme.textColor }}
+                placeholder="Full Name"
               />
-              <input 
-                className="w-full p-4 bg-transparent border-2 outline-none font-medium transition-colors focus:border-current" 
-                style={{ borderColor: `${theme.textColor}20`, borderRadius: `${theme.borderRadius}px`, color: theme.textColor }} 
-                placeholder="Firm / Angel Name" 
+              <input
+                className="w-full p-4 bg-transparent border-2 outline-none font-medium transition-colors focus:border-current"
+                style={{ borderColor: `${theme.textColor}20`, borderRadius: `${theme.borderRadius}px`, color: theme.textColor }}
+                placeholder="Firm / Angel Name"
               />
-              <input 
-                className="w-full p-4 bg-transparent border-2 outline-none font-medium transition-colors focus:border-current" 
-                style={{ borderColor: `${theme.textColor}20`, borderRadius: `${theme.borderRadius}px`, color: theme.textColor }} 
-                placeholder="Work Email" 
+              <input
+                className="w-full p-4 bg-transparent border-2 outline-none font-medium transition-colors focus:border-current"
+                style={{ borderColor: `${theme.textColor}20`, borderRadius: `${theme.borderRadius}px`, color: theme.textColor }}
+                placeholder="Work Email"
               />
-              <button 
-                className="w-full py-5 font-black uppercase tracking-widest text-sm transition-transform hover:-translate-y-1 mt-4 shadow-lg" 
+              <button
+                className="w-full py-5 font-black uppercase tracking-widest text-sm transition-transform hover:-translate-y-1 mt-4 shadow-lg"
                 style={{ backgroundColor: theme.primaryColor, color: "#fff", borderRadius: `${theme.borderRadius}px` }}
               >
                 <EditableText regionKey="contact.submit" fallback="Request Access" />
@@ -488,7 +492,7 @@ export default function Template40({ editableData }: TemplateProps) {
       style={{ fontFamily: theme.fontFamily, backgroundColor: theme.backgroundColor }}
     >
       <Script src="https://upload-widget.cloudinary.com/global/all.js" strategy="afterInteractive" />
-      
+
       <Navbar />
 
       <div className="flex flex-col w-full flex-1">

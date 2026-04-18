@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation";
 import { signInWithPopup, onAuthStateChanged, signOut } from "firebase/auth";
 import type { User } from "firebase/auth";
 import { auth, googleProvider } from "@/firebase/config";
-import { 
-  Sparkles, 
-  Zap, 
-  Globe, 
-  Code2, 
-  Rocket, 
-  ChevronRight, 
+import {
+  Sparkles,
+  Zap,
+  Globe,
+  Code2,
+  Rocket,
+  ChevronRight,
   Play,
   Layers,
   Palette,
@@ -95,7 +95,7 @@ export default function LandingPage() {
     {
       icon: Wand2,
       title: "Analyzing prompt...",
-      description: "Clyraweb helps determine the subject and style of your site.",
+      description: "clyrawebweb helps determine the subject and style of your site.",
       color: "from-orange-500 to-red-600"
     },
     {
@@ -151,14 +151,14 @@ export default function LandingPage() {
       {/* Animated Background with Moon */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {/* Moon */}
-        <div 
+        <div
           className="absolute top-12 right-12 w-16 h-16 rounded-full bg-gradient-to-br from-yellow-100 via-yellow-200 to-orange-200 opacity-90 blur-[2px]"
-          style={{ 
+          style={{
             transform: `translateY(${scrollY * 0.15}px)`,
             boxShadow: "0 0 60px rgba(253, 224, 71, 0.4)"
           }}
         />
-        
+
         {/* Stars */}
         {[...Array(40)].map((_, i) => (
           <div
@@ -175,7 +175,7 @@ export default function LandingPage() {
         ))}
 
         {/* Gradient Orbs */}
-        <div 
+        <div
           className="absolute w-[600px] h-[600px] rounded-full bg-gradient-to-r from-violet-600/10 to-purple-600/10 blur-[120px]"
           style={{
             top: "-10%",
@@ -183,7 +183,7 @@ export default function LandingPage() {
             transform: `translate(${scrollY * 0.05}px, ${scrollY * 0.05}px)`
           }}
         />
-        <div 
+        <div
           className="absolute w-[500px] h-[500px] rounded-full bg-gradient-to-r from-blue-600/10 to-cyan-600/10 blur-[100px]"
           style={{
             bottom: "10%",
@@ -193,7 +193,7 @@ export default function LandingPage() {
         />
 
         {/* Grid Pattern */}
-        <div 
+        <div
           className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:80px_80px]"
           style={{ transform: `translateY(${scrollY * 0.02}px)` }}
         />
@@ -207,7 +207,7 @@ export default function LandingPage() {
               <Sparkles size={20} className="text-white" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
-              ClyraWeb
+              clyrawebWeb
             </span>
           </div>
 
@@ -262,11 +262,11 @@ export default function LandingPage() {
             {/* Main Heading */}
             <h1 className="text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight mb-6">
               <span className="bg-gradient-to-b from-white via-white to-zinc-400 bg-clip-text text-transparent">
-               Presented By
+                Presented By
               </span>
               <br />
               <span className="bg-gradient-to-r from-orange-400 via-red-400 to-violet-400 bg-clip-text text-transparent">
-               Gen Ai
+                Gen Ai
               </span>
             </h1>
 
@@ -290,8 +290,8 @@ export default function LandingPage() {
                   readOnly
                 />
                 <div className="absolute bottom-4 right-4 flex items-center gap-2">
-                  <button 
-                    onClick={handleChatClick} 
+                  <button
+                    onClick={handleChatClick}
                     className="p-3 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white transition-all"
                   >
                     <ArrowRight size={20} />
@@ -410,13 +410,13 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="relative p-12 rounded-3xl bg-gradient-to-b from-violet-600/10 to-purple-600/10 border border-white/10 backdrop-blur-xl overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-violet-600/5 to-purple-600/5" />
-            
+
             <div className="relative z-10">
               <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-transparent">
                 Ready to build something amazing?
               </h2>
               <p className="text-zinc-400 text-lg mb-8 max-w-2xl mx-auto">
-                Join thousands of creators building the future of the web with ClyraWeb.
+                Join thousands of creators building the future of the web with clyrawebWeb.
               </p>
               <button
                 onClick={handleGetStarted}
@@ -437,11 +437,11 @@ export default function LandingPage() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 via-red-500 to-violet-600 flex items-center justify-center">
               <Sparkles size={18} className="text-white" />
             </div>
-            <span className="text-lg font-bold text-white">ClyraWeb</span>
+            <span className="text-lg font-bold text-white">clyrawebWeb</span>
             <span className="text-sm text-zinc-500 ml-2">Beta</span>
           </div>
           <p className="text-zinc-500 text-sm">
-            © 2026 ClyraWeb. All rights reserved.
+            © 2026 clyrawebWeb. All rights reserved.
           </p>
         </div>
       </footer>
@@ -449,7 +449,7 @@ export default function LandingPage() {
       {/* Login Modal */}
       {showLoginModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div 
+          <div
             className="absolute inset-0 bg-black/90 backdrop-blur-sm"
             onClick={() => setShowLoginModal(false)}
           />
@@ -465,7 +465,7 @@ export default function LandingPage() {
               <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-orange-500 via-red-500 to-violet-600 flex items-center justify-center">
                 <Sparkles size={32} className="text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Welcome to ClyraWeb</h2>
+              <h2 className="text-2xl font-bold text-white mb-2">Welcome to clyrawebWeb</h2>
               <p className="text-zinc-400">Sign in to start building your dream website</p>
             </div>
 

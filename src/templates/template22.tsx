@@ -31,24 +31,35 @@ export default function Template22({ editableData }: TemplateProps) {
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = (regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
-      (window as any).cloudinary
-        .createUploadWidget(
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
           {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
             multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
           },
           (error: any, result: any) => {
             if (!error && result && result.event === "success") {
-              updateRegion(regionKey, result.info.secure_url);
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
+              }
             }
           }
-        )
-        .open();
+        );
+      }
+      (window as any).__cloudinaryWidget.open();
     }
   };
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+  // --- clyraweb EDITABLE COMPONENTS ---
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -119,7 +130,7 @@ export default function Template22({ editableData }: TemplateProps) {
       <div className="w-full border-b text-center py-2 text-xs uppercase tracking-widest font-bold opacity-80" style={{ borderColor: `${theme.textColor}20` }}>
         <EditableText regionKey="global.topBanner" fallback="The Daily Editorial • Fresh Perspectives Daily" />
       </div>
-      
+
       <div className="max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden">
         {/* Brand Name (Magazine Style) */}
         <div className="flex-1 text-center md:text-left min-w-0">
@@ -136,9 +147,8 @@ export default function Template22({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-sm font-bold uppercase tracking-widest transition-colors ${
-                activePage === page.toLowerCase() ? "" : "opacity-50 hover:opacity-100"
-              }`}
+              className={`text-sm font-bold uppercase tracking-widest transition-colors ${activePage === page.toLowerCase() ? "" : "opacity-50 hover:opacity-100"
+                }`}
               style={{ color: activePage === page.toLowerCase() ? theme.primaryColor : theme.textColor }}
             >
               {page}
@@ -280,7 +290,7 @@ export default function Template22({ editableData }: TemplateProps) {
           <EditableText regionKey="about.kicker" fallback="The Masthead" className="text-sm font-bold uppercase tracking-widest block opacity-50" />
           <EditableText as="h1" regionKey="about.title" fallback="Truth in Design & Words." className="text-6xl font-black tracking-tighter block" />
         </div>
-        
+
         <EditableImg
           regionKey="about.img"
           fallback="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1600&auto=format&fit=crop"
@@ -339,7 +349,7 @@ export default function Template22({ editableData }: TemplateProps) {
             </div>
           </div>
         </div>
-        
+
         <div className="p-8 border-2 shadow-xl" style={{ borderColor: theme.textColor, backgroundColor: theme.backgroundColor, borderRadius: `${theme.borderRadius}px` }}>
           <h3 className="text-2xl font-black mb-6">Send a Dispatch</h3>
           <div className="space-y-5">
@@ -371,7 +381,7 @@ export default function Template22({ editableData }: TemplateProps) {
     >
       {/* REQUIRED CLOUDINARY SCRIPT (Next/Script) */}
       <Script src="https://upload-widget.cloudinary.com/global/all.js" strategy="afterInteractive" />
-      
+
       <Navbar />
 
       <div className="flex flex-col w-full min-h-[70vh]">

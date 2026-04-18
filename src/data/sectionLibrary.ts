@@ -5,7 +5,7 @@ export const sectionLibrary: Record<string, Block[]> = {
     {
       id: crypto.randomUUID(),
       type: "cta",
-      content: "🚀 Start Building with Clyra",
+      content: "🚀 Start Building with clyraweb",
     },
     {
       id: crypto.randomUUID(),
@@ -49,7 +49,7 @@ export const sectionLibrary: Record<string, Block[]> = {
     {
       id: crypto.randomUUID(),
       type: "faq",
-      content: "⭐ Clyra helped us launch in 1 day",
+      content: "⭐ clyraweb helped us launch in 1 day",
     },
     {
       id: crypto.randomUUID(),
@@ -75,7 +75,7 @@ export const sectionLibrary: Record<string, Block[]> = {
     {
       id: crypto.randomUUID(),
       type: "faq",
-      content: "© 2026 Clyra. All rights reserved.",
+      content: "© 2026 clyraweb. All rights reserved.",
     },
   ],
 };

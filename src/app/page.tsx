@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -14,6 +14,7 @@ import { normalizeSiteContent } from "@/lib/siteContent";
 import JSZip from "jszip";
 import { useAuth } from "@/hooks/useAuth";
 import { generateWebsite } from "@/lib/api";
+import { useWebsiteBuilderStore } from "@/store/useWebsiteBuilderStore";
 import {
   Cpu, Loader2, Code2, Trash2, Sparkles, ArrowUp, Play, Copy, Check,
   Monitor, Eye, RefreshCw, Zap, Terminal, ChevronRight, X, Maximize2,
@@ -21,7 +22,7 @@ import {
   Globe, Download, Plus, Layers, AlertTriangle, Home as HomeIcon, Search, FolderOpen,
   Star, Users, Clock, Gift, Zap as ZapIcon, Menu, LogOut, ChevronDown,
   Command, Layout, Settings, HelpCircle, Sun, Moon, MessageSquare, MessageSquareOff,
-  Send
+  Send, Smartphone, Tablet, Circle, CheckCircle2, XCircle, Edit2
 } from "lucide-react";
 
 type GeneratorMode = "ui" | "blog";
@@ -33,7 +34,7 @@ interface DeployConfig {
   projectName: string;
 }
 
-// ==================== âš™ï¸ CONFIGURATION ====================
+// ==================== ⚙️ CONFIGURATION ====================
 const CONFIG = {
   AUTO_GENERATE_ON_LOAD: false,
   ENABLE_PROMPT_VARIATIONS: false,
@@ -41,7 +42,7 @@ const CONFIG = {
   API_COOLDOWN_MS: 2000,
 } as const;
 
-// âœ… Animated words for chat header
+// ✅ Animated words for chat header
 const ANIMATED_WORDS = ["Building...", "Creating...", "Designing...", "Crafting...", "Generating..."];
 
 // Debounce utility
@@ -94,7 +95,7 @@ class SandpackErrorBoundary extends React.Component<
       return this.props.fallback || (
         <div className="p-10 text-red-400 flex flex-col items-center justify-center h-full">
           <AlertTriangle size={48} className="mb-4" />
-          <p className="font-semibold">Preview Error âš ï¸</p>
+          <p className="font-semibold">Preview Error ⚠️</p>
           <button
             onClick={() => this.setState({ hasError: false })}
             className="mt-4 px-4 py-2 bg-violet-500/20 text-violet-300 rounded-lg hover:bg-violet-500/30 transition-colors"
@@ -113,10 +114,10 @@ export default function Home() {
   const [inputValue, setInputValue] = useState("");
   const [prompt, setPrompt] = useState("");
   const [siteData, setSiteData] = useState<any>(null);
-  
-  // âœ… STEP 1: ADD GLOBAL SCHEMA STATE
+
+  // ✅ STEP 1: ADD GLOBAL SCHEMA STATE
   const [liveSchema, setLiveSchema] = useState<any>(null);
-  
+
   const [loading, setLoading] = useState(false);
 
   const filesRef = useRef<{ [key: string]: string }>({});
@@ -129,7 +130,7 @@ export default function Home() {
       links: ["Home", "About", "Services", "Pricing", "Contact"],
     },
     hero: {
-      heading: "Template 6 Working Successfully ðŸš€",
+      heading: "Template 6 Working Successfully 🚀",
       subheading: "This is direct Template 6 test mode",
       buttonText: "Get Started",
     },
@@ -144,12 +145,12 @@ export default function Home() {
       },
     ],
     contact: {
-      email: "hello@clyraweb.com",
+      email: "hello@clyrawebweb.com",
       phone: "+91 9876543210",
     },
     footer: {
-      company: "ClyraWeb",
-      copyright: "Â© 2026",
+      company: "clyrawebWeb",
+      copyright: "© 2026",
     },
   });
   const [currentFile, setCurrentFile] = useState("src/app/page.tsx");
@@ -161,6 +162,7 @@ export default function Home() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [generationHistory, setGenerationHistory] = useState<string[]>([]);
   const [generatedPages, setGeneratedPages] = useState<string[]>(["home"]);
+  const savedProjects = useWebsiteBuilderStore((s) => s.savedProjects);
   const [globalCss, setGlobalCss] = useState(`/* Global Styles */
 :root {
   --primary: #8b5cf6;
@@ -205,7 +207,7 @@ body {
   const [showSidebar, setShowSidebar] = useState(true);
   const [theme, setTheme] = useState<ThemeMode>("dark");
 
-  // âœ… Chatbox toggle state + animated word index
+  // ✅ Chatbox toggle state + animated word index
   const [isChatOpen, setIsChatOpen] = useState(true);
   const [animatedWordIndex, setAnimatedWordIndex] = useState(0);
 
@@ -220,24 +222,24 @@ body {
   const { user: firebaseUser, loading: authLoading, logout } = useAuth();
 
   const API_ORIGIN =
-    process.env.NEXT_PUBLIC_API_URL || "https://clyrawebbackend-666777548.europe-west1.run.app";
+    process.env.NEXT_PUBLIC_API_URL || "https://clyrawebwebbackend-666777548.europe-west1.run.app";
   const UI_WEBHOOK =
     process.env.NEXT_PUBLIC_UI_WEBHOOK || `${API_ORIGIN.replace(/\/$/, "")}/generate`;
   const BLOG_WEBHOOK =
     process.env.NEXT_PUBLIC_BLOG_WEBHOOK ||
     `${API_ORIGIN.replace(/\/$/, "")}/generate-blog`;
 
-  // ðŸŽ¨ THEME MANAGEMENT - PURE BLACK/WHITE
+  // 🎨 THEME MANAGEMENT - PURE BLACK/WHITE
   useEffect(() => {
-    const savedTheme = localStorage.getItem("clyraweb-theme") as ThemeMode;
+    useWebsiteBuilderStore.getState().loadProjects();
+    const savedTheme = localStorage.getItem("clyrawebweb-theme") as ThemeMode;
     if (savedTheme) {
       setTheme(savedTheme);
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("clyraweb-theme", theme);
-    // Apply theme to document root for full-page coverage
+    localStorage.setItem("clyrawebweb-theme", theme);
     if (theme === "dark") {
       document.documentElement.classList.add("dark");
       document.documentElement.style.backgroundColor = "#000000";
@@ -247,7 +249,6 @@ body {
       document.documentElement.style.backgroundColor = "#ffffff";
       document.documentElement.style.color = "#000000";
     }
-    // Also apply to body for Safari compatibility
     document.body.style.backgroundColor = theme === "dark" ? "#000000" : "#ffffff";
     document.body.style.color = theme === "dark" ? "#ffffff" : "#000000";
   }, [theme]);
@@ -258,7 +259,7 @@ body {
 
   const isDark = theme === "dark";
 
-  // âœ… Animated word rotation effect
+  // ✅ Animated word rotation effect
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimatedWordIndex(prev => (prev + 1) % ANIMATED_WORDS.length);
@@ -266,22 +267,18 @@ body {
     return () => clearInterval(interval);
   }, []);
 
-  // âœ… STEP 2: ADD SYNC EFFECT (after theme effects)
+  // ✅ STEP 2: ADD SYNC EFFECT
   useEffect(() => {
     const syncLiveSchema = () => {
       try {
-        const raw = localStorage.getItem("clyra-live-schema");
+        const raw = localStorage.getItem("clyraweb-live-schema");
         if (!raw) return;
         const parsed = JSON.parse(raw);
 
         setLiveSchema((prev: any) => {
           const oldSchema = JSON.stringify(prev);
           const newSchema = JSON.stringify(parsed);
-
-          if (oldSchema === newSchema) {
-            return prev;
-          }
-
+          if (oldSchema === newSchema) return prev;
           return parsed;
         });
       } catch (error) {
@@ -290,15 +287,14 @@ body {
     };
 
     syncLiveSchema();
-
     window.addEventListener("storage", syncLiveSchema);
     window.addEventListener("focus", syncLiveSchema);
-    window.addEventListener("clyra-schema-updated", syncLiveSchema);
+    window.addEventListener("clyraweb-schema-updated", syncLiveSchema);
 
     return () => {
       window.removeEventListener("storage", syncLiveSchema);
       window.removeEventListener("focus", syncLiveSchema);
-      window.removeEventListener("clyra-schema-updated", syncLiveSchema);
+      window.removeEventListener("clyraweb-schema-updated", syncLiveSchema);
     };
   }, []);
 
@@ -328,15 +324,9 @@ body {
   // Timer
   useEffect(() => {
     let timer: ReturnType<typeof setInterval> | undefined;
-    const start = () => {
-      timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    };
-    const stop = () => {
-      if (timer) clearInterval(timer);
-    };
-    const handleVisibilityChange = () => {
-      document.hidden ? stop() : start();
-    };
+    const start = () => { timer = setInterval(() => setCurrentTime(new Date()), 1000); };
+    const stop = () => { if (timer) clearInterval(timer); };
+    const handleVisibilityChange = () => { document.hidden ? stop() : start(); };
     document.addEventListener("visibilitychange", handleVisibilityChange);
     start();
     return () => {
@@ -361,7 +351,7 @@ body {
     };
   }, []);
 
-  // âœ… FIX #1: Sync currentFile + code when file changes
+  // ✅ FIX #1: Sync currentFile + code when file changes
   useEffect(() => {
     if (currentFile === "assets/style.css") {
       setCode(globalCss);
@@ -370,7 +360,7 @@ body {
     }
   }, [currentFile, filesState, globalCss]);
 
-  // âœ… Generate UI Handler - FINAL PRODUCTION VERSION
+  // ✅ Generate UI Handler
   const handleGenerateUI = useCallback(async () => {
     if (!prompt.trim()) return;
     const now = Date.now();
@@ -385,52 +375,40 @@ body {
     setCopied(false);
 
     try {
-      // âœ… Call backend directly - backend now controls all schema logic
       const result = await generateWebsite(prompt.trim());
+      const aiSchema = result.website || result.schema || result.content || result.data || result;
 
-      // âœ… Extract AI schema from response
-      const aiSchema =
-        result.website ||
-        result.schema ||
-        result.content ||
-        result.data ||
-        result;
+      console.log("🔥 Backend result:", result);
+      console.log("🔥 Parsed schema:", aiSchema);
 
-      console.log("ðŸ”¥ Backend result:", result);
-      console.log("ðŸ”¥ Parsed schema:", aiSchema);
+      if (!aiSchema) throw new Error("Invalid AI schema");
 
-      if (!aiSchema) {
-        throw new Error("Invalid AI schema");
-      }
-      // âœ… Persist schema globally for editor + preview sync
-      localStorage.setItem(
-        "clyra-live-schema",
-        JSON.stringify(aiSchema)
-      );
+      localStorage.setItem("clyraweb-live-schema", JSON.stringify(aiSchema));
+      localStorage.setItem("generated-schema", JSON.stringify(aiSchema));
 
-      localStorage.setItem(
-        "generated-schema",
-        JSON.stringify(aiSchema)
-      );
-      // âœ… Update state with AI-generated schema
+      // ✅ Sync with the global editor store
+      useWebsiteBuilderStore.getState().setSchema(aiSchema);
+      useWebsiteBuilderStore.getState().addProject({
+        id: `proj_${Date.now()}`,
+        title: prompt.trim() || "Generated Website",
+        template: aiSchema.templateId || "template1",
+        status: "draft",
+        createdAt: new Date().toISOString(),
+        schema: aiSchema,
+      });
+
       setLiveSchema(aiSchema);
       setSiteData(aiSchema);
       setPreviewKey((prev) => prev + 1);
       setActiveView("preview");
-      setStatus("AI website generated successfully ðŸš€");
+      setStatus("AI website generated successfully 🚀");
 
-      // âœ… Reset studio states to force LivePreview mode
       setStudioTemplateId(null);
-setStudioContent(aiSchema);
+      setStudioContent(aiSchema);
 
-      // âœ… FIX 3: AI Page Planner - Dynamic page generation from backend
-      const pagesToGenerate =
-        aiSchema.pages?.map((p: any) => p.page) || ["home"];
-
-      // âœ… Update generatedPages state
+      const pagesToGenerate = aiSchema.pages?.map((p: any) => p.page) || ["home"];
       setGeneratedPages(pagesToGenerate);
 
-      // âœ… Generate all page codes dynamically
       const generatePageCode = (pageName: string, pageSchema: any) => `
 "use client";
 
@@ -447,11 +425,7 @@ export default function ${capitalize(pageName || "Home")}Page() {
 `;
 
       const generatePageSchema = (pageName: string) => {
-        // âœ… get only current page schema
-        const currentPage = aiSchema.pages?.find(
-          (p: any) => p.page === pageName
-        );
-
+        const currentPage = aiSchema.pages?.find((p: any) => p.page === pageName);
         return {
           theme: aiSchema.theme,
           layout: aiSchema.layout,
@@ -459,54 +433,28 @@ export default function ${capitalize(pageName || "Home")}Page() {
         };
       };
 
-      // âœ… Build generatedFiles object dynamically
       const generatedFiles: Record<string, string> = {};
-
       pagesToGenerate.forEach((pageName: string) => {
         const pageSchema = generatePageSchema(pageName);
-        const filePath = pageName === "home"
-          ? "src/app/page.tsx"
-          : `src/app/${pageName}/page.tsx`;
+        const filePath = pageName === "home" ? "src/app/page.tsx" : `src/app/${pageName}/page.tsx`;
         generatedFiles[filePath] = generatePageCode(pageName, pageSchema);
       });
 
-      // âœ… Update file refs and state for editor/zip/deploy
       filesRef.current = generatedFiles;
       setFilesState(generatedFiles);
 
-      // âœ… Save project with schema snapshot
-      await saveProject(
-        firebaseUser?.uid,
-        generatedFiles,
-        {
-          schema: JSON.stringify(aiSchema),
-        }
-      );
+      await saveProject(firebaseUser?.uid, generatedFiles, { schema: JSON.stringify(aiSchema) });
 
-      // âœ… KEEP EDITOR IN SYNC - Open first generated page
-      setCurrentFile(
-        pagesToGenerate.includes("home")
-          ? "src/app/page.tsx"
-          : `src/app/${pagesToGenerate[0]}/page.tsx`
-      );
-
+      setCurrentFile(pagesToGenerate.includes("home") ? "src/app/page.tsx" : `src/app/${pagesToGenerate[0]}/page.tsx`);
       setCode(generatedFiles["src/app/page.tsx"] || "");
-
-      // âœ… Auto open preview after generate
       setActiveView("preview");
 
-      // âœ… Handle assets
       if (!assets?.['style.css']) {
         setAssets(prev => ({ ...prev, 'style.css': globalCss }));
       }
 
-      // âœ… Update history and status
       setGenerationHistory((prev) => [...prev.slice(-4), prompt]);
-
-      // âœ… Show page count in status
-      setStatus(
-        `Generated ${pagesToGenerate.length} AI pages ðŸš€`
-      );
+      setStatus(`Generated ${pagesToGenerate.length} AI pages 🚀`);
 
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
@@ -515,13 +463,7 @@ export default function ${capitalize(pageName || "Home")}Page() {
     } finally {
       setIsLoading(false);
     }
-  }, [
-    prompt,
-    siteData,
-    globalCss,
-    firebaseUser?.uid,
-    assets,
-  ]);
+  }, [prompt, siteData, globalCss, firebaseUser?.uid, assets]);
 
   // Rotate Template
   const handleRotateTemplate = useCallback(() => {
@@ -545,7 +487,7 @@ export default function ${capitalize(pageName || "Home")}Page() {
     blogPromptDebounceRef.current?.(val);
   };
 
-  // âœ… FIX #1: saveProject uses projectFiles instead of filesState
+  // ✅ saveProject function
   const saveProject = async (
     uid: string | undefined,
     projectFiles: { [key: string]: string },
@@ -557,43 +499,20 @@ export default function ${capitalize(pageName || "Home")}Page() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-  files: {
-    ...projectFiles, // âœ… FIX: Use projectFiles instead of filesState
-    "package.json": JSON.stringify({
-      name: deployConfig.projectName,
-      private: true,
-      scripts: {
-        dev: "next dev",
-        build: "next build",
-        start: "next start"
-      },
-      dependencies: {
-        next: "14.1.0",
-        react: "18.2.0",
-        "react-dom": "18.2.0"
-      }
-    }, null, 2),
-
-    "next.config.js": `
-/** @type {import('next').NextConfig} */
-const nextConfig = {};
-module.exports = nextConfig;
-`,
-
-    "src/components/renderer/WebsiteRenderer.tsx": `
-export default function WebsiteRenderer({ schema }: any) {
-  return (
-    <div style={{ padding: "40px", color: "white", background: "black", minHeight: "100vh" }}>
-      <pre>{JSON.stringify(schema, null, 2)}</pre>
-    </div>
-  );
-}
-`
-  },
-
-  projectName: deployConfig.projectName,
-  platform: deployConfig.platform,
-}),
+          files: {
+            ...projectFiles,
+            "package.json": JSON.stringify({
+              name: deployConfig.projectName,
+              private: true,
+              scripts: { dev: "next dev", build: "next build", start: "next start" },
+              dependencies: { next: "14.1.0", react: "18.2.0", "react-dom": "18.2.0" }
+            }, null, 2),
+            "next.config.js": `/** @type {import('next').NextConfig} */\nconst nextConfig = {};\nmodule.exports = nextConfig;`,
+            "src/components/renderer/WebsiteRenderer.tsx": `export default function WebsiteRenderer({ schema }: any) { return <div style={{ padding: "40px", color: "white", background: "black", minHeight: "100vh" }}><pre>{JSON.stringify(schema, null, 2)}</pre></div>; }`
+          },
+          projectName: deployConfig.projectName,
+          platform: deployConfig.platform,
+        }),
       });
     } catch (error) {
       console.error("Failed to save project:", error);
@@ -644,7 +563,6 @@ export default function WebsiteRenderer({ schema }: any) {
         setShowDeployModal(false);
         setShowMobileMenu(false);
       }
-      // âœ… Toggle chat with Ctrl/Cmd + `
       if ((e.metaKey || e.ctrlKey) && e.key === "`") {
         e.preventDefault();
         setIsChatOpen(prev => !prev);
@@ -675,6 +593,8 @@ export default function WebsiteRenderer({ schema }: any) {
     }
   };
 
+  const [isDownloading, setIsDownloading] = useState(false);
+
   const handleDownload = async () => {
     if (activeMode === "ui" && Object.keys(filesState).length === 0) {
       setStatus("No code to download");
@@ -691,7 +611,7 @@ export default function WebsiteRenderer({ schema }: any) {
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
 
       if (activeMode === "ui") {
-        const projectFolder = zip.folder(`clyraweb-Ai${timestamp}`);
+        const projectFolder = zip.folder(`clyrawebweb-Ai${timestamp}`);
         const assetsFolder = projectFolder?.folder("assets");
 
         Object.entries(filesState).forEach(([fileName, content]) => {
@@ -703,21 +623,17 @@ export default function WebsiteRenderer({ schema }: any) {
           if (fileName !== "style.css") assetsFolder?.file(fileName, content);
         });
 
-        // âœ… FIX #4: DOWNLOAD README PAGE ROUTES - Cleaner path logic
         const pageList = Object.keys(filesState)
           .filter((f) => f.endsWith("page.tsx"))
           .map((f) => {
-            let route = f
-              .replace("src/app", "")
-              .replace("/page.tsx", "");
-
+            let route = f.replace("src/app", "").replace("/page.tsx", "");
             if (!route || route === "") route = "/";
             return route;
           })
           .join("\n- ");
 
-        const readmeContent = `# ClyraWeb Project - React/Next.js
-Generated with ClyraWeb AI Content Studio
+        const readmeContent = `# clyrawebWeb Project - React/Next.js
+Generated with clyrawebWeb AI Content Studio
 Date: ${new Date().toLocaleDateString()}
 
 ## Files Included
@@ -726,39 +642,29 @@ ${Object.keys(filesState).map(f => `- ${f}`).join('\n')}
 ## Pages
 - ${pageList}
 
-
-
 ## Navigation
 All pages include auto-working navbar routes using Next.js Link component.
 `;
         projectFolder?.file("README.md", readmeContent);
         projectFolder?.file("package.json", JSON.stringify({
-          "name": `clyraweb-ai-${timestamp}`,
+          "name": `clyrawebweb-ai-${timestamp}`,
           "version": "1.0.0",
-          "scripts": {
-            "dev": "next dev",
-            "build": "next build",
-            "start": "next start"
-          },
-          "dependencies": {
-            "next": "14.1.0",
-            "react": "18.2.0",
-            "react-dom": "18.2.0"
-          }
+          "scripts": { "dev": "next dev", "build": "next build", "start": "next start" },
+          "dependencies": { "next": "14.1.0", "react": "18.2.0", "react-dom": "18.2.0" }
         }, null, 2));
 
         const content = await zip.generateAsync({ type: "blob" });
         const url = URL.createObjectURL(content);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `clyraweb-ai-${timestamp}.zip`;
+        link.download = `clyrawebweb-ai-${timestamp}.zip`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
         setStatus("React Project ZIP Downloaded Successfully");
       } else {
-        const projectFolder = zip.folder(`clyra-blog-${timestamp}`);
+        const projectFolder = zip.folder(`clyraweb-blog-${timestamp}`);
         const safeTitle = blogTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 50) || "blog-post";
         projectFolder?.file(`${safeTitle}.md`, `# ${blogTitle}\n\n${blogContent}`);
 
@@ -766,7 +672,7 @@ All pages include auto-working navbar routes using Next.js Link component.
         const url = URL.createObjectURL(content);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `clyra-blog-${timestamp}.zip`;
+        link.download = `clyraweb-blog-${timestamp}.zip`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -783,16 +689,14 @@ All pages include auto-working navbar routes using Next.js Link component.
     }
   };
 
-  const [isDownloading, setIsDownloading] = useState(false);
-
   const resetWorkspace = () => {
     if (activeMode === "ui") {
       setInputValue("");
       setPrompt("");
-     setSiteData(null);
-setLiveSchema(null);
-setStudioContent(null as any);
-localStorage.removeItem("clyra-live-schema");
+      setSiteData(null);
+      setLiveSchema(null);
+      setStudioContent(null as any);
+      localStorage.removeItem("clyraweb-live-schema");
       filesRef.current = {};
       setFilesState({});
       setStudioTemplateId(null);
@@ -803,6 +707,7 @@ localStorage.removeItem("clyra-live-schema");
       setPreviewKey(0);
       setGenerationHistory([]);
       setGeneratedPages(["home"]);
+      useWebsiteBuilderStore.getState().resetToDefault();
     } else {
       setBlogInputValue("");
       setBlogPrompt("");
@@ -811,121 +716,169 @@ localStorage.removeItem("clyra-live-schema");
       setBlogStatus("Ready");
     }
   };
-const handleDeploy = async () => {
-  if (!deployConfig.projectName.trim()) {
-    setDeployStatus("Please enter a project name");
-    return;
-  }
 
-  setIsDeploying(true);
-  setDeployStatus("Preparing premium deploy...");
-  setDeployedUrl(null);
-
-  try {
-    const latestSchema = (() => {
-      try {
-        const raw = localStorage.getItem("clyra-live-schema");
-        return raw ? JSON.parse(raw) : {};
-      } catch {
-        return {};
-      }
-    })();
-
-    console.log("🚀 REAL TEMPLATE DEPLOY:", latestSchema);
-
-    const templateId =
-      latestSchema?.templateId ||
-      latestSchema?.page ||
-      "default";
-
-    const deploySource =
-      latestSchema?.editableData ||
-      latestSchema;
-
-    const previewRoot =
-      document.querySelector("[data-studio-preview-scrollport]") ||
-      document.querySelector("[data-studio-preview-frame]") ||
-      document.querySelector("main");
-
-    const previewHtml = previewRoot
-      ? `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    html,body{margin:0;padding:0;background:#000;color:white;}
-  </style>
-</head>
-<body>${previewRoot.innerHTML}</body>
-</html>`
-      : "<html><body><h1>Preview not found</h1></body></html>";
-
-    const payload = {
-      pages: {
-        "index.html": `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${deployConfig.projectName}</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body style="margin:0;background:#000;color:white;">
-  <iframe
-  srcdoc="${previewHtml.replace(/"/g, '&quot;')}"
-  style="width:100%;height:100vh;border:none;display:block;"
-></iframe>
-</body>
-</html>
-`,
-        "package.json": JSON.stringify({
-          name: deployConfig.projectName,
-          private: true,
-          scripts: {
-            build: "next build",
-            start: "next start"
-          },
-          dependencies: {
-            next: "14.1.0",
-            react: "18.2.0",
-            "react-dom": "18.2.0"
-          }
-        }, null, 2)
-      },
-      projectName: deployConfig.projectName,
-      platform: deployConfig.platform
-    };
-
-    const res = await fetch(`${API_ORIGIN}/deploy`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await res.json();
-
-    if (!data.success) {
-      throw new Error("Deploy failed");
+  // ✅ FIXED: Clean handleDeploy function - NO DUPLICATION
+  // ✅ FIXED: Clean handleDeploy function - proper if/else structure
+  const handleDeploy = async () => {
+    if (!deployConfig.projectName.trim()) {
+      setDeployStatus("Please enter a project name");
+      return;
     }
 
-    setDeployStatus("Deployment Successful 🚀");
-    setDeployedUrl(data.url);
+    setIsDeploying(true);
+    setDeployStatus("Preparing deploy...");
+    setDeployedUrl(null);
 
-    if (data.url) {
-      window.open(data.url, "_blank");
-    }
-  } catch (error: any) {
-    setDeployStatus("Deploy Failed: " + error.message);
-  } finally {
-    setIsDeploying(false);
-  }
+    try {
+      let deployFiles: Record<string, string> = {};
+
+      // Template deploy mode
+      if (liveSchema?.templateId) {
+        const selectedTemplate = liveSchema.templateId;
+        const templatePath = `src/templates/${selectedTemplate}.tsx`;
+
+        deployFiles = {
+          [templatePath]:
+            filesState[templatePath] ||
+            buildStudioExportSource(selectedTemplate, studioContent),
+
+          "src/app/layout.tsx": `
+export const metadata = {
+  title: "${deployConfig.projectName}",
+  description: "Generated by clyraweb"
 };
 
-  // âœ… FIX #2: Update filesRef and trigger preview refresh on editor change
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
+}
+`,
+          "src/app/page.tsx": `
+import TemplatePage from "../templates/${selectedTemplate}";
+
+const editableData = ${JSON.stringify(studioContent || liveSchema || {}, null, 2)};
+
+export default function Home() {
+  return <TemplatePage editableData={editableData} />;
+}
+`,
+
+
+        };
+      } else {
+        // Standard deploy mode
+        deployFiles = {
+          ...filesState,
+
+          "src/app/layout.tsx": `
+export const metadata = {
+  title: "${deployConfig.projectName}",
+  description: "Generated by clyraweb"
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
+}
+`,
+        };
+      }
+
+      // Add required Next.js config files
+      deployFiles["package.json"] = JSON.stringify({
+        name: deployConfig.projectName,
+        private: true,
+        scripts: { build: "next build", start: "next start" },
+        dependencies: {
+          next: "14.1.0",
+          react: "18.2.0",
+          "react-dom": "18.2.0"
+        }
+      }, null, 2);
+
+      deployFiles["next.config.js"] = `
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: "export"
+};
+module.exports = nextConfig;
+`;
+      // sync latest deploy files
+      filesRef.current = {
+        ...filesRef.current,
+        ...deployFiles
+      };
+
+      const res = await fetch(`${API_ORIGIN}/deploy`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          files: deployFiles,
+          projectName: deployConfig.projectName,
+          templateName: liveSchema?.templateId || null
+        })
+      });
+
+      if (!res.body) throw new Error("No readable stream");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let finalUrl = null;
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        console.log("CHUNK:", chunk);
+        buffer += chunk;
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          if (line.startsWith("STEP:")) {
+            // Could update step here if UI supported it
+          } else if (line.startsWith("PROGRESS:")) {
+            // Could update progress here if UI supported it
+          } else if (line.startsWith("URL:")) {
+            finalUrl = line.substring(4).trim();
+            setDeployedUrl(finalUrl);
+          } else if (line.startsWith("ERROR:") || line.includes("❌")) {
+            throw new Error(line);
+          } else {
+            setDeployStatus(line.trim());
+          }
+        }
+      }
+
+      setDeployStatus("Deployment successful 🚀");
+      if (finalUrl) {
+        window.open(finalUrl, "_blank");
+      }
+    } catch (error: any) {
+      setDeployStatus("Deploy Failed: " + error.message);
+    } finally {
+      setIsDeploying(false);
+    }
+  };
+
+  // ✅ FIX #2: Update filesRef and trigger preview refresh on editor change
   const handleEditorChange = useCallback((value: string | undefined) => {
     const newValue = value || "";
     setCode(newValue);
@@ -939,12 +892,8 @@ const handleDeploy = async () => {
     }
 
     setIsTyping(true);
-
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-
-    typingTimeoutRef.current = setTimeout(() => {
-      setIsTyping(false);
-    }, 400);
+    typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 400);
   }, [currentFile]);
 
   const handleSaveFile = useCallback(() => {
@@ -973,19 +922,13 @@ const handleDeploy = async () => {
               </div>
               <div className={`absolute -top-2 -right-2 w-6 h-6 rounded-full blur-[2px] animate-ping opacity-75 ${isDark ? 'bg-violet-400' : 'bg-purple-400'}`}></div>
             </div>
-            <h3 className={`text-3xl font-bold mb-3 ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-              Ready to Create
-            </h3>
-            <p className={`mb-8 leading-relaxed ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
-              Enter a topic below to generate a professional, SEO-optimized blog post instantly with AI.
-            </p>
+            <h3 className={`text-3xl font-bold mb-3 ${isDark ? 'text-white' : 'text-zinc-900'}`}>Ready to Create</h3>
+            <p className={`mb-8 leading-relaxed ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>Enter a topic below to generate a professional, SEO-optimized blog post instantly with AI.</p>
             <div className={`w-full max-w-xs mx-auto h-12 rounded-full border flex items-center px-4 shadow-sm opacity-50 ${isDark ? 'bg-black border-zinc-700' : 'bg-white border-zinc-300'}`}>
               <div className={`w-4 h-4 rounded-full mr-3 animate-pulse ${isDark ? 'bg-zinc-700' : 'bg-zinc-300'}`}></div>
               <div className={`h-2 w-32 rounded-full animate-pulse ${isDark ? 'bg-zinc-800' : 'bg-zinc-200'}`}></div>
             </div>
-            <div className={`mt-4 text-xs font-medium uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-              AI Engine Ready
-            </div>
+            <div className={`mt-4 text-xs font-medium uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>AI Engine Ready</div>
           </div>
         </div>
       );
@@ -1083,12 +1026,9 @@ const handleDeploy = async () => {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
               <Layout size={18} className="text-white" />
             </div>
-            <span className="font-semibold text-sm">Umesh's ClyraWeb</span>
+            <span className="font-semibold text-sm"> clyrawebWeb</span>
           </div>
-          <button
-            onClick={() => setShowSidebar(false)}
-            className={`p-1 rounded transition-colors ${isDark ? 'hover:bg-zinc-800' : 'hover:bg-zinc-100'}`}
-          >
+          <button onClick={() => setShowSidebar(false)} className={`p-1 rounded transition-colors ${isDark ? 'hover:bg-zinc-800' : 'hover:bg-zinc-100'}`}>
             <X size={16} className="text-red-500" />
           </button>
         </div>
@@ -1110,33 +1050,21 @@ const handleDeploy = async () => {
             Resources
           </button>
 
-          {/* âœ… REPLACE STATIC SIDEBAR PROJECT BUTTONS */}
           <div className="pt-4 pb-2">
-            <span className={`text-xs font-medium px-3 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-              Generated Pages
-            </span>
+            <span className={`text-xs font-medium px-3 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Generated Pages</span>
           </div>
 
-          {/* âœ… Sidebar buttons switch file AND open preview */}
           {generatedPages.map((page) => (
             <button
               key={page}
               onClick={() => {
-                const filePath =
-                  page === "home"
-                    ? "src/app/page.tsx"
-                    : `src/app/${page}/page.tsx`;
-
+                const filePath = page === "home" ? "src/app/page.tsx" : `src/app/${page}/page.tsx`;
                 setCurrentFile(filePath);
                 setCode(filesState[filePath] || "");
-                // âœ… UX UPGRADE: Open preview instead of editor + force refresh
                 setActiveView("preview");
                 setPreviewKey((prev) => prev + 1);
               }}
-              className={`w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors ${isDark
-                ? "text-zinc-400 hover:text-white hover:bg-zinc-900"
-                : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100"
-                }`}
+              className={`w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors ${isDark ? "text-zinc-400 hover:text-white hover:bg-zinc-900" : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100"}`}
             >
               <FileText size={18} />
               {capitalize(page)}
@@ -1147,8 +1075,40 @@ const handleDeploy = async () => {
             <span className={`text-xs font-medium px-3 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Recents</span>
           </div>
 
-          <div className={`px-3 py-2 text-sm ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-            No recent projects
+          <div className="px-3 py-1 space-y-1">
+            {savedProjects.length === 0 ? (
+              <div className={`py-2 text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>No recent projects</div>
+            ) : (
+              savedProjects.slice(0, 5).map(proj => (
+                <div key={proj.id} className={`w-full text-left p-2 rounded-lg border flex flex-col gap-1.5 transition-colors ${isDark ? 'bg-zinc-900/50 border-zinc-800 hover:bg-zinc-900' : 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100'}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold truncate max-w-[120px]">{proj.title}</span>
+                    <span className="text-[10px] flex items-center gap-1 font-medium">
+                      {proj.status === "deployed" ? <><CheckCircle2 size={10} className="text-green-500" /> Live</> :
+                        proj.status === "failed" ? <><XCircle size={10} className="text-red-500" /> Failed</> :
+                          <><Circle size={10} className="text-amber-500 fill-amber-500" /> Draft</>}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className={`text-[10px] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{new Date(proj.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <div className="flex items-center gap-1">
+                      {proj.deployUrl && (
+                        <a href={proj.deployUrl} target="_blank" rel="noopener noreferrer" className="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 text-blue-500" title="Open Live">
+                          <ExternalLink size={12} />
+                        </a>
+                      )}
+                      <button onClick={() => {
+                        useWebsiteBuilderStore.getState().setSchema(proj.schema);
+                        useWebsiteBuilderStore.getState().setCurrentProjectId(proj.id);
+                        router.push("/editor");
+                      }} className={`px-2 py-0.5 rounded text-[10px] font-medium ${isDark ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-zinc-200 text-zinc-700 hover:bg-zinc-300'}`}>
+                        Edit
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </nav>
 
@@ -1158,7 +1118,7 @@ const handleDeploy = async () => {
               <Gift size={16} className={isDark ? 'text-zinc-400' : 'text-zinc-600'} />
             </div>
             <div className="text-left">
-              <div className={`text-sm font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-800'}`}>Share ClyraWeb</div>
+              <div className={`text-sm font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-800'}`}>Share clyrawebWeb</div>
               <div className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>100 credits per paid referral</div>
             </div>
           </button>
@@ -1176,20 +1136,14 @@ const handleDeploy = async () => {
 
         <div className={`p-3 border-t ${isDark ? 'border-zinc-800' : 'border-zinc-200'} flex items-center justify-between`}>
           <div className="flex items-center gap-2">
-            <img
-              src={firebaseUser?.photoURL || "/default-avatar.png"}
-              alt="user"
-              className="w-7 h-7 rounded-full ring-2 ring-offset-2 ring-offset-black dark:ring-offset-black ring-violet-500/30"
-            />
+            <img src={firebaseUser?.photoURL || "/default-avatar.png"} alt="user" className="w-7 h-7 rounded-full ring-2 ring-offset-2 ring-offset-black dark:ring-offset-black ring-violet-500/30" />
             <span className="text-xs font-medium truncate max-w-[100px]">{firebaseUser?.displayName || "User"}</span>
           </div>
-          <button
-            onClick={async () => {
-              await logout();
-              router.push("/login");
-            }}
-            className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-zinc-800' : 'hover:bg-zinc-100'}`}
-          >
+          <button onClick={async () => {
+            await logout();
+            useWebsiteBuilderStore.getState().resetToDefault();
+            router.push("/login");
+          }} className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-zinc-800' : 'hover:bg-zinc-100'}`}>
             <LogOut size={16} className={isDark ? 'text-zinc-400' : 'text-zinc-600'} />
           </button>
         </div>
@@ -1206,182 +1160,103 @@ const handleDeploy = async () => {
               </button>
             )}
             <div className="flex items-center gap-1">
-              <button
-                onClick={() => setActiveMode("ui")}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeMode === "ui" 
-                  ? (isDark ? 'bg-zinc-800 text-white shadow-sm' : 'bg-zinc-200 text-zinc-900 shadow-sm') 
-                  : (isDark ? 'text-zinc-400 hover:text-white hover:bg-zinc-900/50' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/50')}`}
-              >
-                UI
-              </button>
-              <button
-                onClick={() => setActiveMode("blog")}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeMode === "blog" 
-                  ? (isDark ? 'bg-zinc-800 text-white shadow-sm' : 'bg-zinc-200 text-zinc-900 shadow-sm') 
-                  : (isDark ? 'text-zinc-400 hover:text-white hover:bg-zinc-900/50' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/50')}`}
-              >
-                Blog
-              </button>
+              <button onClick={() => setActiveMode("ui")} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeMode === "ui" ? (isDark ? 'bg-zinc-800 text-white shadow-sm' : 'bg-zinc-200 text-zinc-900 shadow-sm') : (isDark ? 'text-zinc-400 hover:text-white hover:bg-zinc-900/50' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/50')}`}>UI</button>
+              <button onClick={() => setActiveMode("blog")} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeMode === "blog" ? (isDark ? 'bg-zinc-800 text-white shadow-sm' : 'bg-zinc-200 text-zinc-900 shadow-sm') : (isDark ? 'text-zinc-400 hover:text-white hover:bg-zinc-900/50' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/50')}`}>Blog</button>
             </div>
           </div>
 
           <div className="flex items-center gap-1">
-            <button onClick={toggleTheme} className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white' : 'hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900'}`} title="Toggle theme">
-              {isDark ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-            <button onClick={handleCopy} className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white' : 'hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900'}`} title="Copy code">
-              {copied || blogCopied ? <Check size={18} className="text-emerald-400" /> : <Copy size={18} />}
-            </button>
-            <button onClick={handleDownload} className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white' : 'hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900'}`} title="Download project">
-              <Download size={18} />
-            </button>
-            <button onClick={() => setActiveView(activeView === "editor" ? "preview" : "editor")} className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white' : 'hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900'}`} title="Toggle view">
-              {activeView === "editor" ? <Eye size={18} /> : <Code2 size={18} />}
-            </button>
-            <button onClick={() => setShowDeployModal(true)} className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white' : 'hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900'}`} title="Deploy">
-              <Rocket size={18} />
-            </button>
+            <button onClick={toggleTheme} className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white' : 'hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900'}`} title="Toggle theme">{isDark ? <Sun size={18} /> : <Moon size={18} />}</button>
+            <button onClick={handleCopy} className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white' : 'hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900'}`} title="Copy code">{copied || blogCopied ? <Check size={18} className="text-emerald-400" /> : <Copy size={18} />}</button>
+            <button onClick={handleDownload} className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white' : 'hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900'}`} title="Download project"><Download size={18} /></button>
+            <button onClick={() => setShowDeployModal(true)} className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white' : 'hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900'}`} title="Deploy"><Rocket size={18} /></button>
           </div>
         </header>
 
-        {/* Content Area - Preview on Top, Chat at Bottom */}
+        {/* Content Area */}
         <div className="flex-1 flex flex-col relative overflow-hidden">
-          {/* âœ… PURE BLACK/WHITE BACKGROUND WITH SUBTLE ACCENTS */}
           <div className={`absolute inset-0 ${isDark ? 'bg-black' : 'bg-white'}`} />
-          
-          {/* âœ… Subtle gradient accents (only visible on hover/interaction) */}
-          <div className={`absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-700 pointer-events-none ${isDark 
-            ? 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-900/10 via-transparent to-transparent' 
-            : 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-200/20 via-transparent to-transparent'}`} />
-
-          {/* âœ… Floating animated gradient orbs - ultra subtle */}
+          <div className={`absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-700 pointer-events-none ${isDark ? 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-900/10 via-transparent to-transparent' : 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-200/20 via-transparent to-transparent'}`} />
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className={`absolute -top-1/2 -left-1/2 w-[800px] h-[800px] rounded-full blur-3xl animate-pulse opacity-5 ${isDark ? 'bg-gradient-to-br from-violet-600 to-pink-600' : 'bg-gradient-to-br from-purple-400 to-pink-400'}`} style={{ animationDuration: '12s' }} />
             <div className={`absolute top-1/2 -right-1/4 w-[600px] h-[600px] rounded-full blur-3xl animate-pulse opacity-5 ${isDark ? 'bg-gradient-to-br from-blue-600 to-cyan-600' : 'bg-gradient-to-br from-blue-400 to-cyan-400'}`} style={{ animationDuration: '15s', animationDelay: '3s' }} />
           </div>
 
-          {/* Full Screen Exit Hint */}
           {isFullscreen && (
             <div className={`absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg border text-sm backdrop-blur-md ${isDark ? 'bg-black/80 border-zinc-700' : 'bg-white/80 border-zinc-200'}`}>
               Press <kbd className={`px-2 py-0.5 rounded border mx-1 ${isDark ? 'bg-zinc-800 border-zinc-600' : 'bg-zinc-100 border-zinc-300'}`}>Esc</kbd> to exit fullscreen
             </div>
           )}
 
-          {/* Main Content - Preview takes most space */}
           <div className={`relative z-10 flex-1 flex flex-col ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
             {/* Preview Area */}
-            <div
-              className={`${isFullscreen ? "flex-1" : "h-[calc(100vh-270px)]"
-                } border-b overflow-hidden pt-4 px-4 transition-all duration-300`}
-              style={{ height: isChatOpen ? 'calc(100vh - 200px)' : 'calc(100vh - 80px)' }}
-            >
+            <div className={`${isFullscreen ? "flex-1" : "h-[calc(100vh-270px)]"} border-b overflow-hidden pt-4 px-4 transition-all duration-300`} style={{ height: isChatOpen ? 'calc(100vh - 200px)' : 'calc(100vh - 80px)' }}>
               {isLoading ? (
                 <LoaderSkeleton />
-              ) : activeView === "preview" ? (
-                activeMode === "ui" ? (
-                  <div
-                    className={`w-full h-full relative pt-3 backdrop-blur-sm rounded-2xl border transition-colors ${isDark 
-                      ? "bg-black/50 border-zinc-800" 
-                      : "bg-white/50 border-zinc-200"}`}
-                  >
-                    {studioTemplateId ? (
-                      <div className="w-full h-full rounded-2xl overflow-hidden shadow-sm border relative">
-                        <SandpackErrorBoundary>
-                          <TemplateStudioPreview
-                            templateId={studioTemplateId}
-                            content={studioContent}
-                          />
-                        </SandpackErrorBoundary>
-                      </div>
-                    ) : (
-                      // âœ… STEP 3: SIMPLIFIED schema PROP USING liveSchema
-                      <LivePreview
-                        key={previewKey}
-                        schema={liveSchema}
-                        isDark={isDark}
-                      />
-                    )}
-                    {isTyping && (
-                      <div className={`absolute inset-0 flex items-center justify-center backdrop-blur-sm z-10 ${isDark ? 'bg-black/60' : 'bg-white/60'}`}>
-                        <Loader2 className="animate-spin text-violet-400" size={32} />
-                      </div>
-                    )}
-                  </div>
-                ) : renderBlogPreview()
-              ) : (
-                <div className={`w-full h-full rounded-2xl border transition-colors ${isDark ? 'bg-black border-zinc-800' : 'bg-white border-zinc-200'}`}>
-                  {renderEditorContent()}
-                  {activeMode === "ui" && (
-                    <button
-                      onClick={handleSaveFile}
-                      className="absolute top-4 right-4 px-3 py-1.5 bg-violet-500/20 text-violet-300 border border-violet-500/30 rounded-lg text-xs hover:bg-violet-500/30 transition-colors"
-                    >
-                      Save File
-                    </button>
+              ) : activeMode === "ui" ? (
+                <div className={`w-full h-full relative pt-3 backdrop-blur-sm rounded-2xl border transition-colors ${isDark ? "bg-black/50 border-zinc-800" : "bg-white/50 border-zinc-200"}`}>
+
+                  {/* ✅ EDIT IN EDITOR BUTTON OVERLAY */}
+                  {liveSchema && (
+                    <div className="absolute top-4 right-4 z-50">
+                      <button
+                        onClick={() => router.push("/editor")}
+                        className="flex items-center gap-2 px-6 py-3 font-semibold text-sm rounded-xl shadow-2xl transition-all hover:-translate-y-1 hover:shadow-violet-500/25 bg-gradient-to-r from-violet-600 to-purple-600 text-white"
+                      >
+                        <Palette size={18} />
+                        Edit in Editor
+                      </button>
+                    </div>
+                  )}
+
+                  {studioTemplateId ? (
+                    <div className="w-full h-full rounded-2xl overflow-hidden shadow-sm border relative">
+                      <SandpackErrorBoundary>
+                        <TemplateStudioPreview templateId={studioTemplateId} content={studioContent} />
+                      </SandpackErrorBoundary>
+                    </div>
+                  ) : (
+                    <LivePreview key={previewKey} schema={liveSchema} isDark={isDark} />
+                  )}
+                  {isTyping && (
+                    <div className={`absolute inset-0 flex items-center justify-center backdrop-blur-sm z-10 ${isDark ? 'bg-black/60' : 'bg-white/60'}`}>
+                      <Loader2 className="animate-spin text-violet-400" size={32} />
+                    </div>
                   )}
                 </div>
-              )}
+              ) : renderBlogPreview()}
             </div>
 
-            {/* âœ… PREMIUM GEMINI-STYLE PROMPT BOX WITH UP ARROW BUTTON */}
-            <div
-              className={`flex-shrink-0 backdrop-blur-xl border-t transition-all duration-500 ease-in-out overflow-hidden relative ${isDark ? 'bg-black/80 border-zinc-800' : 'bg-white/80 border-zinc-200'
-                } ${isChatOpen ? 'min-h-[180px] max-h-[300px]' : 'min-h-0 max-h-0'}`}
-            >
-              {/* âœ… Premium animated gradient border effect */}
+            {/* Premium Chat Input */}
+            <div className={`flex-shrink-0 backdrop-blur-xl border-t transition-all duration-500 ease-in-out overflow-hidden relative ${isDark ? 'bg-black/80 border-zinc-800' : 'bg-white/80 border-zinc-200'} ${isChatOpen ? 'min-h-[180px] max-h-[300px]' : 'min-h-0 max-h-0'}`}>
               {isChatOpen && (
-                <>
-                  <div className="absolute inset-0 pointer-events-none">
-                    {/* Top animated glow line */}
-                    <div className={`absolute top-0 left-0 right-0 h-[1px] ${isDark
-                      ? 'bg-gradient-to-r from-transparent via-violet-500/40 to-transparent animate-gradient-x'
-                      : 'bg-gradient-to-r from-transparent via-purple-500/40 to-transparent animate-gradient-x'
-                      }`} />
-                  </div>
-                </>
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className={`absolute top-0 left-0 right-0 h-[1px] ${isDark ? 'bg-gradient-to-r from-transparent via-violet-500/40 to-transparent animate-gradient-x' : 'bg-gradient-to-r from-transparent via-purple-500/40 to-transparent animate-gradient-x'}`} />
+                </div>
               )}
 
               <div className="relative z-10 flex-1 p-3 flex flex-col gap-2">
-                {/* âœ… Animated header with rotating words */}
                 {isChatOpen && generationHistory.length > 0 && activeMode === "ui" && (
                   <div className={`flex items-center justify-between text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
                     <div className="flex items-center gap-2">
                       <Sparkles size={12} className={`${isDark ? 'text-violet-400' : 'text-purple-500'} animate-pulse`} />
                       <span className="font-medium">AI Assistant</span>
-                      <span className="text-zinc-600 dark:text-zinc-500">â€¢</span>
-                      {/* âœ… Animated word rotation */}
-                      <span className={`font-semibold bg-clip-text text-transparent bg-gradient-to-r ${isDark ? 'from-violet-400 via-purple-400 to-pink-400' : 'from-purple-600 via-violet-600 to-pink-600'} animate-gradient-x`}>
-                        {ANIMATED_WORDS[animatedWordIndex]}
-                      </span>
+                      <span className="text-zinc-600 dark:text-zinc-500">•</span>
+                      <span className={`font-semibold bg-clip-text text-transparent bg-gradient-to-r ${isDark ? 'from-violet-400 via-purple-400 to-pink-400' : 'from-purple-600 via-violet-600 to-pink-600'} animate-gradient-x`}>{ANIMATED_WORDS[animatedWordIndex]}</span>
                     </div>
                     <div className="flex gap-1">
                       {generationHistory.slice(-2).map((h, index) => {
                         const label = typeof h === "string" ? h : (h as any)?.prompt || JSON.stringify(h);
-                        return (
-                          <span
-                            key={`${label.slice(0, 30)}-${index}`}
-                            className={`px-2 py-0.5 rounded-md truncate max-w-[150px] text-[10px] ${isDark ? "bg-zinc-900/50" : "bg-zinc-100/50"}`}
-                            title={label}
-                          >
-                            {label.length > 35 ? `${label.slice(0, 35)}â€¦` : label}
-                          </span>
-                        );
+                        return (<span key={`${label.slice(0, 30)}-${index}`} className={`px-2 py-0.5 rounded-md truncate max-w-[150px] text-[10px] ${isDark ? "bg-zinc-900/50" : "bg-zinc-100/50"}`} title={label}>{label.length > 35 ? `${label.slice(0, 35)}…` : label}</span>);
                       })}
                     </div>
                   </div>
                 )}
 
-                {/* âœ… GEMINI-STYLE POLISHED INPUT WITH UP ARROW BUTTON */}
                 <div className="relative group flex-1">
-                  {/* Outer animated glow ring */}
                   <div className={`absolute -inset-0.5 bg-gradient-to-r from-violet-500 via-purple-500 to-pink-500 rounded-3xl opacity-10 group-hover:opacity-20 blur-md transition duration-500 animate-gradient-x`} />
-                  
-                  <div className={`relative rounded-3xl border p-1.5 shadow-lg backdrop-blur-sm transition-all duration-300 ${isDark 
-                    ? 'bg-zinc-900/60 border-zinc-700 hover:border-zinc-600' 
-                    : 'bg-zinc-50/60 border-zinc-300 hover:border-zinc-400'
-                  }`}>
+                  <div className={`relative rounded-3xl border p-1.5 shadow-lg backdrop-blur-sm transition-all duration-300 ${isDark ? 'bg-zinc-900/60 border-zinc-700 hover:border-zinc-600' : 'bg-zinc-50/60 border-zinc-300 hover:border-zinc-400'}`}>
                     <div className="flex items-end gap-2">
-                      {/* Textarea - Gemini style */}
                       <textarea
                         value={activeMode === "ui" ? inputValue : blogInputValue}
                         onChange={(e) => activeMode === "ui" ? handlePromptChange(e.target.value) : handleBlogPromptChange(e.target.value)}
@@ -1392,84 +1267,42 @@ const handleDeploy = async () => {
                           }
                         }}
                         placeholder={activeMode === "ui" ? "Describe your website idea..." : "Enter blog topic..."}
-                        className={`flex-1 bg-transparent outline-none resize-none text-sm min-h-[44px] max-h-[120px] placeholder:transition-colors px-4 py-3 rounded-2xl ${isDark 
-                          ? 'text-white placeholder:text-zinc-500' 
-                          : 'text-zinc-900 placeholder:text-zinc-400'
-                        }`}
+                        className={`flex-1 bg-transparent outline-none resize-none text-sm min-h-[44px] max-h-[120px] placeholder:transition-colors px-4 py-3 rounded-2xl ${isDark ? 'text-white placeholder:text-zinc-500' : 'text-zinc-900 placeholder:text-zinc-400'}`}
                         rows={1}
                         disabled={isLoading}
                         style={{ lineHeight: '1.5' }}
                       />
-                      
-                      {/* âœ… UP ARROW SEND BUTTON - Gemini style */}
                       <button
                         onClick={activeMode === "ui" ? handleGenerateUI : handleGenerateBlog}
                         disabled={isLoading || (activeMode === "ui" ? !inputValue.trim() : !blogInputValue.trim())}
-                        className={`flex-shrink-0 w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-200 shadow-md ${
-                          isLoading || (activeMode === "ui" ? !inputValue.trim() : !blogInputValue.trim())
-                            ? (isDark ? 'bg-zinc-800 cursor-not-allowed' : 'bg-zinc-200 cursor-not-allowed')
-                            : 'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 hover:scale-105 active:scale-95 shadow-violet-500/30'
-                        }`}
+                        className={`flex-shrink-0 w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-200 shadow-md ${isLoading || (activeMode === "ui" ? !inputValue.trim() : !blogInputValue.trim()) ? (isDark ? 'bg-zinc-800 cursor-not-allowed' : 'bg-zinc-200 cursor-not-allowed') : 'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 hover:scale-105 active:scale-95 shadow-violet-500/30'}`}
                         title="Generate (Enter)"
                       >
-                        {isLoading ? (
-                          <Loader2 size={18} className="animate-spin text-white" />
-                        ) : (
-                          <ArrowUp size={18} className="text-white font-bold" />
-                        )}
+                        {isLoading ? <Loader2 size={18} className="animate-spin text-white" /> : <ArrowUp size={18} className="text-white font-bold" />}
                       </button>
                     </div>
-                    
-                    {/* Helper text */}
                     <div className={`flex items-center justify-between mt-1 px-4 pb-1 ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>
                       <div className="flex items-center gap-2 text-[10px]">
-                        <span className="flex items-center gap-0.5">
-                          <Sparkles size={10} className={isDark ? 'text-violet-400' : 'text-purple-500'} />
-                          AI Powered
-                        </span>
-                        <span className="text-zinc-700 dark:text-zinc-600">â€¢</span>
+                        <span className="flex items-center gap-0.5"><Sparkles size={10} className={isDark ? 'text-violet-400' : 'text-purple-500'} /> AI Powered</span>
+                        <span className="text-zinc-700 dark:text-zinc-600">•</span>
                         <span>Press Enter to generate</span>
                       </div>
-                      <button
-                        onClick={() => setIsChatOpen(prev => !prev)}
-                        className={`text-[10px] hover:underline ${isDark ? 'text-zinc-600 hover:text-zinc-400' : 'text-zinc-400 hover:text-zinc-600'}`}
-                      >
-                        {isChatOpen ? 'Hide' : 'Show'} Chat
-                      </button>
+                      <button onClick={() => setIsChatOpen(prev => !prev)} className={`text-[10px] hover:underline ${isDark ? 'text-zinc-600 hover:text-zinc-400' : 'text-zinc-400 hover:text-zinc-600'}`}>{isChatOpen ? 'Hide' : 'Show'} Chat</button>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* âœ… TOGGLE BUTTON WITH TEXT LABELS */}
+            {/* Toggle Button */}
             <button
               onClick={() => setIsChatOpen(prev => !prev)}
-              className={`absolute bottom-3 right-3 z-40 px-3 py-1.5 rounded-full shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-1.5 text-xs font-medium ${isDark
-                ? 'bg-black/90 hover:bg-zinc-900 text-zinc-300 border border-zinc-700 backdrop-blur-sm'
-                : 'bg-white/90 hover:bg-zinc-50 text-zinc-700 border border-zinc-300 backdrop-blur-sm'
-                }`}
+              className={`absolute bottom-3 right-3 z-40 px-3 py-1.5 rounded-full shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-1.5 text-xs font-medium ${isDark ? 'bg-black/90 hover:bg-zinc-900 text-zinc-300 border border-zinc-700 backdrop-blur-sm' : 'bg-white/90 hover:bg-zinc-50 text-zinc-700 border border-zinc-300 backdrop-blur-sm'}`}
               title={isChatOpen ? "Close Chat (Ctrl+`)" : "Open Chat (Ctrl+`)"}
             >
-              {/* Animated lighting effect on button */}
-              <span className={`absolute inset-0 rounded-full ${isDark
-                ? 'bg-gradient-to-br from-violet-500/5 to-pink-500/5'
-                : 'bg-gradient-to-br from-purple-400/5 to-pink-400/5'
-                } blur-sm animate-pulse`} />
+              <span className={`absolute inset-0 rounded-full ${isDark ? 'bg-gradient-to-br from-violet-500/5 to-pink-500/5' : 'bg-gradient-to-br from-purple-400/5 to-pink-400/5'} blur-sm animate-pulse`} />
               <span className="relative z-10 flex items-center gap-1">
-                {isChatOpen ? (
-                  <>
-                    <MessageSquareOff size={14} />
-                    <span className="hidden sm:inline">Close Chat</span>
-                    <ChevronDown size={12} className="rotate-180 transition-transform" />
-                  </>
-                ) : (
-                  <>
-                    <MessageSquare size={14} />
-                    <span className="hidden sm:inline">Open Chat</span>
-                    <ChevronDown size={12} className="transition-transform" />
-                  </>
-                )}
+                {isChatOpen ? (<> <MessageSquareOff size={14} /><span className="hidden sm:inline">Close Chat</span><ChevronDown size={12} className="rotate-180 transition-transform" /></>) : (<> <MessageSquare size={14} /><span className="hidden sm:inline">Open Chat</span><ChevronDown size={12} className="transition-transform" /></>)}
               </span>
             </button>
           </div>
@@ -1479,13 +1312,9 @@ const handleDeploy = async () => {
         <div className={`h-7 border-t backdrop-blur-sm flex items-center justify-between px-4 text-[10px] ${isDark ? 'border-zinc-800 bg-black/50 text-zinc-500' : 'border-zinc-200 bg-white/50 text-zinc-500'}`}>
           <div className="flex items-center gap-3">
             <span className="truncate max-w-[150px]">{status}</span>
-            {Object.keys(filesState).length > 0 && (
-              <span className="hidden sm:inline">{Object.keys(filesState).length} files</span>
-            )}
+            {Object.keys(filesState).length > 0 && <span className="hidden sm:inline">{Object.keys(filesState).length} files</span>}
           </div>
-          <div className="flex items-center gap-3">
-            <span>{currentTime.toLocaleTimeString()}</span>
-          </div>
+          <div className="flex items-center gap-3"><span>{currentTime.toLocaleTimeString()}</span></div>
         </div>
       </main>
 
@@ -1495,106 +1324,39 @@ const handleDeploy = async () => {
           <div className={`w-full max-w-md border rounded-2xl overflow-hidden shadow-2xl ${isDark ? 'bg-black border-zinc-800' : 'bg-white border-zinc-200'}`}>
             <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-zinc-800' : 'border-zinc-200'}`}>
               <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>Deploy Project</h3>
-              <button onClick={() => setShowDeployModal(false)} className={`p-1 rounded ${isDark ? 'hover:bg-zinc-800' : 'hover:bg-zinc-100'}`}>
-                <X size={18} />
-              </button>
+              <button onClick={() => setShowDeployModal(false)} className={`p-1 rounded ${isDark ? 'hover:bg-zinc-800' : 'hover:bg-zinc-100'}`}><X size={18} /></button>
             </div>
             <div className="p-4 space-y-4">
               <div>
                 <label className={`block text-sm mb-2 ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>Project Name</label>
-                <input
-                  type="text"
-                  value={deployConfig.projectName}
-                  onChange={(e) => setDeployConfig({ ...deployConfig, projectName: e.target.value })}
-                  placeholder="my-project"
-                  className={`w-full px-3 py-2 border rounded-lg text-sm outline-none focus:border-violet-500 transition-colors ${isDark ? 'bg-black border-zinc-700 text-white placeholder:text-zinc-600' : 'bg-white border-zinc-300 text-zinc-900 placeholder:text-zinc-400'}`}
-                />
+                <input type="text" value={deployConfig.projectName} onChange={(e) => setDeployConfig({ ...deployConfig, projectName: e.target.value })} placeholder="my-project" className={`w-full px-3 py-2 border rounded-lg text-sm outline-none focus:border-violet-500 transition-colors ${isDark ? 'bg-black border-zinc-700 text-white placeholder:text-zinc-600' : 'bg-white border-zinc-300 text-zinc-900 placeholder:text-zinc-400'}`} />
               </div>
-              {deployStatus && (
-                <div className={`p-3 rounded-lg text-sm ${isDark ? 'bg-zinc-900' : 'bg-zinc-100'}`}>{deployStatus}</div>
-              )}
+              {deployStatus && <div className={`p-3 rounded-lg text-sm ${isDark ? 'bg-zinc-900' : 'bg-zinc-100'}`}>{deployStatus}</div>}
             </div>
             <div className={`flex justify-end gap-2 p-4 border-t ${isDark ? 'border-zinc-800' : 'border-zinc-200'}`}>
-              <button onClick={() => setShowDeployModal(false)} className={`px-4 py-2 text-sm ${isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-600 hover:text-zinc-900'}`}>
-                Cancel
-              </button>
-              <button
-                onClick={handleDeploy}
-                disabled={isDeploying || !deployConfig.projectName.trim()}
-                className="px-4 py-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white text-sm font-medium rounded-lg disabled:opacity-50 transition-all shadow-lg shadow-violet-500/20"
-              >
-                {isDeploying ? "Deploying..." : "Deploy"}
-              </button>
+              <button onClick={() => setShowDeployModal(false)} className={`px-4 py-2 text-sm ${isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-600 hover:text-zinc-900'}`}>Cancel</button>
+              <button onClick={handleDeploy} disabled={isDeploying || !deployConfig.projectName.trim()} className="px-4 py-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white text-sm font-medium rounded-lg disabled:opacity-50 transition-all shadow-lg shadow-violet-500/20">{isDeploying ? "Deploying..." : "Deploy"}</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* âœ… GLOBAL STYLES FOR PREMIUM ANIMATIONS */}
+      {/* Global Styles */}
       <style jsx global>{`
-        @keyframes gradient-x {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-        }
-        @keyframes glow-pulse {
-          0%, 100% { opacity: 0.3; transform: scale(1); }
-          50% { opacity: 0.6; transform: scale(1.05); }
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-8px) rotate(2deg); }
-        }
-        .animate-gradient-x {
-          background-size: 200% 200%;
-          animation: gradient-x 3s ease infinite;
-        }
-        .animate-glow {
-          animation: glow-pulse 2.5s ease-in-out infinite;
-        }
-        .animate-float {
-          animation: float 4s ease-in-out infinite;
-        }
-        /* Smooth scrollbar for premium feel */
-        ::-webkit-scrollbar {
-          width: 6px;
-          height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-          background: ${isDark ? '#27272a' : '#e4e4e7'};
-          border-radius: 3px;
-          transition: background 0.2s;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-          background: ${isDark ? '#3f3f46' : '#d4d4d8'};
-        }
-        /* Ensure full page coverage */
-        html, body, #__next {
-          height: 100%;
-          margin: 0;
-          padding: 0;
-        }
-        /* Remove default focus outline for better UX */
-        button:focus-visible, input:focus-visible, textarea:focus-visible {
-          outline: 2px solid ${isDark ? '#8b5cf6' : '#7c3aed'};
-          outline-offset: 2px;
-        }
-        /* Gemini-style textarea auto-resize hint */
-        textarea {
-          field-sizing: content;
-        }
+        @keyframes gradient-x { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        @keyframes glow-pulse { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.05); } }
+        @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-8px) rotate(2deg); } }
+        .animate-gradient-x { background-size: 200% 200%; animation: gradient-x 3s ease infinite; }
+        .animate-glow { animation: glow-pulse 2.5s ease-in-out infinite; }
+        .animate-float { animation: float 4s ease-in-out infinite; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: ${isDark ? '#27272a' : '#e4e4e7'}; border-radius: 3px; transition: background 0.2s; }
+        ::-webkit-scrollbar-thumb:hover { background: ${isDark ? '#3f3f46' : '#d4d4d8'}; }
+        html, body, #__next { height: 100%; margin: 0; padding: 0; }
+        button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid ${isDark ? '#8b5cf6' : '#7c3aed'}; outline-offset: 2px; }
+        textarea { field-sizing: content; }
       `}</style>
     </div>
   );
 }
-
-
-
-
-
-
-
-
-

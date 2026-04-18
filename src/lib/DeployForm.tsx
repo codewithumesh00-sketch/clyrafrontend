@@ -43,7 +43,7 @@ export default function DeployForm({ assets = [] }: DeployFormProps) {
         throw new Error(`Template not found: ${templateId}`);
       }
 
-      const schemaRaw = localStorage.getItem("clyra-template-schema");
+      const schemaRaw = localStorage.getItem("clyraweb-template-schema");
       if (!schemaRaw) {
         throw new Error("Website schema not found");
       }

@@ -61,7 +61,7 @@ export default function Template17({ editableData }: TemplateProps) {
     }
   };
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+  // --- clyraweb EDITABLE COMPONENTS ---
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -148,9 +148,8 @@ export default function Template17({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-sm font-bold transition-all px-4 py-1 rounded-full ${
-                activePage === page.toLowerCase() ? "shadow-sm" : "opacity-70 hover:opacity-100"
-              }`}
+              className={`text-sm font-bold transition-all px-4 py-1 rounded-full ${activePage === page.toLowerCase() ? "shadow-sm" : "opacity-70 hover:opacity-100"
+                }`}
               style={{
                 backgroundColor: activePage === page.toLowerCase() ? theme.backgroundColor : "transparent",
                 color: activePage === page.toLowerCase() ? theme.primaryColor : theme.textColor,
@@ -167,7 +166,7 @@ export default function Template17({ editableData }: TemplateProps) {
             style={{
               backgroundColor: theme.primaryColor,
               color: "#ffffff",
-              borderRadius: 999, 
+              borderRadius: 999,
             }}
           >
             <EditableText regionKey="global.navCta" fallback="Book Visit" />
@@ -202,13 +201,13 @@ export default function Template17({ editableData }: TemplateProps) {
             className="text-sm opacity-80 leading-relaxed block max-w-xs mx-auto md:mx-0"
           />
         </div>
-        
+
         <div className="flex flex-col gap-3">
           <h4 className="font-extrabold uppercase tracking-widest text-xs opacity-50 mb-2">Quick Links</h4>
           {["Home", "About", "Contact"].map((p) => (
-            <button 
-              key={p} 
-              onClick={() => setActivePage(p.toLowerCase() as any)} 
+            <button
+              key={p}
+              onClick={() => setActivePage(p.toLowerCase() as any)}
               className="hover:translate-x-1 transition-transform text-sm font-bold w-fit mx-auto md:mx-0"
               style={{ color: theme.primaryColor }}
             >
@@ -264,8 +263,8 @@ export default function Template17({ editableData }: TemplateProps) {
             </div>
           </div>
           <div className="relative w-full aspect-square md:aspect-[4/3] lg:aspect-square mx-auto max-w-lg lg:max-w-none">
-            <div 
-              className="absolute inset-0 translate-x-4 translate-y-4 opacity-50" 
+            <div
+              className="absolute inset-0 translate-x-4 translate-y-4 opacity-50"
               style={{ backgroundColor: theme.primaryColor, borderRadius: `${theme.borderRadius * 2}px` }}
             />
             <EditableImg
@@ -289,8 +288,8 @@ export default function Template17({ editableData }: TemplateProps) {
             { id: "2", title: "Veterinary Care", desc: "Routine checkups and emergency care.", img: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=500&fit=crop" },
             { id: "3", title: "Daycare & Play", desc: "Supervised fun with furry friends.", img: "https://images.unsplash.com/photo-1544568100-847a948585b9?w=500&fit=crop" }
           ].map((feature, idx) => (
-            <div 
-              key={feature.id} 
+            <div
+              key={feature.id}
               className="bg-white p-6 shadow-sm hover:shadow-xl transition-all flex flex-col gap-4 group"
               style={{ borderRadius: theme.borderRadius }}
             >
@@ -314,8 +313,8 @@ export default function Template17({ editableData }: TemplateProps) {
       <Section id="about" bgType="primary">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="order-2 lg:order-1 relative">
-            <div 
-              className="absolute inset-0 -translate-x-4 -translate-y-4 opacity-50" 
+            <div
+              className="absolute inset-0 -translate-x-4 -translate-y-4 opacity-50"
               style={{ backgroundColor: theme.secondaryColor, borderRadius: `${theme.borderRadius * 3}px` }}
             />
             <EditableImg
@@ -339,7 +338,7 @@ export default function Template17({ editableData }: TemplateProps) {
               fallback="Every wagging tail and happy purr drives us forward. Our facilities are designed to be stress-free, engaging, and absolutely safe for your companions."
               className="text-lg opacity-80 leading-relaxed block"
             />
-            
+
             <div className="p-6 mt-8 shadow-sm" style={{ backgroundColor: theme.secondaryColor, borderRadius: theme.borderRadius }}>
               <EditableText as="h4" regionKey="about.quote" fallback="“They are not just pets, they are family. And we treat them as such.”" className="text-xl font-bold italic block" />
               <EditableText as="p" regionKey="about.author" fallback="- Dr. Sarah Jenkins, Founder" className="text-sm font-bold opacity-70 block mt-2" />
@@ -359,13 +358,13 @@ export default function Template17({ editableData }: TemplateProps) {
             <EditableText as="p" regionKey="contact.subtitle" fallback="Ready to book an appointment or have a question? We're all ears." className="text-xl opacity-80 block max-w-2xl mx-auto" />
           </div>
 
-          <div 
-            className="grid md:grid-cols-5 gap-0 overflow-hidden shadow-2xl" 
+          <div
+            className="grid md:grid-cols-5 gap-0 overflow-hidden shadow-2xl"
             style={{ borderRadius: theme.borderRadius * 1.5, backgroundColor: theme.secondaryColor }}
           >
             <div className="md:col-span-2 p-10 md:p-12 text-white flex flex-col justify-between relative overflow-hidden" style={{ backgroundColor: theme.primaryColor }}>
               <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-white opacity-10 rounded-full" />
-              
+
               <div className="relative z-10 space-y-10">
                 <div>
                   <h4 className="text-sm font-extrabold uppercase tracking-widest opacity-80 mb-2">Visit Us</h4>

@@ -9,7 +9,7 @@ import {
 import { useThemeStore } from "@/store/useThemeStore";
 
 /**
- * PRODUCTION-SAFE TEMPLATE FOR CLYRA
+ * PRODUCTION-SAFE TEMPLATE FOR clyraweb
  * Built with internal routing, dynamic theme support, and Cloudinary integration.
  * Beauty Salon Edition - Elegant, Soft, High-end UI/UX.
  */
@@ -38,24 +38,35 @@ export default function Template13({ editableData }: TemplateProps) {
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = (regionKey: string) => {
     if (typeof window !== "undefined" && (window as any).cloudinary) {
-      (window as any).cloudinary
-        .createUploadWidget(
+      const activeRegionKey = regionKey;
+      (window as any).__clyraweb_active_upload_region = activeRegionKey;
+      (window as any).__clyraweb_update_region = updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
           {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            cloudName: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME : "demo",
+            uploadPreset: (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ? process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET : "docs_upload_example_us_preset",
             multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
           },
           (error: any, result: any) => {
             if (!error && result && result.event === "success") {
-              updateRegion(regionKey, result.info.secure_url);
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              const updateFn = (window as any).__clyraweb_update_region;
+              if (activeRegion && updateFn) {
+                updateFn(activeRegion, result.info.secure_url);
+              }
             }
           }
-        )
-        .open();
+        );
+      }
+      (window as any).__cloudinaryWidget.open();
     }
   };
 
-  // --- CLYRA EDITABLE COMPONENTS ---
+  // --- clyraweb EDITABLE COMPONENTS ---
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
     const dataValue = getNestedValue(editableData, regionKey);
@@ -140,10 +151,9 @@ export default function Template13({ editableData }: TemplateProps) {
             <button
               key={page}
               onClick={() => setActivePage(page.toLowerCase() as any)}
-              className={`text-sm transition-all duration-300 uppercase tracking-[0.2em] relative after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-full after:h-[1px] after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300 after:origin-left ${
-                activePage === page.toLowerCase() ? "after:scale-x-100 font-semibold" : "opacity-60 hover:opacity-100"
-              }`}
-              style={{ 
+              className={`text-sm transition-all duration-300 uppercase tracking-[0.2em] relative after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-full after:h-[1px] after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300 after:origin-left ${activePage === page.toLowerCase() ? "after:scale-x-100 font-semibold" : "opacity-60 hover:opacity-100"
+                }`}
+              style={{
                 color: activePage === page.toLowerCase() ? theme.primaryColor : theme.textColor
               }}
             >
@@ -195,13 +205,13 @@ export default function Template13({ editableData }: TemplateProps) {
             style={{ fontFamily: "sans-serif" }}
           />
         </div>
-        
+
         <div className="flex flex-col gap-5">
           <h4 className="font-bold uppercase tracking-[0.2em] text-xs opacity-50">Navigation</h4>
           {["Home", "About", "Contact"].map((p) => (
-            <button 
-              key={p} 
-              onClick={() => setActivePage(p.toLowerCase() as any)} 
+            <button
+              key={p}
+              onClick={() => setActivePage(p.toLowerCase() as any)}
               className="hover:opacity-100 opacity-70 transition-opacity text-sm w-fit mx-auto md:mx-0 uppercase tracking-widest"
               style={{ fontFamily: "sans-serif" }}
             >
@@ -241,7 +251,7 @@ export default function Template13({ editableData }: TemplateProps) {
                 className="text-5xl md:text-7xl font-normal leading-[1.1] block"
               />
             </div>
-            
+
             <EditableText
               as="p"
               regionKey="hero.subtitle"
@@ -249,7 +259,7 @@ export default function Template13({ editableData }: TemplateProps) {
               className="text-lg opacity-80 leading-relaxed block max-w-lg"
               style={{ fontFamily: "sans-serif" }}
             />
-            
+
             <div className="flex flex-wrap gap-4 pt-4">
               <button
                 className="px-10 py-4 font-medium uppercase tracking-widest text-sm shadow-xl hover:-translate-y-1 transition-transform"
@@ -259,10 +269,10 @@ export default function Template13({ editableData }: TemplateProps) {
               </button>
               <button
                 className="px-10 py-4 font-medium uppercase tracking-widest text-sm border hover:-translate-y-1 transition-transform"
-                style={{ 
-                  borderColor: theme.textColor, 
-                  color: theme.textColor, 
-                  borderRadius: `${theme.borderRadius}px` 
+                style={{
+                  borderColor: theme.textColor,
+                  color: theme.textColor,
+                  borderRadius: `${theme.borderRadius}px`
                 }}
                 onClick={() => setActivePage("about")}
               >
@@ -321,7 +331,7 @@ export default function Template13({ editableData }: TemplateProps) {
     <Section id="about" bgType="primary">
       <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center animate-in slide-in-from-bottom-8 duration-1000 w-full min-w-0">
         <div className="relative">
-           <EditableImg
+          <EditableImg
             regionKey="about.img1"
             fallback="https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1200&auto=format&fit=crop"
             className="w-full aspect-[3/4] object-cover shadow-2xl"
@@ -329,18 +339,18 @@ export default function Template13({ editableData }: TemplateProps) {
           />
         </div>
         <div className="space-y-8">
-          <EditableText 
-            as="span" 
-            regionKey="about.eyebrow" 
-            fallback="OUR PHILOSOPHY" 
+          <EditableText
+            as="span"
+            regionKey="about.eyebrow"
+            fallback="OUR PHILOSOPHY"
             className="text-sm font-bold tracking-[0.3em] uppercase block opacity-70"
             style={{ color: theme.primaryColor, fontFamily: "sans-serif" }}
           />
-          <EditableText 
-            as="h2" 
-            regionKey="about.title" 
-            fallback="Beauty is an Art. Care is our Canvas." 
-            className="text-5xl md:text-6xl font-normal leading-tight block" 
+          <EditableText
+            as="h2"
+            regionKey="about.title"
+            fallback="Beauty is an Art. Care is our Canvas."
+            className="text-5xl md:text-6xl font-normal leading-tight block"
           />
           <EditableText
             as="p"
@@ -375,8 +385,8 @@ export default function Template13({ editableData }: TemplateProps) {
           />
         </div>
 
-        <div 
-          className="grid md:grid-cols-5 gap-0 overflow-hidden shadow-2xl border" 
+        <div
+          className="grid md:grid-cols-5 gap-0 overflow-hidden shadow-2xl border"
           style={{ borderRadius: `${theme.borderRadius * 1.5}px`, borderColor: `${theme.textColor}10` }}
         >
           <div className="md:col-span-2 p-12 flex flex-col justify-between" style={{ backgroundColor: theme.secondaryColor }}>
@@ -396,29 +406,29 @@ export default function Template13({ editableData }: TemplateProps) {
               </div>
             </div>
           </div>
-          
+
           <div className="md:col-span-3 p-12 bg-white/50 backdrop-blur-md">
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-6">
-                <input 
-                  className="w-full p-4 bg-transparent border-b outline-none focus:border-opacity-100 transition-colors" 
-                  style={{ borderColor: `${theme.textColor}30`, fontFamily: "sans-serif" }} 
-                  placeholder="First Name" 
+                <input
+                  className="w-full p-4 bg-transparent border-b outline-none focus:border-opacity-100 transition-colors"
+                  style={{ borderColor: `${theme.textColor}30`, fontFamily: "sans-serif" }}
+                  placeholder="First Name"
                 />
-                <input 
-                  className="w-full p-4 bg-transparent border-b outline-none focus:border-opacity-100 transition-colors" 
-                  style={{ borderColor: `${theme.textColor}30`, fontFamily: "sans-serif" }} 
-                  placeholder="Last Name" 
+                <input
+                  className="w-full p-4 bg-transparent border-b outline-none focus:border-opacity-100 transition-colors"
+                  style={{ borderColor: `${theme.textColor}30`, fontFamily: "sans-serif" }}
+                  placeholder="Last Name"
                 />
               </div>
-              <input 
-                className="w-full p-4 bg-transparent border-b outline-none focus:border-opacity-100 transition-colors" 
-                style={{ borderColor: `${theme.textColor}30`, fontFamily: "sans-serif" }} 
-                placeholder="Email Address" 
+              <input
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-opacity-100 transition-colors"
+                style={{ borderColor: `${theme.textColor}30`, fontFamily: "sans-serif" }}
+                placeholder="Email Address"
                 type="email"
               />
-              <select 
-                className="w-full p-4 bg-transparent border-b outline-none focus:border-opacity-100 transition-colors opacity-70 appearance-none" 
+              <select
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-opacity-100 transition-colors opacity-70 appearance-none"
                 style={{ borderColor: `${theme.textColor}30`, fontFamily: "sans-serif" }}
               >
                 <option value="">Select Service Area...</option>
@@ -426,13 +436,13 @@ export default function Template13({ editableData }: TemplateProps) {
                 <option value="skin">Skin Care</option>
                 <option value="spa">Spa Ritual</option>
               </select>
-              <textarea 
-                className="w-full p-4 bg-transparent border-b outline-none focus:border-opacity-100 transition-colors resize-none h-32" 
-                style={{ borderColor: `${theme.textColor}30`, fontFamily: "sans-serif" }} 
-                placeholder="Any specific requests or details?" 
+              <textarea
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-opacity-100 transition-colors resize-none h-32"
+                style={{ borderColor: `${theme.textColor}30`, fontFamily: "sans-serif" }}
+                placeholder="Any specific requests or details?"
               />
-              <button 
-                className="w-full py-5 font-medium uppercase tracking-[0.2em] text-sm mt-4 hover:opacity-90 transition-opacity" 
+              <button
+                className="w-full py-5 font-medium uppercase tracking-[0.2em] text-sm mt-4 hover:opacity-90 transition-opacity"
                 style={{ backgroundColor: theme.primaryColor, color: "#fff", borderRadius: `${theme.borderRadius}px` }}
               >
                 <EditableText regionKey="contact.submit" fallback="Request Appointment" />
@@ -451,7 +461,7 @@ export default function Template13({ editableData }: TemplateProps) {
     >
       {/* Script loading via standard HTML to avoid resolution errors */}
       <script src="https://upload-widget.cloudinary.com/global/all.js" async></script>
-      
+
       <Navbar />
 
       <div className="flex flex-col w-full min-w-0">

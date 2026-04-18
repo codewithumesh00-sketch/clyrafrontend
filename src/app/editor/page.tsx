@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
@@ -27,16 +27,19 @@ import {
   Plus,
   Undo2,
   Redo2,
+  History,
 } from "lucide-react";
 
+import DeployPanel from "@/components/editor/DeployPanel";
 import SectionLibraryPanel from "@/components/editor/SectionLibraryPanel";
 import LexicalToolbar from "@/components/editor/LexicalToolbar";
 import LivePreview from "@/components/editor/LivePreview";
 import ThemeCustomizer from "@/components/editor/ThemeCustomizer";
-import DeployForm from "@/lib/DeployForm";
+import { useThemeStore } from "@/store/useThemeStore";
 import { useWebsiteBuilderStore } from "@/store/useWebsiteBuilderStore";
+import { resolveTemplate } from "@/templates/templateRegistry";
 
-const theme = {
+const lexicalTheme = {
   paragraph: "mb-3 text-gray-700 leading-relaxed",
   heading: {
     h1: "text-4xl font-bold mb-4 text-gray-900",
@@ -48,6 +51,7 @@ const theme = {
 
 export default function EditorPage() {
   const schema = useWebsiteBuilderStore((state) => state.schema);
+  const { theme } = useThemeStore();
   const [mounted, setMounted] = useState(false);
   const [saveTime, setSaveTime] = useState("Not saved");
   const [savedState, setSavedState] = useState<string | null>(null);
@@ -56,11 +60,24 @@ export default function EditorPage() {
   const [activeTab, setActiveTab] = useState<"content" | "theme" | "sections">("content");
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [showDeploy, setShowDeploy] = useState(false);
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [showDeployPanel, setShowDeployPanel] = useState(false);
+
+  const {
+    setDeployProgress,
+    addDeployLog,
+    clearDeployLogs,
+    addDeployHistory,
+    setIsPublishing,
+    setDeployStep,
+    currentProjectId,
+    updateProject,
+  } = useWebsiteBuilderStore();
 
   useEffect(() => {
     setMounted(true);
-    const saved = localStorage.getItem("clyra-editor");
+    useWebsiteBuilderStore.getState().loadProjects();
+    const saved = localStorage.getItem("clyraweb-editor");
     if (saved) {
       setSavedState(saved);
       setLastSaved(new Date());
@@ -69,6 +86,10 @@ export default function EditorPage() {
   }, []);
 
   const handleSave = useCallback(() => {
+    const lexicalState = localStorage.getItem("clyraweb-editor");
+    if (lexicalState) {
+      localStorage.setItem("clyraweb-editor-saved", lexicalState);
+    }
     const now = new Date();
     setLastSaved(now);
     setSaveTime(`Saved ${now.toLocaleTimeString()}`);
@@ -79,6 +100,108 @@ export default function EditorPage() {
     return () => clearTimeout(timer);
   }, []);
 
+  const handlePublish = async () => {
+    setIsDeploying(true);
+    setIsPublishing(true);
+    setShowDeployPanel(true);
+    clearDeployLogs();
+    setDeployProgress(0);
+    setDeployStep("START");
+
+    try {
+      const templateId = schema.templateId || "template1";
+      const cleanTemplateName = templateId.split("/").pop();
+
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+
+      const response = await fetch(`${API_URL}/deploy`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          projectName: "clyraweb-auto-publish",
+          templateName: cleanTemplateName,
+          editableData: schema.editableData,
+          theme: theme,
+        }),
+      });
+
+      if (!response.body) throw new Error("No readable stream");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        console.log("CHUNK:", chunk);
+        buffer += chunk;
+        const lines = buffer.split("\\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+
+          if (line.startsWith("STEP:")) {
+            const step = line.substring(5).trim();
+            setDeployStep(step);
+          } else if (line.startsWith("PROGRESS:")) {
+            setDeployProgress(parseInt(line.split(":")[1]));
+          } else if (line.startsWith("URL:")) {
+            const url = line.substring(4).trim();
+            addDeployHistory({
+              id: Date.now().toString(),
+              date: new Date().toISOString(),
+              status: "success",
+              url: url
+            });
+            if (currentProjectId) {
+              updateProject(currentProjectId, {
+                status: "deployed",
+                deployUrl: url,
+                deployedAt: new Date().toISOString()
+              });
+            }
+            // window.open(url, "_blank"); // Optional auto-open
+          } else if (line.startsWith("ERROR:") || line.includes("❌")) {
+            if (line.startsWith("ERROR:")) {
+              addDeployLog(line.substring(6).trim());
+            } else {
+              addDeployLog(line.trim());
+            }
+            addDeployHistory({
+              id: Date.now().toString(),
+              date: new Date().toISOString(),
+              status: "failed",
+            });
+            if (currentProjectId) {
+              updateProject(currentProjectId, { status: "failed" });
+            }
+          } else {
+            addDeployLog(line.trim());
+          }
+        }
+      }
+    } catch (err) {
+      addDeployLog("Error deploying: " + (err instanceof Error ? err.message : String(err)));
+      addDeployHistory({
+        id: Date.now().toString(),
+        date: new Date().toISOString(),
+        status: "failed",
+      });
+      if (currentProjectId) {
+        updateProject(currentProjectId, { status: "failed" });
+      }
+    } finally {
+      setIsDeploying(false);
+      setIsPublishing(false);
+    }
+  };
+
   const previewWidth = {
     desktop: "100%",
     tablet: "768px",
@@ -87,8 +210,8 @@ export default function EditorPage() {
 
   const initialConfig = useMemo(() => {
     return {
-      namespace: "ClyraEditor",
-      theme,
+      namespace: "clyrawebEditor",
+      theme: lexicalTheme,
       nodes: [HeadingNode, QuoteNode],
       editorState: savedState || undefined,
       onError(error: Error) {
@@ -126,7 +249,7 @@ export default function EditorPage() {
                 <button
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                   className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                > 
+                >
                   {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                 </button>
                 <div className="flex items-center gap-2">
@@ -134,22 +257,21 @@ export default function EditorPage() {
                     <span className="text-white font-bold text-sm">C</span>
                   </div>
                   <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-                    Clyra
+                    clyraweb
                   </h1>
                 </div>
               </div>
-              
+
 
               <div className="hidden md:flex items-center gap-1 bg-gray-50 rounded-xl p-1">
                 {["desktop", "tablet", "mobile"].map((d) => (
                   <button
                     key={d}
                     onClick={() => setDevice(d as any)}
-                    className={`p-2 rounded-lg transition-all ${
-                      device === d
+                    className={`p-2 rounded-lg transition-all ${device === d
                         ? "bg-white shadow-sm text-gray-900"
                         : "text-gray-500 hover:text-gray-700"
-                    }`}
+                      }`}
                   >
                     {d === "desktop" && <Monitor className="h-4 w-4" />}
                     {d === "tablet" && <Tablet className="h-4 w-4" />}
@@ -159,29 +281,45 @@ export default function EditorPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="hidden sm:flex items-center gap-2 text-sm text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg">
+                <button
+                  onClick={handleSave}
+                  className="hidden sm:flex items-center gap-2 text-sm text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 hover:text-blue-600 px-3 py-1.5 rounded-lg transition-all shadow-sm cursor-pointer"
+                >
                   <Save className="h-3.5 w-3.5" />
-                  <span>{saveTime}</span>
-                </div>
+                  <span>{saveTime === "Not saved" ? "Save" : saveTime}</span>
+                </button>
 
                 <button
                   onClick={() => setIsPreviewMode(!isPreviewMode)}
-                  className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${
-                    isPreviewMode
+                  className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${isPreviewMode
                       ? "bg-blue-50 text-blue-600 border border-blue-200"
                       : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                    }`}
                 >
                   <Eye className="h-4 w-4" />
                   <span className="text-sm"></span>
                 </button>
 
                 <button
-                  onClick={() => setShowDeploy(true)}
-                  className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-sm hover:shadow-md"
+                  onClick={() => setShowDeployPanel(true)}
+                  className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all text-gray-600 hover:bg-gray-100 hover:text-blue-600 border border-transparent hover:border-gray-200"
+                  title="Deploy History"
+                >
+                  <History className="h-4 w-4" />
+                </button>
+
+                <button
+                  onClick={handlePublish}
+                  disabled={isDeploying}
+                  className={`flex items-center gap-2 bg-gradient-to-r ${isDeploying
+                      ? "from-gray-400 to-gray-500 cursor-not-allowed"
+                      : "from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                    } text-white px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-sm hover:shadow-md`}
                 >
                   <Upload className="h-4 w-4" />
-                  <span className="hidden sm:inline">Publish</span>
+                  <span className="hidden sm:inline">
+                    {isDeploying ? "Publishing..." : "Publish"}
+                  </span>
                 </button>
               </div>
             </div>
@@ -213,11 +351,10 @@ export default function EditorPage() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id as any)}
-                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-all ${
-                        activeTab === tab.id
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-all ${activeTab === tab.id
                           ? "bg-white shadow-sm text-gray-900"
                           : "text-gray-500 hover:text-gray-700"
-                      }`}
+                        }`}
                     >
                       {tab.icon}
                       <span className="hidden sm:inline">{tab.label}</span>
@@ -256,7 +393,7 @@ export default function EditorPage() {
                           <OnChangePlugin
                             onChange={(editorState) => {
                               const json = editorState.toJSON();
-                              localStorage.setItem("clyra-editor", JSON.stringify(json));
+                              localStorage.setItem("clyraweb-editor", JSON.stringify(json));
                               handleSave();
                               editorState.read(() => {
                                 $getRoot().getTextContent();
@@ -294,32 +431,29 @@ export default function EditorPage() {
 
           {/* PREVIEW AREA */}
           <main
-            className={`flex-1 overflow-auto ${
-              isPreviewMode ? "bg-white" : "bg-gray-50"
-            }`}
+            className={`flex-1 overflow-auto ${isPreviewMode ? "bg-white" : "bg-gray-50"
+              }`}
           >
             <div
-              className={`${
-                isPreviewMode
+              className={`${isPreviewMode
                   ? "min-h-screen w-full"
                   : "min-h-full p-4 md:p-6"
-              }`}
+                }`}
             >
               <div className="flex justify-center">
                 <div
-                  className={`transition-all duration-300 ease-in-out ${
-                    isPreviewMode
+                  className={`transition-all duration-300 ease-in-out ${isPreviewMode
                       ? "w-full min-h-screen bg-white"
                       : "bg-white rounded-2xl shadow-sm overflow-hidden"
-                  }`}
+                    }`}
                   style={
                     isPreviewMode
                       ? {}
                       : {
-                          width: previewWidth[device],
-                          maxWidth: "100%",
-                          minHeight: "calc(100vh - 120px)",
-                        }
+                        width: previewWidth[device],
+                        maxWidth: "100%",
+                        minHeight: "calc(100vh - 120px)",
+                      }
                   }
                 >
                   {isPreviewMode && (
@@ -332,7 +466,7 @@ export default function EditorPage() {
                   )}
                   <div
                     id="preview-root"
-                    data-clyra-preview="true"
+                    data-clyraweb-preview="true"
                     className={isPreviewMode ? "pointer-events-auto" : ""}
                   >
                     <LivePreview schema={schema} />
@@ -378,23 +512,14 @@ export default function EditorPage() {
             {getDeviceIcon()}
           </button>
         </div>
-
-        {/* ✅ DEPLOY MODAL - Connected to real deploy pipeline */}
-        {showDeploy && (
-          <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-6">
-            <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold">Deploy Website</h2>
-                <button onClick={() => setShowDeploy(false)}>
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <DeployForm />
-            </div>
-          </div>
-        )}
       </LexicalComposer>
+
+      {/* Deploy Panel Overlay */}
+      <DeployPanel
+        isOpen={showDeployPanel}
+        onClose={() => setShowDeployPanel(false)}
+        isDeploying={isDeploying}
+      />
     </div>
   );
 }
