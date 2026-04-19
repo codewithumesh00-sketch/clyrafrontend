@@ -9,42 +9,50 @@ function getEnv(name: string, value: string | undefined): string {
   return value;
 }
 
-// ✅ DETECT ENVIRONMENT (important for auth fix)
-const isProd =
-  typeof window !== "undefined" &&
-  window.location.hostname !== "localhost";
+// ✅ DETECT ENVIRONMENT
+const isBrowser = typeof window !== "undefined";
+const isLocalhost =
+  isBrowser &&
+  (window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1");
 
-// ✅ CLEAN + CONSISTENT CONFIG
+// ✅ FINAL CONFIG (FIXED AUTH DOMAIN)
 const firebaseConfig = {
   apiKey: getEnv(
     "NEXT_PUBLIC_FIREBASE_API_KEY",
     process.env.NEXT_PUBLIC_FIREBASE_API_KEY
   ),
 
-  authDomain: getEnv(
-    "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
-    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-  ),
+  // 🔥 CRITICAL FIX — THIS SOLVES redirect_uri_mismatch
+  authDomain: isLocalhost
+    ? getEnv(
+      "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
+      process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    ) // localhost → firebaseapp.com
+    : "app.clyraweb.in", // production → YOUR DOMAIN
 
   projectId: getEnv(
     "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
     process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
   ),
+
   storageBucket: getEnv(
     "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET",
     process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
   ),
+
   messagingSenderId: getEnv(
     "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
     process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
   ),
+
   appId: getEnv(
     "NEXT_PUBLIC_FIREBASE_APP_ID",
     process.env.NEXT_PUBLIC_FIREBASE_APP_ID
   ),
 };
 
-// ✅ PREVENT MULTIPLE INIT (important for Next.js)
+// ✅ PREVENT MULTIPLE INIT (Next.js safe)
 export const app =
   !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
 
@@ -54,7 +62,7 @@ export const auth = getAuth(app);
 // ✅ GOOGLE PROVIDER
 export const googleProvider = new GoogleAuthProvider();
 
-// ✅ BETTER UX + CONSISTENT FLOW
+// ✅ BETTER UX
 googleProvider.setCustomParameters({
   prompt: "select_account",
 });
