@@ -1136,7 +1136,7 @@ module.exports = nextConfig;
 
         <div className={`p-3 border-t ${isDark ? 'border-zinc-800' : 'border-zinc-200'} flex items-center justify-between`}>
           <div className="flex items-center gap-2">
-            <img src={firebaseUser?.photoURL || "/default-avatar.png"} alt="user" className="w-7 h-7 rounded-full ring-2 ring-offset-2 ring-offset-black dark:ring-offset-black ring-violet-500/30" />
+            <img src={firebaseUser?.photoURL || "https://api.dicebear.com/7.x/avataaars/svg?seed=fallback"} alt="user" className="w-7 h-7 rounded-full ring-2 ring-offset-2 ring-offset-black dark:ring-offset-black ring-violet-500/30" />
             <span className="text-xs font-medium truncate max-w-[100px]">{firebaseUser?.displayName || "User"}</span>
           </div>
           <button onClick={async () => {
