@@ -1,31 +1,35 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
-// NOTE:
-// - We try env-config first (for deployments).
-// - If env is missing, we fall back to the repo's previously hard-coded config
-//   so local dev continues to work without extra setup.
+// ✅ STRICT ENV CHECK (prevents silent bugs)
+function getEnv(name: string, value: string | undefined): string {
+  if (!value) {
+    throw new Error(`❌ Missing environment variable: ${name}`);
+  }
+  return value;
+}
+
+// ✅ CLEAN + CONSISTENT CONFIG (NO FALLBACKS)
 const firebaseConfig = {
-  apiKey:
-    process.env.NEXT_PUBLIC_FIREBASE_API_KEY ||
-    "AIzaSyABt5vdsk6Wsuj96robB4bYmCn5AWIylyQ",
-  authDomain:
-    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ||
-    "clyrawebui.firebaseapp.com",
-  projectId:
-    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "clyrawebui",
-  storageBucket:
-    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
-    "clyrawebui.firebasestorage.app",
-  messagingSenderId:
-    process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ||
-    "489677679886",
-  appId:
-    process.env.NEXT_PUBLIC_FIREBASE_APP_ID ||
-    "1:489677679886:web:f37c0cd00a391e178afb5f",
+  apiKey: getEnv("NEXT_PUBLIC_FIREBASE_API_KEY", process.env.NEXT_PUBLIC_FIREBASE_API_KEY),
+  authDomain: getEnv("NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN", process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN),
+  projectId: getEnv("NEXT_PUBLIC_FIREBASE_PROJECT_ID", process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID),
+  storageBucket: getEnv("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET", process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET),
+  messagingSenderId: getEnv("NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID", process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID),
+  appId: getEnv("NEXT_PUBLIC_FIREBASE_APP_ID", process.env.NEXT_PUBLIC_FIREBASE_APP_ID),
 };
 
-// Prevent multiple initialization (common during hot reload/dev).
-export const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
+// ✅ PREVENT MULTIPLE INIT (important for Next.js)
+export const app =
+  !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
+
+// ✅ AUTH INSTANCE
 export const auth = getAuth(app);
+
+// ✅ GOOGLE PROVIDER
 export const googleProvider = new GoogleAuthProvider();
+
+// ✅ OPTIONAL (recommended for better UX)
+googleProvider.setCustomParameters({
+  prompt: "select_account",
+});
