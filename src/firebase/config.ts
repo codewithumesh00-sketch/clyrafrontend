@@ -3,14 +3,13 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
-// ✅ DETECT ENVIRONMENT
-const isBrowser = typeof window !== "undefined";
+// ✅ DETECT LOCALHOST
 const isLocalhost =
-  isBrowser &&
+  typeof window !== "undefined" &&
   (window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1");
 
-// ✅ FINAL CONFIG (SAFE FOR BUILD + CLIENT)
+// ✅ FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
 
@@ -25,7 +24,7 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
 };
 
-// ✅ PREVENT MULTIPLE INIT
+// ✅ INIT
 export const app =
   !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
 
