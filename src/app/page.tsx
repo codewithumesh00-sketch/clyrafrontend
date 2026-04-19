@@ -316,10 +316,16 @@ body {
   }, []);
 
   useEffect(() => {
-    if (!authLoading && !firebaseUser) {
-      router.push("/login");
-    }
-  }, [authLoading, firebaseUser, router]);
+    if (authLoading) return;
+
+    const timeout = setTimeout(() => {
+      if (!firebaseUser) {
+        router.push("/login");
+      }
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [authLoading, firebaseUser]);
 
   // Timer
   useEffect(() => {
