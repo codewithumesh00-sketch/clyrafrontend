@@ -21,13 +21,10 @@ const firebaseConfig = {
     process.env.NEXT_PUBLIC_FIREBASE_API_KEY
   ),
 
-  // 🔥 CRITICAL FIX
-  authDomain: isProd
-    ? "app.clyraweb.in" // ✅ force your real domain in production
-    : getEnv(
-      "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
-      process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    ),
+  authDomain: getEnv(
+    "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
+    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+  ),
 
   projectId: getEnv(
     "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
