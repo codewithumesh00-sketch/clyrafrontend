@@ -62,6 +62,7 @@ export default function LandingPage() {
   }, [router]);
 
   useEffect(() => {
+    console.log("HOST:", window.location.hostname);
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);
