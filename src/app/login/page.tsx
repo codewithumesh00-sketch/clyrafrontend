@@ -2,7 +2,13 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { signInWithPopup, onAuthStateChanged, signOut } from "firebase/auth";
+import {
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  onAuthStateChanged,
+  signOut
+} from "firebase/auth";
 import type { User } from "firebase/auth";
 import { auth, googleProvider } from "@/firebase/config";
 import {
@@ -36,6 +42,25 @@ export default function LandingPage() {
   const [error, setError] = useState<string | null>(null);
   const [scrollY, setScrollY] = useState(0);
 
+  // Check for redirect result on mount
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) {
+          console.log("LOGIN SUCCESS:", result.user);
+          setShowLoginModal(false);
+          router.push("/dashboard");
+        }
+      })
+      .catch((error) => {
+        console.error("REDIRECT ERROR:", error);
+        setError(error.message);
+      })
+      .finally(() => {
+        setSigningIn(false);
+      });
+  }, [router]);
+
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
@@ -55,17 +80,31 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // ✅ Updated sign-in handler with localhost detection
+  const isLocalhost =
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1");
+
   const handleGoogleSignIn = async () => {
     setError(null);
     setSigningIn(true);
+
     try {
-      await signInWithPopup(auth, googleProvider);
-      setShowLoginModal(false);
-      router.push("/dashboard");
+      if (isLocalhost) {
+        // ✅ keep popup for dev
+        await signInWithPopup(auth, googleProvider);
+        setShowLoginModal(false);
+        router.push("/dashboard");
+      } else {
+        // 🔥 production safe redirect flow
+        await signInWithRedirect(auth, googleProvider);
+        // Note: redirect will reload the page, getRedirectResult handles the rest
+      }
     } catch (e) {
-      const message = e instanceof Error ? e.message : "Login failed. Try again.";
+      const message =
+        e instanceof Error ? e.message : "Login failed. Try again.";
       setError(message);
-    } finally {
       setSigningIn(false);
     }
   };
