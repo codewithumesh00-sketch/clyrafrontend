@@ -13,9 +13,9 @@ const isLocalhost =
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
 
-  authDomain: isLocalhost
-    ? process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!
-    : "clyraui.firebaseapp.com",
+  authDomain: typeof window !== "undefined" && !isLocalhost
+    ? window.location.hostname
+    : process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
 
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
