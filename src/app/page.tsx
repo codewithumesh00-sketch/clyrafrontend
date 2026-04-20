@@ -322,7 +322,7 @@ body {
       if (!firebaseUser) {
         router.push("/login");
       }
-    }, 300);
+    }, 1000); // 🔥 increase delay
 
     return () => clearTimeout(timeout);
   }, [authLoading, firebaseUser]);

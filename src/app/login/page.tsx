@@ -12,25 +12,9 @@ import {
 import type { User } from "firebase/auth";
 import { auth, googleProvider } from "@/firebase/config";
 import {
-  Sparkles,
-  Zap,
-  Globe,
-  Code2,
-  Rocket,
-  ChevronRight,
-  Play,
-  Layers,
-  Palette,
-  MousePointer2,
-  CheckCircle2,
-  X,
-  Loader2,
-  LogOut,
-  Moon,
-  Star,
-  Wand2,
-  Box,
-  ArrowRight
+  Sparkles, Zap, Globe, Code2, Rocket, ChevronRight, Play,
+  Layers, Palette, MousePointer2, CheckCircle2, X, Loader2,
+  LogOut, Moon, Star, Wand2, Box, ArrowRight
 } from "lucide-react";
 
 export default function LandingPage() {
@@ -42,14 +26,14 @@ export default function LandingPage() {
   const [error, setError] = useState<string | null>(null);
   const [scrollY, setScrollY] = useState(0);
 
-  // Check for redirect result on mount
+  // ✅ Check for redirect result on mount - ONLY place that redirects to /dashboard
   useEffect(() => {
     getRedirectResult(auth)
       .then((result) => {
         if (result?.user) {
           console.log("LOGIN SUCCESS:", result.user);
           setShowLoginModal(false);
-          router.push("/dashboard");
+          router.push("/dashboard"); // ✅ Single source of truth for redirect
         }
       })
       .catch((error) => {
@@ -61,14 +45,13 @@ export default function LandingPage() {
       });
   }, [router]);
 
+  // ✅ Auth state listener - ONLY updates state, NO redirect
   useEffect(() => {
     console.log("HOST:", window.location.hostname);
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);
-      if (u) {
-        router.push("/dashboard");
-      }
+      // ❌ REMOVED: if (u) router.push("/dashboard"); ← This was causing the loop!
     });
     return () => unsub();
   }, [router]);
@@ -81,7 +64,6 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // ✅ Updated sign-in handler with localhost detection
   const isLocalhost =
     typeof window !== "undefined" &&
     (window.location.hostname === "localhost" ||
@@ -93,18 +75,14 @@ export default function LandingPage() {
 
     try {
       if (isLocalhost) {
-        // ✅ keep popup for dev
         await signInWithPopup(auth, googleProvider);
         setShowLoginModal(false);
         router.push("/dashboard");
       } else {
-        // 🔥 production safe redirect flow
         await signInWithRedirect(auth, googleProvider);
-        // Note: redirect will reload the page, getRedirectResult handles the rest
       }
     } catch (e) {
-      const message =
-        e instanceof Error ? e.message : "Login failed. Try again.";
+      const message = e instanceof Error ? e.message : "Login failed. Try again.";
       setError(message);
       setSigningIn(false);
     }
@@ -293,13 +271,11 @@ export default function LandingPage() {
       <section className="relative z-10 pt-20 pb-16 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900/80 border border-white/10 backdrop-blur-sm mb-8">
               <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-sm text-zinc-300">AI-Powered Website Builder</span>
             </div>
 
-            {/* Main Heading */}
             <h1 className="text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight mb-6">
               <span className="bg-gradient-to-b from-white via-white to-zinc-400 bg-clip-text text-transparent">
                 Presented By
@@ -394,17 +370,14 @@ export default function LandingPage() {
                   opacity: Math.min(1, 0.3 + (scrollY > index * 150 ? 0.7 : 0))
                 }}
               >
-                {/* Connecting Line */}
                 {index < pipelineSteps.length - 1 && (
                   <div className="absolute left-8 top-20 w-0.5 h-24 bg-gradient-to-b from-orange-500/50 to-transparent hidden md:block" />
                 )}
 
-                {/* Icon */}
                 <div className={`flex-shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center shadow-xl`}>
                   <step.icon size={32} className="text-white" />
                 </div>
 
-                {/* Content */}
                 <div className="flex-1">
                   <h3 className="text-3xl font-bold text-white mb-2">{step.title}</h3>
                   <p className="text-zinc-400 text-lg leading-relaxed">{step.description}</p>

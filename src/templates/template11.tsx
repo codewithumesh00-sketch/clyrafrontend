@@ -1,14 +1,12 @@
 ﻿"use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, FormEvent } from "react";
 import Script from "next/script";
 import {
   useWebsiteBuilderStore,
   useRegionValue,
 } from "@/store/useWebsiteBuilderStore";
 import { useThemeStore } from "@/store/useThemeStore";
-
-
 
 export const template11Meta = {
   id: "business/template11",
@@ -29,6 +27,10 @@ export default function Template11({ editableData }: TemplateProps) {
   const [activePage, setActivePage] = useState<"home" | "about" | "contact">("home");
   const { theme } = useThemeStore();
   const updateRegion = useWebsiteBuilderStore((state: any) => state.updateRegion);
+
+  // ✅ STEP 1 + BONUS: Get Formspree endpoint + form provider (scalable)
+  const formspreeEndpoint = useRegionValue("contact.formspreeEndpoint");
+  const formProvider = useRegionValue("contact.formProvider") || "formspree";
 
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = useCallback((regionKey: string) => {
@@ -60,7 +62,6 @@ export default function Template11({ editableData }: TemplateProps) {
       (window as any).__cloudinaryWidget.open();
     }
   }, [updateRegion]);
-
 
   const EditableText = ({ regionKey, fallback, as: Tag = "span", className = "" }: any) => {
     const hookValue = useRegionValue(regionKey);
@@ -358,83 +359,168 @@ export default function Template11({ editableData }: TemplateProps) {
     </Section>
   );
 
-  const ContactView = () => (
-    <Section id="contact" bgType="secondary" className="animate-in zoom-in-95 duration-500 w-full max-w-full">
-      <div className="max-w-5xl mx-auto break-words">
-        <div className="text-center mb-16 space-y-6">
-          <EditableText as="h1" regionKey="contact.title" fallback="Get in Touch" className="text-5xl sm:text-6xl font-extrabold tracking-tight block" />
-          <EditableText as="p" regionKey="contact.subtitle" fallback="Have questions about enrollment? Our admissions team is here to help you begin your journey." className="text-xl opacity-70 block max-w-2xl mx-auto" />
-        </div>
+  // ✅ STEP 7: AJAX Submit Handler (PRO LEVEL)
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-        <div
-          className="grid md:grid-cols-5 gap-0 shadow-2xl overflow-hidden"
-          style={{ borderRadius: `${theme.borderRadius * 2}px`, backgroundColor: theme.backgroundColor }}
-        >
+    if (!formspreeEndpoint) {
+      alert("⚠️ Please connect your Formspree endpoint first in the builder settings.");
+      return;
+    }
+
+    const formData = new FormData(e.currentTarget);
+
+    try {
+      const response = await fetch(formspreeEndpoint, {
+        method: "POST",
+        body: formData,
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
+      if (response.ok) {
+        alert("✅ Message sent successfully! We'll get back to you soon.");
+        e.currentTarget.reset();
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        alert(`❌ Submission failed: ${errorData.errors?.map((e: any) => e.message).join(", ") || "Please try again."}`);
+      }
+    } catch (error) {
+      console.error("Form submission error:", error);
+      alert("❌ Network error. Please check your connection and try again.");
+    }
+  };
+
+  const ContactView = () => {
+    // ✅ STEP 6: Get endpoint for validation
+    const formspreeEndpoint = useRegionValue("contact.formspreeEndpoint");
+
+    return (
+      <Section id="contact" bgType="secondary" className="animate-in zoom-in-95 duration-500 w-full max-w-full">
+        <div className="max-w-5xl mx-auto break-words">
+          <div className="text-center mb-16 space-y-6">
+            <EditableText as="h1" regionKey="contact.title" fallback="Get in Touch" className="text-5xl sm:text-6xl font-extrabold tracking-tight block" />
+            <EditableText as="p" regionKey="contact.subtitle" fallback="Have questions about enrollment? Our admissions team is here to help you begin your journey." className="text-xl opacity-70 block max-w-2xl mx-auto" />
+          </div>
+
           <div
-            className="md:col-span-2 p-10 sm:p-12 text-white flex flex-col justify-between"
-            style={{ backgroundColor: theme.primaryColor }}
+            className="grid md:grid-cols-5 gap-0 shadow-2xl overflow-hidden"
+            style={{ borderRadius: `${theme.borderRadius * 2}px`, backgroundColor: theme.backgroundColor }}
           >
-            <div className="space-y-10">
-              <EditableText as="h3" regionKey="contact.infoTitle" fallback="Contact Information" className="text-2xl font-bold block" />
-              <div className="space-y-8">
-                <div>
-                  <p className="text-sm font-bold opacity-60 uppercase tracking-wider mb-2">Admissions Office</p>
-                  <EditableText regionKey="contact.address" fallback="123 Education Lane, Tech District, CA 94105" className="font-semibold text-lg block" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold opacity-60 uppercase tracking-wider mb-2">Direct Line</p>
-                  <EditableText regionKey="contact.phone" fallback="+1 (800) 123-4567" className="font-semibold text-lg block" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold opacity-60 uppercase tracking-wider mb-2">Email Support</p>
-                  <EditableText regionKey="contact.emailBox" fallback="admissions@edunova.edu" className="font-semibold text-lg block" />
+            <div
+              className="md:col-span-2 p-10 sm:p-12 text-white flex flex-col justify-between"
+              style={{ backgroundColor: theme.primaryColor }}
+            >
+              <div className="space-y-10">
+                <EditableText as="h3" regionKey="contact.infoTitle" fallback="Contact Information" className="text-2xl font-bold block" />
+                <div className="space-y-8">
+                  <div>
+                    <p className="text-sm font-bold opacity-60 uppercase tracking-wider mb-2">Admissions Office</p>
+                    <EditableText regionKey="contact.address" fallback="123 Education Lane, Tech District, CA 94105" className="font-semibold text-lg block" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold opacity-60 uppercase tracking-wider mb-2">Direct Line</p>
+                    <EditableText regionKey="contact.phone" fallback="+1 (800) 123-4567" className="font-semibold text-lg block" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold opacity-60 uppercase tracking-wider mb-2">Email Support</p>
+                    <EditableText regionKey="contact.emailBox" fallback="admissions@edunova.edu" className="font-semibold text-lg block" />
+                  </div>
                 </div>
               </div>
+              <div className="mt-16 opacity-50 text-sm">
+                <EditableText regionKey="contact.hours" fallback="Operating Hours: Mon-Fri, 9AM - 6PM PST" />
+              </div>
             </div>
-            <div className="mt-16 opacity-50 text-sm">
-              <EditableText regionKey="contact.hours" fallback="Operating Hours: Mon-Fri, 9AM - 6PM PST" />
-            </div>
-          </div>
 
-          <div className="md:col-span-3 p-10 sm:p-12">
-            <div className="space-y-6">
-              <div className="grid sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-bold opacity-70">First Name</label>
-                  <input className="w-full p-4 bg-transparent border outline-none transition-all focus:ring-2 focus:ring-opacity-50" style={{ borderColor: `${theme.textColor}20`, borderRadius: `${theme.borderRadius}px` }} placeholder="John" />
+            {/* ✅ STEP 3 + 4 + 5: Real form with named inputs + submit button */}
+            <div className="md:col-span-3 p-10 sm:p-12">
+              <form
+                onSubmit={handleSubmit}
+                // ✅ STEP 3: action + method for Formspree
+                action={formspreeEndpoint || undefined}
+                method="POST"
+                className="space-y-6"
+              >
+                <div className="grid sm:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold opacity-70">First Name</label>
+                    {/* ✅ STEP 4: name attribute (REQUIRED for Formspree) */}
+                    <input
+                      name="firstName"
+                      className="w-full p-4 bg-transparent border outline-none transition-all focus:ring-2 focus:ring-opacity-50"
+                      style={{ borderColor: `${theme.textColor}20`, borderRadius: `${theme.borderRadius}px` }}
+                      placeholder="John"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold opacity-70">Last Name</label>
+                    <input
+                      name="lastName"
+                      className="w-full p-4 bg-transparent border outline-none transition-all focus:ring-2 focus:ring-opacity-50"
+                      style={{ borderColor: `${theme.textColor}20`, borderRadius: `${theme.borderRadius}px` }}
+                      placeholder="Doe"
+                      required
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold opacity-70">Last Name</label>
-                  <input className="w-full p-4 bg-transparent border outline-none transition-all focus:ring-2 focus:ring-opacity-50" style={{ borderColor: `${theme.textColor}20`, borderRadius: `${theme.borderRadius}px` }} placeholder="Doe" />
+                  <label className="text-sm font-bold opacity-70">Email Address</label>
+                  <input
+                    name="email"
+                    type="email"
+                    className="w-full p-4 bg-transparent border outline-none transition-all focus:ring-2 focus:ring-opacity-50"
+                    style={{ borderColor: `${theme.textColor}20`, borderRadius: `${theme.borderRadius}px` }}
+                    placeholder="john@example.com"
+                    required
+                  />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-bold opacity-70">Email Address</label>
-                <input className="w-full p-4 bg-transparent border outline-none transition-all focus:ring-2 focus:ring-opacity-50" style={{ borderColor: `${theme.textColor}20`, borderRadius: `${theme.borderRadius}px` }} placeholder="john@example.com" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-bold opacity-70">Message / Inquiry</label>
-                <textarea rows={4} className="w-full p-4 bg-transparent border outline-none transition-all focus:ring-2 focus:ring-opacity-50 resize-none" style={{ borderColor: `${theme.textColor}20`, borderRadius: `${theme.borderRadius}px` }} placeholder="How can we help you today?"></textarea>
-              </div>
-              <button className="w-full py-5 font-bold text-lg shadow-md hover:shadow-lg transition-all" style={{ backgroundColor: theme.primaryColor, color: "#fff", borderRadius: `${theme.borderRadius}px` }}>
-                <EditableText regionKey="contact.submitBtn" fallback="Send Message" />
-              </button>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold opacity-70">Message / Inquiry</label>
+                  <textarea
+                    name="message"
+                    rows={4}
+                    className="w-full p-4 bg-transparent border outline-none transition-all focus:ring-2 focus:ring-opacity-50 resize-none"
+                    style={{ borderColor: `${theme.textColor}20`, borderRadius: `${theme.borderRadius}px` }}
+                    placeholder="How can we help you today?"
+                    required
+                  ></textarea>
+                </div>
+                {/* ✅ STEP 5: type="submit" */}
+                <button
+                  type="submit"
+                  className="w-full py-5 font-bold text-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: theme.primaryColor, color: "#fff", borderRadius: `${theme.borderRadius}px` }}
+                  disabled={!formspreeEndpoint}
+                >
+                  <EditableText regionKey="contact.submitBtn" fallback="Send Message" />
+                </button>
+
+                {/* ✅ Helper hint for builder users */}
+                {!formspreeEndpoint && (
+                  <p className="text-xs opacity-60 text-center mt-2">
+                    🔧 Connect your Formspree endpoint in the builder settings to enable this form
+                  </p>
+                )}
+              </form>
             </div>
           </div>
         </div>
-      </div>
-    </Section>
-  );
+      </Section>
+    );
+  };
 
   return (
     <main
       className="min-h-screen selection:bg-black/10 dark:selection:bg-white/10 flex flex-col"
       style={{ fontFamily: theme.fontFamily, backgroundColor: theme.backgroundColor }}
     >
-      <script
+      <Script
         src="https://upload-widget.cloudinary.com/global/all.js"
-        async
-      ></script>
+        strategy="lazyOnload"
+      />
 
       <Navbar />
 
@@ -445,6 +531,44 @@ export default function Template11({ editableData }: TemplateProps) {
       </div>
 
       <Footer />
+
+      {/* ✅ BONUS: Editor Panel Field (Add this in your BUILDER UI, NOT in template) */}
+      {/* 
+      {/* In your builder's editor panel component, add: 
+      {activeRegion?.type === "contact" && (
+        <div className="space-y-4 p-4 border-t">
+          <h4 className="font-bold text-sm">Form Settings</h4>
+          
+          <div>
+            <label className="block text-xs font-medium mb-1">Form Provider</label>
+            <select
+              value={useRegionValue("contact.formProvider") || "formspree"}
+              onChange={(e) => updateRegion("contact.formProvider", e.target.value)}
+              className="w-full p-2 border rounded text-sm"
+            >
+              <option value="formspree">Formspree</option>
+              <option value="netlify">Netlify Forms</option>
+              <option value="custom">Custom Endpoint</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-xs font-medium mb-1">Form Endpoint URL</label>
+            <input
+              type="url"
+              placeholder="https://formspree.io/f/your-form-id"
+              value={useRegionValue("contact.formspreeEndpoint") || ""}
+              onChange={(e) => updateRegion("contact.formspreeEndpoint", e.target.value)}
+              className="w-full p-2 border rounded text-sm font-mono"
+            />
+            <p className="text-xs opacity-60 mt-1">
+              Get your endpoint from{" "}
+              <a href="https://formspree.io" target="_blank" className="underline">formspree.io</a>
+            </p>
+          </div>
+        </div>
+      )}
+      */}
 
       <style>{`
         html { scroll-behavior: smooth; }
@@ -460,8 +584,3 @@ export default function Template11({ editableData }: TemplateProps) {
     </main>
   );
 }
-
-
-
-
-
