@@ -4,8 +4,6 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   onAuthStateChanged,
   signOut
 } from "firebase/auth";
@@ -26,24 +24,7 @@ export default function LandingPage() {
   const [error, setError] = useState<string | null>(null);
   const [scrollY, setScrollY] = useState(0);
 
-  // ✅ Check for redirect result on mount - ONLY place that redirects to /dashboard
-  useEffect(() => {
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result?.user) {
-          console.log("LOGIN SUCCESS:", result.user);
-          setShowLoginModal(false);
-          router.push("/dashboard"); // ✅ Single source of truth for redirect
-        }
-      })
-      .catch((error) => {
-        console.error("REDIRECT ERROR:", error);
-        setError(error.message);
-      })
-      .finally(() => {
-        setSigningIn(false);
-      });
-  }, [router]);
+  // Redirect result is no longer needed because we're using popup exclusively
 
   // ✅ Auth state listener - ONLY updates state, NO redirect
   useEffect(() => {
@@ -51,7 +32,9 @@ export default function LandingPage() {
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);
-      // ❌ REMOVED: if (u) router.push("/dashboard"); ← This was causing the loop!
+      if (u) {
+        router.push("/dashboard");
+      }
     });
     return () => unsub();
   }, [router]);
@@ -64,23 +47,14 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const isLocalhost =
-    typeof window !== "undefined" &&
-    (window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1");
-
   const handleGoogleSignIn = async () => {
     setError(null);
     setSigningIn(true);
 
     try {
-      if (isLocalhost) {
-        await signInWithPopup(auth, googleProvider);
-        setShowLoginModal(false);
-        router.push("/dashboard");
-      } else {
-        await signInWithRedirect(auth, googleProvider);
-      }
+      await signInWithPopup(auth, googleProvider);
+      setShowLoginModal(false);
+      router.push("/dashboard");
     } catch (e) {
       const message = e instanceof Error ? e.message : "Login failed. Try again.";
       setError(message);
