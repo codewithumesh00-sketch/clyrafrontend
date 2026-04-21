@@ -318,9 +318,19 @@ export default function Template23({ editableData, isPublished = false }: Templa
       <Navbar />
 
       <div className="w-full">
-        {activePage === "home" && <Home />}
-        {activePage === "about" && <About />}
-        {activePage === "contact" && <Contact />}
+        {isPublished ? (
+          <>
+            <div id="clyra-page-home"><Home /></div>
+            <div id="clyra-page-about" style={{display:'none'}}><About /></div>
+            <div id="clyra-page-contact" style={{display:'none'}}><Contact /></div>
+          </>
+        ) : (
+          <>
+            {activePage === "home" && <Home />}
+            {activePage === "about" && <About />}
+            {activePage === "contact" && <Contact />}
+          </>
+        )}
       </div>
 
       <footer className="w-full py-20 border-t border-white/5 px-4 sm:px-6 lg:px-8">

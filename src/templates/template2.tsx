@@ -1451,11 +1451,23 @@ export default function Template2({ editableData, isPublished = false }: Templat
       <CartDrawer />
 
       <div className="flex flex-col w-full">
-        {activePage === "home" && <HomeView />}
-        {activePage === "shop" && <ShopView />}
-        {activePage === "product" && <ProductView />}
-        {activePage === "cart" && <CartPageView />}
-        {activePage === "contact" && <ContactView />}
+        {isPublished ? (
+          <>
+          <div id="clyra-page-home"><HomeView /></div>
+          <div id="clyra-page-shop" style={{display:'none'}}><ShopView /></div>
+          <div id="clyra-page-product" style={{display:'none'}}><ProductView /></div>
+          <div id="clyra-page-cart" style={{display:'none'}}><CartPageView /></div>
+          <div id="clyra-page-contact" style={{display:'none'}}><ContactView /></div>
+          </>
+        ) : (
+          <>
+          {activePage === "home" && <HomeView />}
+          {activePage === "shop" && <ShopView />}
+          {activePage === "product" && <ProductView />}
+          {activePage === "cart" && <CartPageView />}
+          {activePage === "contact" && <ContactView />}
+          </>
+        )}
       </div>
 
       <Footer />

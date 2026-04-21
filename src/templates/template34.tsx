@@ -403,9 +403,19 @@ export default function Template34({ editableData, isPublished = false }: Templa
       <Navbar />
 
       <div className="w-full">
-        {activePage === "home" && <HomeView />}
-        {activePage === "about" && <AboutView />}
-        {activePage === "contact" && <ContactView />}
+        {isPublished ? (
+          <>
+          <div id="clyra-page-home"><HomeView /></div>
+          <div id="clyra-page-about" style={{display:'none'}}><AboutView /></div>
+          <div id="clyra-page-contact" style={{display:'none'}}><ContactView /></div>
+          </>
+        ) : (
+          <>
+          {activePage === "home" && <HomeView />}
+          {activePage === "about" && <AboutView />}
+          {activePage === "contact" && <ContactView />}
+          </>
+        )}
       </div>
 
       <footer className="w-full py-20 px-4 sm:px-6 lg:px-8 border-t flex justify-center" style={{ borderColor: `${theme.textColor}10` }}>

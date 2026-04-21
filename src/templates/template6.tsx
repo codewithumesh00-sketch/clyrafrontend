@@ -366,9 +366,19 @@ export default function Template6({
       <Navbar />
 
       <main className="flex-grow w-full">
-        {activePage === "home" && <HomeView />}
-        {activePage === "about" && <AboutView />}
-        {activePage === "contact" && <ContactView />}
+        {isPublished ? (
+          <>
+          <div id="clyra-page-home"><HomeView /></div>
+          <div id="clyra-page-about" style={{display:'none'}}><AboutView /></div>
+          <div id="clyra-page-contact" style={{display:'none'}}><ContactView /></div>
+          </>
+        ) : (
+          <>
+          {activePage === "home" && <HomeView />}
+          {activePage === "about" && <AboutView />}
+          {activePage === "contact" && <ContactView />}
+          </>
+        )}
       </main>
 
       <footer className="w-full px-4 sm:px-6 lg:px-8 py-12 border-t mt-auto" style={{ borderColor: `${theme.textColor}1A` }}>

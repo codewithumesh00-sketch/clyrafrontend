@@ -1181,11 +1181,23 @@ export default function Template1({ editableData, isPublished = false }: Templat
       <Navbar />
 
       <div className="flex flex-col w-full">
-        {activePage === "home" && <HomeView />}
-        {activePage === "about" && <AboutView />}
-        {activePage === "services" && <ServicesView />}
-        {activePage === "blog" && <BlogView />}
-        {activePage === "contact" && <ContactView />}
+        {isPublished ? (
+          <>
+          <div id="clyra-page-home"><HomeView /></div>
+          <div id="clyra-page-about" style={{display:'none'}}><AboutView /></div>
+          <div id="clyra-page-services" style={{display:'none'}}><ServicesView /></div>
+          <div id="clyra-page-blog" style={{display:'none'}}><BlogView /></div>
+          <div id="clyra-page-contact" style={{display:'none'}}><ContactView /></div>
+          </>
+        ) : (
+          <>
+          {activePage === "home" && <HomeView />}
+          {activePage === "about" && <AboutView />}
+          {activePage === "services" && <ServicesView />}
+          {activePage === "blog" && <BlogView />}
+          {activePage === "contact" && <ContactView />}
+          </>
+        )}
       </div>
 
       <Footer />

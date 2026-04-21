@@ -441,9 +441,19 @@ export default function Template3({ editableData, isPublished = false }: Templat
       <Navbar />
 
       <div className="w-full">
-        {activePage === "home" && <HomeView />}
-        {activePage === "about" && <AboutView />}
-        {activePage === "contact" && <ContactView />}
+        {isPublished ? (
+          <>
+          <div id="clyra-page-home"><HomeView /></div>
+          <div id="clyra-page-about" style={{display:'none'}}><AboutView /></div>
+          <div id="clyra-page-contact" style={{display:'none'}}><ContactView /></div>
+          </>
+        ) : (
+          <>
+          {activePage === "home" && <HomeView />}
+          {activePage === "about" && <AboutView />}
+          {activePage === "contact" && <ContactView />}
+          </>
+        )}
       </div>
 
       <footer

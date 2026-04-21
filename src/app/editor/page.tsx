@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import Script from "next/script";
+import { resolveTemplate } from "@/templates/templateRegistry";
 import {
   Monitor,
   Tablet,
@@ -156,130 +158,143 @@ export default function EditorPage() {
           theme: theme,
           files: (() => {
             try {
-              const iframeEl = document.querySelector("#preview-root iframe") as HTMLIFrameElement | null;
-              if (!iframeEl?.contentDocument) return {};
+              // ── SSR render with isPublished=true so ALL pages are in the HTML ──
+              // Templates now render all page divs with id="clyra-page-*" when
+              // isPublished=true; non-home pages start hidden via display:none.
+              const templateEntry = resolveTemplate(schema.templateId || "template1");
+              if (!templateEntry?.component) return {};
 
-              const doc = iframeEl.contentDocument;
+              const bodyHtml = renderToStaticMarkup(
+                React.createElement(templateEntry.component, {
+                  editableData: {
+                    ...schema.editableData,
+                    formspreeEndpoint: formEndpoint,
+                  },
+                  isPublished: true,
+                })
+              );
 
-              // ── 1. Deep-clone so we don't mutate the live preview ──────
-              const clone = doc.cloneNode(true) as Document;
-
-              // ── 2. Strip ALL editor-only attributes ────────────────────
-              clone.querySelectorAll("[contenteditable]").forEach((el) => {
-                el.removeAttribute("contenteditable");
-              });
-              // Remove editor focus-ring helper classes from every element
-              const EDITOR_CLASSES = [
-                "focus:outline-none","focus:ring-2","focus:ring-blue-400","transition-all"
-              ];
-              clone.querySelectorAll("*").forEach((el) => {
-                EDITOR_CLASSES.forEach((cls) => el.classList?.remove(cls));
-              });
-
-              // ── 3. Fill empty h1 from editableData (template default) ──
-              const h1 = clone.querySelector("h1");
-              if (h1 && !h1.textContent?.trim()) {
-                const fallbackTitle =
-                  (schema?.editableData as any)?.hero?.heading ||
-                  (schema?.editableData as any)?.hero?.title ||
-                  (schema?.editableData as any)?.navbar?.brand ||
-                  (schema as any)?.prompt ||
-                  "Welcome";
-                h1.textContent = fallbackTitle;
-              }
-
-              // ── 4. Build site title ────────────────────────────────────
+              // ── Build site title ────────────────────────────────────────────
               const siteTitle =
                 (schema?.editableData as any)?.hero?.heading ||
                 (schema?.editableData as any)?.hero?.title ||
                 (schema?.editableData as any)?.navbar?.brand ||
                 "My Site";
 
-              // ── 5. Collect head assets (Tailwind CDN + fonts + styles) ─
-              const headExtras = Array.from(clone.head.children)
-                .map((el) => el.outerHTML)
-                .join("\n  ");
-
-              const cleanHTML = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${siteTitle}</title>
-  ${headExtras}
-  <style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0;padding:0;overflow-x:hidden}</style>
-</head>
-<body>
-${clone.body.innerHTML}
-</body>
-</html>`;
-
-              // ── 6. Inject production navigation script ──────────────────
-const NAV_SCRIPT = `<script>
+              // ── Production nav script — show/hide clyra-page-* divs ─────────
+              const NAV_SCRIPT = `<script>
 (function(){
-  // 1. Find all <section> elements that are direct content blocks
-  //    (not inside nav/header/footer)
-  var allSections = Array.from(document.querySelectorAll("section")).filter(function(el){
-    return !el.closest("nav") && !el.closest("header") && !el.closest("footer");
+  // Collect all page containers rendered by the template
+  var pages = {};
+  document.querySelectorAll('[id^="clyra-page-"]').forEach(function(el){
+    pages[el.id.replace('clyra-page-', '')] = el;
   });
 
-  // 2. Keep only top-level sections (not nested inside another section)
-  var sections = allSections.filter(function(el){
-    return !allSections.some(function(other){
-      return other !== el && other !== el.parentElement && other.contains(el);
-    });
-  });
+  // If no clyra-page-* divs found, fall back to scroll behaviour
+  var useScroll = Object.keys(pages).length === 0;
 
-  // 3. Fallback: if no sections found, use main children
-  if(sections.length === 0){
-    var main = document.querySelector("main");
-    if(main){ sections = Array.from(main.children); }
+  function showPage(name) {
+    Object.values(pages).forEach(function(p){ p.style.display = 'none'; });
+    var target = pages[name] || pages['home'];
+    if (target) {
+      target.style.display = 'block';
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    }
   }
 
-  // 4. Assign stable IDs
-  sections.forEach(function(sec, i){ if(!sec.id){ sec.id = "clyra-sec-" + i; } });
-
-  // 5. Wire nav buttons — HOME=top, others map to sections by order
-  var navBtns = Array.from(document.querySelectorAll("nav button, nav a")).filter(function(el){
-    var t = (el.textContent || "").trim();
-    return t.length >= 2 && t.length <= 20;
+  // Wire ALL nav buttons and links (navbar + footer)
+  var navEls = Array.from(document.querySelectorAll(
+    'nav button, nav a, footer button, footer a'
+  )).filter(function(el){
+    var t = (el.textContent || '').trim();
+    return t.length >= 2 && t.length <= 25;
   });
 
-  navBtns.forEach(function(btn, idx){
-    var txt = btn.textContent.trim().toLowerCase();
-    btn.style.cursor = "pointer";
-    btn.addEventListener("click", function(e){
-      e.preventDefault();
-      e.stopPropagation();
-
-      if(txt === "home"){
-        window.scrollTo({top:0,behavior:"smooth"});
-        return;
-      }
-
-      // Try heading text match first
-      var match = sections.find(function(s){
-        var h = s.querySelector("h1,h2,h3,h4,h5");
-        return h && h.textContent.trim().toLowerCase().indexOf(txt) !== -1;
+  if (useScroll) {
+    // Legacy scroll fallback for templates without clyra-page-* divs
+    var allSections = Array.from(document.querySelectorAll('section')).filter(function(el){
+      return !el.closest('nav') && !el.closest('header') && !el.closest('footer');
+    });
+    var sections = allSections.filter(function(el){
+      return !allSections.some(function(other){
+        return other !== el && other.contains(el);
       });
-      if(match){ match.scrollIntoView({behavior:"smooth",block:"start"}); return; }
+    });
+    sections.forEach(function(sec, i){ if(!sec.id) sec.id = 'clyra-sec-' + i; });
 
-      // Position-based fallback
-      // contact/last nav item → last section
-      // 2nd item → section[0], 3rd item → section[1] etc.
-      var isLast = idx === navBtns.length - 1 || txt.indexOf("contact") !== -1;
-      var si = isLast ? sections.length - 1 : Math.max(0, idx - 1);
-      if(sections[si]){ sections[si].scrollIntoView({behavior:"smooth",block:"start"}); }
+    navEls.forEach(function(btn, idx){
+      var txt = (btn.textContent || '').trim().toLowerCase();
+      btn.style.cursor = 'pointer';
+      btn.addEventListener('click', function(e){
+        e.preventDefault(); e.stopPropagation();
+        if(txt === 'home'){ window.scrollTo({top:0,behavior:'smooth'}); return; }
+        var match = sections.find(function(s){
+          var h = s.querySelector('h1,h2,h3');
+          return h && h.textContent.trim().toLowerCase().indexOf(txt) !== -1;
+        });
+        if(match){ match.scrollIntoView({behavior:'smooth',block:'start'}); return; }
+        var isLast = idx === navEls.length-1 || txt.indexOf('contact') !== -1;
+        var si = isLast ? sections.length-1 : Math.max(0, idx-1);
+        if(sections[si]) sections[si].scrollIntoView({behavior:'smooth',block:'start'});
+      });
+    });
+    return;
+  }
+
+  navEls.forEach(function(btn){
+    var txt = (btn.textContent || '').trim().toLowerCase();
+    btn.style.cursor = 'pointer';
+    btn.addEventListener('click', function(e){
+      e.preventDefault(); e.stopPropagation();
+      // Exact match
+      if(pages[txt]){ showPage(txt); return; }
+      // Partial match (e.g. "get started" → home)
+      var match = Object.keys(pages).find(function(k){
+        return txt.indexOf(k) !== -1 || k.indexOf(txt) !== -1;
+      });
+      if(match){ showPage(match); return; }
+      // Default: home
+      showPage('home');
     });
   });
 })();
 <\/script>`;
 
-const finalHTML = cleanHTML.replace("</body>", NAV_SCRIPT + "\n</body>");
-return { "index.html": finalHTML };
+              const finalHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${siteTitle}</title>
+  <script src="https://cdn.tailwindcss.com"><\/script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; overflow-x: hidden; }
+    [contenteditable] { pointer-events: none !important; user-select: none !important; outline: none !important; }
+  </style>
+</head>
+<body>
+${bodyHtml}
+${NAV_SCRIPT}
+</body>
+</html>`;
+
+              return { "index.html": finalHTML };
             } catch (e) {
-              console.warn("iframe capture failed", e);
-              return {};
+              console.warn("SSR render failed, falling back to iframe capture", e);
+              // ── Fallback: iframe capture (home page only) ──
+              try {
+                const iframeEl = document.querySelector("#preview-root iframe") as HTMLIFrameElement | null;
+                if (!iframeEl?.contentDocument) return {};
+                const doc = iframeEl.contentDocument;
+                const clone = doc.cloneNode(true) as Document;
+                clone.querySelectorAll("[contenteditable]").forEach((el) => el.removeAttribute("contenteditable"));
+                const headExtras = Array.from(clone.head.children).map((el) => el.outerHTML).join("\n  ");
+                const siteTitle2 = (schema?.editableData as any)?.hero?.title || (schema?.editableData as any)?.navbar?.brand || "My Site";
+                const fallbackHTML = `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>${siteTitle2}</title>\n  ${headExtras}\n  <style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0;padding:0;overflow-x:hidden}</style>\n</head>\n<body>\n${clone.body.innerHTML}\n</body>\n</html>`;
+                return { "index.html": fallbackHTML };
+              } catch { return {}; }
             }
           })(),
         }),

@@ -384,9 +384,19 @@ export default function Template9({ editableData, isPublished = false }: Templat
       <Navbar />
 
       <main className="w-full min-w-0">
-        {activePage === "home" && <HomeView />}
-        {activePage === "about" && <AboutView />}
-        {activePage === "contact" && <ContactView />}
+        {isPublished ? (
+          <>
+          <div id="clyra-page-home"><HomeView /></div>
+          <div id="clyra-page-about" style={{display:'none'}}><AboutView /></div>
+          <div id="clyra-page-contact" style={{display:'none'}}><ContactView /></div>
+          </>
+        ) : (
+          <>
+          {activePage === "home" && <HomeView />}
+          {activePage === "about" && <AboutView />}
+          {activePage === "contact" && <ContactView />}
+          </>
+        )}
       </main>
 
       <footer className="w-full py-20 px-4 sm:px-6 lg:px-8 border-t" style={{ backgroundColor: theme.backgroundColor, borderColor: `${theme.textColor}10`, color: theme.textColor }}>

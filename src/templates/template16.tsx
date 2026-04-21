@@ -487,9 +487,19 @@ export default function Template16({ editableData, isPublished = false }: Templa
       <Navbar />
 
       <div className="flex flex-col w-full min-h-[calc(100vh-6rem)]">
-        {activePage === "home" && <HomeView />}
-        {activePage === "about" && <AboutView />}
-        {activePage === "contact" && <ContactView />}
+        {isPublished ? (
+          <>
+          <div id="clyra-page-home"><HomeView /></div>
+          <div id="clyra-page-about" style={{display:'none'}}><AboutView /></div>
+          <div id="clyra-page-contact" style={{display:'none'}}><ContactView /></div>
+          </>
+        ) : (
+          <>
+          {activePage === "home" && <HomeView />}
+          {activePage === "about" && <AboutView />}
+          {activePage === "contact" && <ContactView />}
+          </>
+        )}
       </div>
 
       <Footer />

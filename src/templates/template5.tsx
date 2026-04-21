@@ -605,11 +605,23 @@ export default function Template5({ editableData, isPublished = false }: Templat
       <Navbar />
 
       <div className="w-full">
-        {activePage === "home" && <HomeView />}
-        {activePage === "programs" && <ProgramsView />}
-        {activePage === "about" && <AboutView />}
-        {activePage === "blog" && <BlogView />}
-        {activePage === "contact" && <ContactView />}
+        {isPublished ? (
+          <>
+          <div id="clyra-page-home"><HomeView /></div>
+          <div id="clyra-page-programs" style={{display:'none'}}><ProgramsView /></div>
+          <div id="clyra-page-about" style={{display:'none'}}><AboutView /></div>
+          <div id="clyra-page-blog" style={{display:'none'}}><BlogView /></div>
+          <div id="clyra-page-contact" style={{display:'none'}}><ContactView /></div>
+          </>
+        ) : (
+          <>
+          {activePage === "home" && <HomeView />}
+          {activePage === "programs" && <ProgramsView />}
+          {activePage === "about" && <AboutView />}
+          {activePage === "blog" && <BlogView />}
+          {activePage === "contact" && <ContactView />}
+          </>
+        )}
       </div>
 
       <footer className="py-20 border-t border-white/5 bg-black/40">
