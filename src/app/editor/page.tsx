@@ -214,7 +214,46 @@ ${clone.body.innerHTML}
 </body>
 </html>`;
 
-              return { "index.html": cleanHTML };
+              // ── 6. Inject navigation script for smooth scroll ──────────
+const NAV_SCRIPT = `<script>
+(function(){
+  // Assign IDs to sections from their heading text
+  var allSections = document.querySelectorAll("main section, section, [class*=section]");
+  allSections.forEach(function(sec, i){
+    if(!sec.id){
+      var h = sec.querySelector("h1,h2,h3");
+      sec.id = h ? h.textContent.trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") || ("sec-"+i) : ("sec-"+i);
+    }
+  });
+
+  // Wire nav buttons/links to scroll targets
+  var navEls = document.querySelectorAll("nav button, nav a, header button, header a");
+  navEls.forEach(function(el){
+    var txt = el.textContent.trim().toLowerCase();
+    el.style.cursor = "pointer";
+    el.addEventListener("click", function(e){
+      e.preventDefault();
+      if(txt === "home" || txt === ""){
+        window.scrollTo({top:0,behavior:"smooth"});
+        return;
+      }
+      // Exact ID match
+      var target = document.getElementById(txt);
+      // Partial heading match
+      if(!target){
+        target = Array.from(allSections).find(function(s){
+          var h = s.querySelector("h1,h2,h3");
+          return h && h.textContent.trim().toLowerCase().indexOf(txt) !== -1;
+        });
+      }
+      if(target){ target.scrollIntoView({behavior:"smooth",block:"start"}); }
+    });
+  });
+})();
+<\/script>`;
+
+const finalHTML = cleanHTML.replace("</body>", NAV_SCRIPT + "\n</body>");
+return { "index.html": finalHTML };
             } catch (e) {
               console.warn("iframe capture failed", e);
               return {};
