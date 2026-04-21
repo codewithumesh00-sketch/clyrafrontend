@@ -149,12 +149,30 @@ export default function EditorPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           projectName: "clyraweb-auto-publish",
-          templateName: cleanTemplateName,
+          // Capture live rendered HTML from preview iframe for exact visual match
           editableData: {
             ...schema.editableData,
             formspreeEndpoint: formEndpoint,
           },
           theme: theme,
+          files: (() => {
+            try {
+              const iframeEl = document.querySelector("#preview-root iframe") as HTMLIFrameElement | null;
+              if (iframeEl?.contentDocument) {
+                const doc = iframeEl.contentDocument;
+                const siteTitle =
+                  (schema?.editableData as any)?.hero?.title ||
+                  (schema?.editableData as any)?.hero?.heading ||
+                  (schema?.editableData as any)?.navbar?.brand ||
+                  "My Site";
+                const headExtras = Array.from(doc.head.children).map(el => el.outerHTML).join("\n  ");
+                return {
+                  "index.html": `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>${siteTitle}</title>\n  ${headExtras}\n  <style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0;padding:0;overflow-x:hidden}</style>\n</head>\n<body>\n${doc.body.innerHTML}\n</body>\n</html>`
+                };
+              }
+            } catch(e) { console.warn("iframe capture failed", e); }
+            return {};
+          })(),
         }),
       });
 
