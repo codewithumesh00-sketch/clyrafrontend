@@ -1,7 +1,7 @@
 export async function generateWebsite(prompt, currentContent = {}) {
   const API_URL = (
     process.env.NEXT_PUBLIC_API_URL ||
-    "http://127.0.0.1:7240"
+    "https://clyrawebbackend-666777548.europe-west1.run.app"
   ).replace(/\/$/, "");
 
   try {
@@ -17,9 +17,15 @@ export async function generateWebsite(prompt, currentContent = {}) {
       cache: "no-store",
     });
 
+    // 🔥 Important: handle non-JSON safely
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`HTTP ${res.status}: ${text}`);
+    }
+
     const data = await res.json();
 
-    if (!res.ok || !data.success) {
+    if (!data.success) {
       throw new Error(data?.error || "Generation failed");
     }
 

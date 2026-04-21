@@ -211,7 +211,7 @@ body {
   const { user: firebaseUser, loading: authLoading, logout } = useAuth();
 
   const API_ORIGIN =
-    process.env.NEXT_PUBLIC_API_URL || "https://clyrawebwebbackend-666777548.europe-west1.run.app";
+    process.env.NEXT_PUBLIC_API_URL || "https://clyrawebbackend-666777548.europe-west1.run.app";
   const UI_WEBHOOK =
     process.env.NEXT_PUBLIC_UI_WEBHOOK || `${API_ORIGIN.replace(/\/$/, "")}/generate`;
   const BLOG_WEBHOOK =
