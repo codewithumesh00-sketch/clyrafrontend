@@ -260,6 +260,62 @@ export default function EditorPage() {
 })();
 <\/script>`;
 
+              // ── Formspree form handler (injected into deployed HTML) ────
+              const FORM_SCRIPT = formEndpoint ? `<script>
+(function(){
+  var endpoint = '${formEndpoint}';
+  if(!endpoint) return;
+
+  // Un-disable any submit buttons React may have disabled
+  document.querySelectorAll('button[type="submit"][disabled]').forEach(function(btn){
+    btn.removeAttribute('disabled');
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+  });
+
+  document.querySelectorAll('form').forEach(function(form){
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      var btn = form.querySelector('button[type="submit"]');
+      var originalText = btn ? btn.textContent : '';
+      if(btn){ btn.textContent = 'Sending...'; btn.disabled = true; }
+
+      var data = {};
+      new FormData(form).forEach(function(val, key){ data[key] = val; });
+
+      // Also capture any uncontrolled inputs (value attr may be empty)
+      form.querySelectorAll('input, textarea, select').forEach(function(el){
+        if(el.name && !data[el.name]) data[el.name] = el.value;
+      });
+
+      fetch(endpoint, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','Accept':'application/json'},
+        body: JSON.stringify(data)
+      }).then(function(res){
+        if(res.ok){
+          var msg = document.createElement('div');
+          msg.style.cssText = 'padding:20px;background:#22c55e15;border:1px solid #22c55e40;border-radius:8px;color:#22c55e;font-weight:600;text-align:center;margin-top:16px';
+          msg.textContent = '\u2713 Message sent successfully!';
+          form.parentNode.insertBefore(msg, form.nextSibling);
+          form.reset();
+          if(btn){ btn.textContent = originalText; btn.disabled = false; }
+        } else {
+          var errMsg = document.createElement('div');
+          errMsg.style.cssText = 'padding:20px;background:#ef444415;border:1px solid #ef444440;border-radius:8px;color:#ef4444;font-weight:600;text-align:center;margin-top:16px';
+          errMsg.textContent = '\u2717 Something went wrong. Please try again.';
+          form.parentNode.insertBefore(errMsg, form.nextSibling);
+          if(btn){ btn.textContent = originalText; btn.disabled = false; }
+        }
+      }).catch(function(){
+        if(btn){ btn.textContent = originalText; btn.disabled = false; }
+        alert('Network error. Please try again.');
+      });
+    });
+  });
+})();
+<\/script>` : '';
+
               const finalHTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -277,6 +333,7 @@ export default function EditorPage() {
 <body>
 ${bodyHtml}
 ${NAV_SCRIPT}
+${FORM_SCRIPT}
 </body>
 </html>`;
 
