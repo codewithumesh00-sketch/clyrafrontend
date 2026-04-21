@@ -214,39 +214,65 @@ ${clone.body.innerHTML}
 </body>
 </html>`;
 
-              // ── 6. Inject navigation script for smooth scroll ──────────
+              // ── 6. Inject production navigation + layout fix script ─────
 const NAV_SCRIPT = `<script>
 (function(){
-  // Assign IDs to sections from their heading text
-  var allSections = document.querySelectorAll("main section, section, [class*=section]");
-  allSections.forEach(function(sec, i){
-    if(!sec.id){
-      var h = sec.querySelector("h1,h2,h3");
-      sec.id = h ? h.textContent.trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") || ("sec-"+i) : ("sec-"+i);
-    }
+  // Collect all top-level content sections (not nav/footer)
+  var sections = Array.from(document.querySelectorAll(
+    "main > section, main > div > section, section, main > div, .min-h-screen > div > div"
+  )).filter(function(el){
+    return !el.closest("nav") && !el.closest("header") && !el.closest("footer") &&
+           el.tagName !== "NAV" && el.tagName !== "FOOTER" && el.tagName !== "HEADER";
   });
 
-  // Wire nav buttons/links to scroll targets
-  var navEls = document.querySelectorAll("nav button, nav a, header button, header a");
-  navEls.forEach(function(el){
-    var txt = el.textContent.trim().toLowerCase();
-    el.style.cursor = "pointer";
-    el.addEventListener("click", function(e){
+  // Remove duplicates (keep outermost)
+  sections = sections.filter(function(el){
+    return !sections.some(function(other){ return other !== el && other.contains(el); });
+  });
+
+  // Assign sequential IDs
+  sections.forEach(function(sec, i){
+    if(!sec.id){ sec.id = "section-" + i; }
+  });
+
+  // Get nav interaction buttons (exclude CTA / logo)
+  var navBtns = Array.from(document.querySelectorAll(
+    "nav button, nav a, header nav button, header nav a"
+  )).filter(function(el){
+    var t = el.textContent.trim();
+    return t.length > 0 && t.length < 30;
+  });
+
+  navBtns.forEach(function(btn, idx){
+    var txt = btn.textContent.trim().toLowerCase();
+    btn.style.cursor = "pointer";
+
+    btn.addEventListener("click", function(e){
       e.preventDefault();
-      if(txt === "home" || txt === ""){
+      e.stopPropagation();
+
+      // HOME always scrolls to top
+      if(txt === "home"){
         window.scrollTo({top:0,behavior:"smooth"});
         return;
       }
-      // Exact ID match
-      var target = document.getElementById(txt);
-      // Partial heading match
-      if(!target){
-        target = Array.from(allSections).find(function(s){
-          var h = s.querySelector("h1,h2,h3");
-          return h && h.textContent.trim().toLowerCase().indexOf(txt) !== -1;
-        });
+
+      // Try text match first (e.g., section heading contains button text)
+      var byText = sections.find(function(s){
+        var heading = s.querySelector("h1,h2,h3,h4");
+        return heading && heading.textContent.trim().toLowerCase().indexOf(txt) !== -1;
+      });
+      if(byText){ byText.scrollIntoView({behavior:"smooth",block:"start"}); return; }
+
+      // Fallback: map by order (2nd btn -> section 1, 3rd btn -> section 2, etc.)
+      var sectionIdx = Math.max(0, idx - 1);
+      // Last nav item (contact) always goes to last section
+      if(idx === navBtns.length - 1 || txt === "contact"){
+        sectionIdx = sections.length - 1;
       }
-      if(target){ target.scrollIntoView({behavior:"smooth",block:"start"}); }
+      if(sections[sectionIdx]){
+        sections[sectionIdx].scrollIntoView({behavior:"smooth",block:"start"});
+      }
     });
   });
 })();
