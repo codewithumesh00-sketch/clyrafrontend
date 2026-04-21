@@ -371,8 +371,8 @@ function LivePreviewComponent({
                       key={device}
                       onClick={() => setDeviceView(device)}
                       className={`rounded-sm p-1 transition-all ${deviceView === device
-                          ? isDark ? "bg-white/20 text-white shadow-sm" : "bg-white text-black shadow-sm"
-                          : isDark ? "text-gray-400 hover:text-white hover:bg-white/10" : "text-gray-500 hover:text-black hover:bg-black/5"
+                        ? isDark ? "bg-white/20 text-white shadow-sm" : "bg-white text-black shadow-sm"
+                        : isDark ? "text-gray-400 hover:text-white hover:bg-white/10" : "text-gray-500 hover:text-black hover:bg-black/5"
                         }`}
                       title={`View as ${device}`}
                     >
@@ -388,8 +388,8 @@ function LivePreviewComponent({
               <button
                 onClick={handleOpenEditor}
                 className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${isDark
-                    ? "border-yellow-500/30 bg-yellow-500/10 hover:bg-yellow-500/20 hover:border-yellow-500/50 text-yellow-400"
-                    : "border-yellow-600/30 bg-yellow-50 hover:bg-yellow-100 hover:border-yellow-600/50 text-yellow-700"
+                  ? "border-yellow-500/30 bg-yellow-500/10 hover:bg-yellow-500/20 hover:border-yellow-500/50 text-yellow-400"
+                  : "border-yellow-600/30 bg-yellow-50 hover:bg-yellow-100 hover:border-yellow-600/50 text-yellow-700"
                   }`}
                 title="Edit template"
               >
@@ -541,6 +541,7 @@ function LivePreviewComponent({
                 }>
                   <WebsiteRenderer
                     schema={memoizedSchema}
+                    isPublished={true} // 🔒 LOCK EDITING
                     key={`${deviceView}-${liveSchema?.category}-${liveSchema?.templateId}`}
                   />
                 </Suspense>

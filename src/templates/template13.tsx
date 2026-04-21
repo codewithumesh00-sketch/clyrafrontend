@@ -24,16 +24,25 @@ export const template13Meta = {
 
 type TemplateProps = {
   editableData?: any;
+  isPublished?: boolean;
 };
 
 const getNestedValue = (obj: any, path: string) => {
   return path.split(".").reduce((acc, part) => acc && acc[part], obj);
 };
 
-export default function Template13({ editableData }: TemplateProps) {
+export default function Template13({ editableData, isPublished = false }: TemplateProps) {
   const [activePage, setActivePage] = useState<"home" | "about" | "contact">("home");
   const { theme } = useThemeStore();
-  const updateRegion = useWebsiteBuilderStore((state: any) => state.updateRegion);
+  const storeUpdateRegion = useWebsiteBuilderStore((state: any) => state.updateRegion);
+  const updateRegion = isPublished ? () => { } : storeUpdateRegion;
+
+  const storeEndpoint = useWebsiteBuilderStore(
+    (state: any) => state.schema?.editableData?.formspreeEndpoint
+  );
+  const formspreeEndpoint = isPublished
+    ? editableData?.formspreeEndpoint
+    : storeEndpoint || editableData?.formspreeEndpoint;
 
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = (regionKey: string) => {
@@ -371,88 +380,131 @@ export default function Template13({ editableData }: TemplateProps) {
     </Section>
   );
 
-  const ContactView = () => (
-    <Section id="contact" bgType="primary">
-      <div className="max-w-5xl mx-auto animate-in zoom-in-95 duration-700 w-full min-w-0">
-        <div className="text-center mb-16">
-          <EditableText as="h1" regionKey="contact.title" fallback="Reserve Your Time" className="text-5xl md:text-7xl font-normal block mb-6" />
-          <EditableText
-            as="p"
-            regionKey="contact.subtitle"
-            fallback="Reach out to our concierge team to schedule your personalized session."
-            className="text-lg opacity-70 max-w-xl mx-auto block"
-            style={{ fontFamily: "sans-serif" }}
-          />
-        </div>
+  // ========== CONTACT VIEW ==========
+  const ContactView = () => {
+    const [formData, setFormData] = React.useState({ name: "", email: "", phone: "", message: "" });
+    const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle");
 
-        <div
-          className="grid md:grid-cols-5 gap-0 overflow-hidden shadow-2xl border"
-          style={{ borderRadius: `${theme.borderRadius * 1.5}px`, borderColor: `${theme.textColor}10` }}
-        >
-          <div className="md:col-span-2 p-12 flex flex-col justify-between" style={{ backgroundColor: theme.secondaryColor }}>
-            <div className="space-y-12">
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!formspreeEndpoint) {
+        alert("âš ï¸ Form is not connected. Please add your Formspree endpoint in the editor.");
+        return;
+      }
+      setStatus("loading");
+      try {
+        const res = await fetch(formspreeEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(formData),
+        });
+        if (res.ok) {
+          setStatus("success");
+          setFormData({ name: "", email: "", phone: "", message: "" });
+          setTimeout(() => setStatus("idle"), 5000);
+        } else throw new Error();
+      } catch {
+        setStatus("error");
+        setTimeout(() => setStatus("idle"), 5000);
+      }
+    };
+
+    return (
+      <div>
+        <Section id="contact-header">
+          <div className="text-center max-w-3xl mx-auto">
+            <EditableText as="h1" regionKey="contact.title" fallback="Let's Connect" className="text-5xl md:text-6xl font-black tracking-tighter block mb-6" />
+            <EditableText as="p" regionKey="contact.subtitle" fallback="Ready to work together? Reach out and let's start the conversation." className="text-xl opacity-70 block" />
+          </div>
+        </Section>
+
+        <Section id="contact-form">
+          <div className="grid md:grid-cols-2 gap-16">
+            <div className="space-y-8">
               <div>
-                <h4 className="text-xs font-bold uppercase opacity-50 tracking-[0.2em] mb-3" style={{ fontFamily: "sans-serif" }}>Visit Us</h4>
-                <EditableText regionKey="contact.address" fallback="123 Serenity Boulevard, NY 10012" className="text-lg block leading-relaxed" />
+                <h3 className="text-2xl font-bold mb-4">Visit Us</h3>
+                <EditableText regionKey="contact.address" fallback="123 Business Avenue, Suite 100, New York, NY 10001" className="opacity-70 block" />
               </div>
               <div>
-                <h4 className="text-xs font-bold uppercase opacity-50 tracking-[0.2em] mb-3" style={{ fontFamily: "sans-serif" }}>Contact</h4>
-                <EditableText regionKey="contact.email" fallback="bookings@aurasalon.com" className="text-lg block" />
-                <EditableText regionKey="contact.phone" fallback="+1 (555) 123-4567" className="text-lg block mt-2" />
+                <h3 className="text-2xl font-bold mb-4">Contact Info</h3>
+                <EditableText regionKey="contact.email" fallback="hello@example.com" className="opacity-70 block mb-2" />
+                <EditableText regionKey="contact.phone" fallback="+1 (555) 123-4567" className="opacity-70 block" />
               </div>
               <div>
-                <h4 className="text-xs font-bold uppercase opacity-50 tracking-[0.2em] mb-3" style={{ fontFamily: "sans-serif" }}>Hours</h4>
-                <EditableText regionKey="contact.hours" fallback="Mon-Sat: 9am - 8pm | Sun: Closed" className="text-base opacity-80 block" style={{ fontFamily: "sans-serif" }} />
+                <h3 className="text-2xl font-bold mb-4">Follow Us</h3>
+                <div className="flex gap-4">
+                  {["LinkedIn", "Twitter", "Instagram"].map((social) => (
+                    <span key={social} className="cursor-pointer hover:underline" style={{ color: theme.primaryColor }}>{social}</span>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="md:col-span-3 p-12 bg-white/50 backdrop-blur-md">
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <input
-                  className="w-full p-4 bg-transparent border-b outline-none focus:border-opacity-100 transition-colors"
-                  style={{ borderColor: `${theme.textColor}30`, fontFamily: "sans-serif" }}
-                  placeholder="First Name"
-                />
-                <input
-                  className="w-full p-4 bg-transparent border-b outline-none focus:border-opacity-100 transition-colors"
-                  style={{ borderColor: `${theme.textColor}30`, fontFamily: "sans-serif" }}
-                  placeholder="Last Name"
-                />
-              </div>
+            <form onSubmit={handleSubmit} className="space-y-6">
               <input
-                className="w-full p-4 bg-transparent border-b outline-none focus:border-opacity-100 transition-colors"
-                style={{ borderColor: `${theme.textColor}30`, fontFamily: "sans-serif" }}
-                placeholder="Email Address"
-                type="email"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Your Name"
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-blue-500 transition-colors"
+                style={{ borderColor: `${theme.textColor}20` }}
+                required
+                disabled={status === "loading"}
               />
-              <select
-                className="w-full p-4 bg-transparent border-b outline-none focus:border-opacity-100 transition-colors opacity-70 appearance-none"
-                style={{ borderColor: `${theme.textColor}30`, fontFamily: "sans-serif" }}
-              >
-                <option value="">Select Service Area...</option>
-                <option value="hair">Hair Styling</option>
-                <option value="skin">Skin Care</option>
-                <option value="spa">Spa Ritual</option>
-              </select>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Your Email"
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-blue-500 transition-colors"
+                style={{ borderColor: `${theme.textColor}20` }}
+                required
+                disabled={status === "loading"}
+              />
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="Your Phone"
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-blue-500 transition-colors"
+                style={{ borderColor: `${theme.textColor}20` }}
+                required
+                disabled={status === "loading"}
+              />
               <textarea
-                className="w-full p-4 bg-transparent border-b outline-none focus:border-opacity-100 transition-colors resize-none h-32"
-                style={{ borderColor: `${theme.textColor}30`, fontFamily: "sans-serif" }}
-                placeholder="Any specific requests or details?"
+                name="message"
+                value={formData.message}
+                onChange={handleChange}
+                placeholder="Your Message"
+                rows={5}
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-blue-500 transition-colors resize-none"
+                style={{ borderColor: `${theme.textColor}20` }}
+                required
+                disabled={status === "loading"}
               />
               <button
-                className="w-full py-5 font-medium uppercase tracking-[0.2em] text-sm mt-4 hover:opacity-90 transition-opacity"
+                type="submit"
+                disabled={status === "loading" || !formspreeEndpoint}
+                className={`w-full py-4 font-bold uppercase tracking-widest text-sm transition-all ${status === "loading" || !formspreeEndpoint ? "opacity-60 cursor-not-allowed" : "hover:opacity-90 active:scale-[0.98]"}`}
                 style={{ backgroundColor: theme.primaryColor, color: "#fff", borderRadius: `${theme.borderRadius}px` }}
               >
-                <EditableText regionKey="contact.submit" fallback="Request Appointment" />
+                {status === "loading" ? "Sending..." : "Send Message"}
               </button>
-            </div>
+              {status === "success" && <p className="text-green-500 text-sm font-medium animate-in fade-in">âœ“ Message sent successfully!</p>}
+              {status === "error" && <p className="text-red-500 text-sm font-medium animate-in fade-in">âŒ Something went wrong. Please try again.</p>}
+              {!formspreeEndpoint && !isPublished && <p className="text-amber-500 text-xs">âš ï¸ Connect your Formspree endpoint in the editor</p>}
+            </form>
           </div>
-        </div>
+        </Section>
       </div>
-    </Section>
-  );
+    );
+  };
 
   return (
     <main

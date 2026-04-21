@@ -16,16 +16,25 @@ export const template16Meta = {
 
 type TemplateProps = {
   editableData?: any;
+  isPublished?: boolean;
 };
 
 const getNestedValue = (obj: any, path: string) => {
   return path.split(".").reduce((acc, part) => acc && acc[part], obj);
 };
 
-export default function Template16({ editableData }: TemplateProps) {
+export default function Template16({ editableData, isPublished = false }: TemplateProps) {
   const [activePage, setActivePage] = useState<"home" | "about" | "contact">("home");
   const { theme } = useThemeStore();
-  const updateRegion = useWebsiteBuilderStore((state: any) => state.updateRegion);
+  const storeUpdateRegion = useWebsiteBuilderStore((state: any) => state.updateRegion);
+  const updateRegion = isPublished ? () => { } : storeUpdateRegion;
+
+  const storeEndpoint = useWebsiteBuilderStore(
+    (state: any) => state.schema?.editableData?.formspreeEndpoint
+  );
+  const formspreeEndpoint = isPublished
+    ? editableData?.formspreeEndpoint
+    : storeEndpoint || editableData?.formspreeEndpoint;
 
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = (regionKey: string) => {
@@ -339,58 +348,131 @@ export default function Template16({ editableData }: TemplateProps) {
     </Section>
   );
 
-  const ContactView = () => (
-    <Section id="contact" bgType="primary">
-      <div className="max-w-6xl mx-auto animate-in zoom-in-95 duration-500">
-        <div className="text-center mb-16">
-          <EditableText as="h1" regionKey="contact.title" fallback="Let's Talk." className="text-6xl md:text-7xl font-black tracking-tighter block mb-6" />
-          <EditableText as="p" regionKey="contact.subtitle" fallback="Ready to get behind the wheel? Contact our concierge team to secure your reservation." className="text-xl opacity-70 block max-w-2xl mx-auto" />
-        </div>
+  // ========== CONTACT VIEW ==========
+  const ContactView = () => {
+    const [formData, setFormData] = React.useState({ name: "", email: "", phone: "", message: "" });
+    const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle");
 
-        <div className="grid lg:grid-cols-5 gap-12 bg-white/5 p-8 md:p-12 shadow-2xl border" style={{ borderRadius: `${theme.borderRadius * 2}px`, borderColor: `${theme.textColor}10`, backgroundColor: theme.secondaryColor }}>
-          <div className="lg:col-span-2 space-y-10">
-            <div>
-              <h4 className="text-xs font-black uppercase opacity-40 tracking-widest mb-3">Headquarters</h4>
-              <EditableText regionKey="contact.address" fallback="100 Luxury Lane, Suite 400" className="text-lg font-bold block" />
-              <EditableText regionKey="contact.city" fallback="Beverly Hills, CA 90210" className="text-lg font-bold block" />
-            </div>
-            <div>
-              <h4 className="text-xs font-black uppercase opacity-40 tracking-widest mb-3">Direct Line</h4>
-              <EditableText regionKey="contact.phone" fallback="+1 (800) 555-RIDE" className="text-2xl font-black block" style={{ color: theme.primaryColor }} />
-            </div>
-            <div>
-              <h4 className="text-xs font-black uppercase opacity-40 tracking-widest mb-3">Email Support</h4>
-              <EditableText regionKey="contact.email" fallback="booking@velocity.com" className="text-lg font-bold block" />
-            </div>
-          </div>
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
-          <div className="lg:col-span-3 space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest opacity-50">First Name</label>
-                <input className="w-full p-4 bg-transparent border-2 outline-none transition-colors focus:border-blue-500" style={{ borderColor: `${theme.textColor}15`, borderRadius: `${theme.borderRadius}px` }} placeholder="John" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest opacity-50">Last Name</label>
-                <input className="w-full p-4 bg-transparent border-2 outline-none transition-colors focus:border-blue-500" style={{ borderColor: `${theme.textColor}15`, borderRadius: `${theme.borderRadius}px` }} placeholder="Doe" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-widest opacity-50">Desired Vehicle</label>
-              <input className="w-full p-4 bg-transparent border-2 outline-none transition-colors focus:border-blue-500" style={{ borderColor: `${theme.textColor}15`, borderRadius: `${theme.borderRadius}px` }} placeholder="e.g. Porsche 911" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-widest opacity-50">Message</label>
-              <textarea rows={4} className="w-full p-4 bg-transparent border-2 outline-none transition-colors focus:border-blue-500 resize-none" style={{ borderColor: `${theme.textColor}15`, borderRadius: `${theme.borderRadius}px` }} placeholder="Your dates and special requests..." />
-            </div>
-            <button className="w-full py-5 font-black uppercase tracking-widest text-sm shadow-xl hover:scale-[1.02] transition-transform" style={{ backgroundColor: theme.primaryColor, color: "#fff", borderRadius: `${theme.borderRadius}px` }}>
-              <EditableText regionKey="contact.submit" fallback="Send Request" />
-            </button>
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!formspreeEndpoint) {
+        alert("âš ï¸ Form is not connected. Please add your Formspree endpoint in the editor.");
+        return;
+      }
+      setStatus("loading");
+      try {
+        const res = await fetch(formspreeEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(formData),
+        });
+        if (res.ok) {
+          setStatus("success");
+          setFormData({ name: "", email: "", phone: "", message: "" });
+          setTimeout(() => setStatus("idle"), 5000);
+        } else throw new Error();
+      } catch {
+        setStatus("error");
+        setTimeout(() => setStatus("idle"), 5000);
+      }
+    };
+
+    return (
+      <div>
+        <Section id="contact-header">
+          <div className="text-center max-w-3xl mx-auto">
+            <EditableText as="h1" regionKey="contact.title" fallback="Let's Connect" className="text-5xl md:text-6xl font-black tracking-tighter block mb-6" />
+            <EditableText as="p" regionKey="contact.subtitle" fallback="Ready to work together? Reach out and let's start the conversation." className="text-xl opacity-70 block" />
           </div>
-        </div>
+        </Section>
+
+        <Section id="contact-form">
+          <div className="grid md:grid-cols-2 gap-16">
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-2xl font-bold mb-4">Visit Us</h3>
+                <EditableText regionKey="contact.address" fallback="123 Business Avenue, Suite 100, New York, NY 10001" className="opacity-70 block" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold mb-4">Contact Info</h3>
+                <EditableText regionKey="contact.email" fallback="hello@example.com" className="opacity-70 block mb-2" />
+                <EditableText regionKey="contact.phone" fallback="+1 (555) 123-4567" className="opacity-70 block" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold mb-4">Follow Us</h3>
+                <div className="flex gap-4">
+                  {["LinkedIn", "Twitter", "Instagram"].map((social) => (
+                    <span key={social} className="cursor-pointer hover:underline" style={{ color: theme.primaryColor }}>{social}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <input
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Your Name"
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-blue-500 transition-colors"
+                style={{ borderColor: `${theme.textColor}20` }}
+                required
+                disabled={status === "loading"}
+              />
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Your Email"
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-blue-500 transition-colors"
+                style={{ borderColor: `${theme.textColor}20` }}
+                required
+                disabled={status === "loading"}
+              />
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="Your Phone"
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-blue-500 transition-colors"
+                style={{ borderColor: `${theme.textColor}20` }}
+                required
+                disabled={status === "loading"}
+              />
+              <textarea
+                name="message"
+                value={formData.message}
+                onChange={handleChange}
+                placeholder="Your Message"
+                rows={5}
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-blue-500 transition-colors resize-none"
+                style={{ borderColor: `${theme.textColor}20` }}
+                required
+                disabled={status === "loading"}
+              />
+              <button
+                type="submit"
+                disabled={status === "loading" || !formspreeEndpoint}
+                className={`w-full py-4 font-bold uppercase tracking-widest text-sm transition-all ${status === "loading" || !formspreeEndpoint ? "opacity-60 cursor-not-allowed" : "hover:opacity-90 active:scale-[0.98]"}`}
+                style={{ backgroundColor: theme.primaryColor, color: "#fff", borderRadius: `${theme.borderRadius}px` }}
+              >
+                {status === "loading" ? "Sending..." : "Send Message"}
+              </button>
+              {status === "success" && <p className="text-green-500 text-sm font-medium animate-in fade-in">âœ“ Message sent successfully!</p>}
+              {status === "error" && <p className="text-red-500 text-sm font-medium animate-in fade-in">âŒ Something went wrong. Please try again.</p>}
+              {!formspreeEndpoint && !isPublished && <p className="text-amber-500 text-xs">âš ï¸ Connect your Formspree endpoint in the editor</p>}
+            </form>
+          </div>
+        </Section>
       </div>
-    </Section>
-  );
+    );
+  };
 
   return (
     <main

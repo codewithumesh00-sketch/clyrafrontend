@@ -23,12 +23,8 @@ type StudioPreviewSchema = {
   }>;
 };
 
-export function resolveStudioTemplateId(
-  name?: string
-): string {
-  return (name || "default")
-    .toLowerCase()
-    .trim();
+export function resolveStudioTemplateId(name?: string): string {
+  return (name || "default").toLowerCase().trim();
 }
 
 function buildFallbackSchema(
@@ -102,14 +98,8 @@ export default function TemplateStudioPreview({
   content?: Record<string, unknown>;
 }) {
   const data = useMemo(() => {
-    const normalized = normalizeSiteContent(
-      content ?? {}
-    );
-
-    return buildFallbackSchema(
-      normalized,
-      templateId
-    );
+    const normalized = normalizeSiteContent(content ?? {});
+    return buildFallbackSchema(normalized, templateId);
   }, [content, templateId]);
 
   return (
@@ -121,7 +111,10 @@ export default function TemplateStudioPreview({
         className="h-full overflow-y-auto overflow-x-hidden"
         data-studio-preview-scrollport
       >
-        <WebsiteRenderer schema={data as any} />
+        <WebsiteRenderer
+          schema={data as any}
+          isPublished={true} // 🔒 LOCKED MODE
+        />
       </div>
     </div>
   );

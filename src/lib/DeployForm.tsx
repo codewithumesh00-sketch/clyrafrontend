@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import ReactDOMServer from "react-dom/server";
@@ -22,6 +22,8 @@ export default function DeployForm({ assets = [] }: DeployFormProps) {
   const [isDeploying, setIsDeploying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [resultUrl, setResultUrl] = useState<string | null>(null);
 
   const handleDeploy = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -33,6 +35,18 @@ export default function DeployForm({ assets = [] }: DeployFormProps) {
     if (!currentWebsite) return setError("No website selected");
 
     setIsDeploying(true);
+    setProgress(0);
+    setResultUrl(null);
+    
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 97) {
+          clearInterval(progressInterval);
+          return 97;
+        }
+        return prev + Math.floor(Math.random() * 3) + 1;
+      });
+    }, 200);
 
     try {
       const token = await user.getIdToken();
@@ -53,6 +67,7 @@ export default function DeployForm({ assets = [] }: DeployFormProps) {
       const staticHtml = ReactDOMServer.renderToStaticMarkup(
         React.createElement(templateEntry.component, {
           editableData: parsedSchema.editableData || {},
+          isPublished: true,
         })
       );
 
@@ -89,13 +104,18 @@ export default function DeployForm({ assets = [] }: DeployFormProps) {
       const result = await response.json();
       console.log("FULL DEPLOY RESULT:", result);
 
+      clearInterval(progressInterval);
+      setProgress(100);
       setSuccess(true);
       setProjectName("");
 
       if (result?.url) {
+        setResultUrl(result.url);
         window.open(result.url, "_blank");
       }
     } catch (err) {
+      clearInterval(progressInterval);
+      setProgress(0);
       setError(err instanceof Error ? err.message : "Deploy failed");
     } finally {
       setIsDeploying(false);
@@ -112,11 +132,31 @@ export default function DeployForm({ assets = [] }: DeployFormProps) {
         onChange={(e) => setProjectName(e.target.value)}
         className="w-full p-3 border rounded-xl"
         placeholder="my-awesome-project"
+        disabled={isDeploying}
       />
       {error && <div className="p-3 bg-red-100 text-red-700 rounded-xl">{error}</div>}
-      {success && <div className="p-3 bg-green-100 text-green-700 rounded-xl">Deployed successfully</div>}
-      <button type="submit" className="w-full p-3 rounded-xl bg-blue-600 text-white">
-        {isDeploying ? "Deploying..." : "Publish to Netlify"}
+      
+      {(isDeploying || success) && (
+        <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+          <div 
+            className="bg-blue-600 h-3 transition-all duration-300 ease-out" 
+            style={{ width: `${progress}%` }} 
+          />
+        </div>
+      )}
+      {isDeploying && <div className="text-center text-xs text-gray-500 font-medium">Deploying... {progress}%</div>}
+      
+      {success && resultUrl && (
+        <div className="p-3 bg-green-50 text-green-700 rounded-xl border border-green-200">
+          <div className="font-semibold mb-1">Deployed successfully!</div>
+          <a href={resultUrl} target="_blank" rel="noopener noreferrer" className="underline text-sm truncate block break-all">
+            {resultUrl}
+          </a>
+        </div>
+      )}
+      
+      <button type="submit" disabled={isDeploying} className="w-full p-3 rounded-xl bg-blue-600 text-white disabled:opacity-50">
+        {isDeploying ? "Publishing..." : "Publish to Netlify"}
       </button>
     </form>
   );

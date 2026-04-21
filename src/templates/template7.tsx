@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import Script from "next/script";
@@ -21,12 +21,22 @@ const getNestedValue = (obj: any, path: string) => {
 
 export default function Template7({
   editableData,
+  isPublished = false,
 }: {
   editableData?: any;
+  isPublished?: boolean;
 }) {
   const [activePage, setActivePage] = useState<"home" | "about" | "contact">("home");
   const { theme } = useThemeStore();
-  const updateRegion = useWebsiteBuilderStore((state: any) => state.updateRegion);
+  const storeUpdateRegion = useWebsiteBuilderStore((state: any) => state.updateRegion);
+  const updateRegion = isPublished ? () => { } : storeUpdateRegion;
+
+  const storeEndpoint = useWebsiteBuilderStore(
+    (state: any) => state.schema?.editableData?.formspreeEndpoint
+  );
+  const formspreeEndpoint = isPublished
+    ? editableData?.formspreeEndpoint
+    : storeEndpoint || editableData?.formspreeEndpoint;
 
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = (regionKey: string) => {
@@ -245,53 +255,70 @@ export default function Template7({
     </section>
   );
 
-  const Contact = () => (
-    <section className="px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
-      <div className="max-w-4xl mx-auto space-y-16">
-        <div className="text-center space-y-6">
-          <EditableText
-            as="h2"
-            regionKey="contact.title"
-            fallback="Ready to flow?"
-            className="text-6xl md:text-8xl font-black tracking-tighter block"
-          />
-          <EditableText
-            as="p"
-            regionKey="contact.sub"
-            fallback="Drop us a line and we'll get back to you within 4 business hours."
-            className="text-lg opacity-50 block"
-          />
-        </div>
+  const Contact = () => {
+    const [formData, setFormData] = React.useState({ name: "", email: "", phone: "", message: "" });
+    const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle");
 
-        <div className="grid md:grid-cols-2 gap-12 bg-white/5 p-12 border border-black/5" style={{ borderRadius: `${theme.borderRadius * 2}px` }}>
-          <div className="space-y-8">
-            <div className="space-y-2">
-              <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Inquiries</span>
-              <EditableText regionKey="contact.email" fallback="hello@flow.agency" className="text-lg font-bold block underline" />
-            </div>
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!formspreeEndpoint) {
+        alert("⚠️ Form is not connected. Please add your Formspree endpoint in the editor.");
+        return;
+      }
+      setStatus("loading");
+      try {
+        const res = await fetch(formspreeEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(formData),
+        });
+        if (res.ok) {
+          setStatus("success");
+          setFormData({ name: "", email: "", phone: "", message: "" });
+          setTimeout(() => setStatus("idle"), 5000);
+        } else throw new Error();
+      } catch {
+        setStatus("error");
+        setTimeout(() => setStatus("idle"), 5000);
+      }
+    };
+
+    return (
+      <section className="px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
+        <div className="max-w-4xl mx-auto space-y-16">
+          <div className="text-center space-y-6">
+            <EditableText as="h2" regionKey="contact.title" fallback="Ready to flow?" className="text-6xl md:text-8xl font-black tracking-tighter block" />
+            <EditableText as="p" regionKey="contact.sub" fallback="Drop us a line and we'll get back to you within 4 business hours." className="text-lg opacity-50 block" />
           </div>
-          <div className="flex flex-col gap-4">
-            <input
-              type="text"
-              placeholder="Full Name"
-              className="w-full p-4 bg-transparent border-b outline-none focus:border-black transition-colors"
-              style={{ borderColor: `${theme.textColor}20` }}
-            />
-            <button
-              className="w-full py-5 font-black uppercase tracking-widest text-xs"
-              style={{
-                backgroundColor: theme.primaryColor,
-                color: "#fff",
-                borderRadius: `${theme.borderRadius}px`
-              }}
-            >
-              <EditableText regionKey="contact.btn" fallback="Send Inquiry" />
-            </button>
+
+          <div className="grid md:grid-cols-2 gap-12 bg-white/5 p-12 border border-black/5" style={{ borderRadius: `${theme.borderRadius * 2}px` }}>
+            <div className="space-y-8">
+              <div className="space-y-2">
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Inquiries</span>
+                <EditableText regionKey="contact.email" fallback="hello@flow.agency" className="text-lg font-bold block underline" />
+              </div>
+            </div>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <input name="name" value={formData.name} onChange={handleChange} placeholder="Full Name" required disabled={status === "loading"} className="w-full p-4 bg-transparent border-b outline-none focus:border-black transition-colors" style={{ borderColor: `${theme.textColor}20` }} />
+              <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Your Email" required disabled={status === "loading"} className="w-full p-4 bg-transparent border-b outline-none focus:border-black transition-colors" style={{ borderColor: `${theme.textColor}20` }} />
+              <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="Your Phone" required disabled={status === "loading"} className="w-full p-4 bg-transparent border-b outline-none focus:border-black transition-colors" style={{ borderColor: `${theme.textColor}20` }} />
+              <textarea name="message" value={formData.message} onChange={handleChange} placeholder="Your Message" rows={4} required disabled={status === "loading"} className="w-full p-4 bg-transparent border-b outline-none focus:border-black transition-colors resize-none" style={{ borderColor: `${theme.textColor}20` }} />
+              <button type="submit" disabled={status === "loading" || !formspreeEndpoint} className={`w-full py-5 font-black uppercase tracking-widest text-xs ${status === "loading" || !formspreeEndpoint ? "opacity-60 cursor-not-allowed" : "hover:opacity-90"}`} style={{ backgroundColor: theme.primaryColor, color: "#fff", borderRadius: `${theme.borderRadius}px` }}>
+                {status === "loading" ? "Sending..." : "Send Inquiry"}
+              </button>
+              {status === "success" && <p className="text-green-500 text-sm">✓ Message sent successfully!</p>}
+              {status === "error" && <p className="text-red-500 text-sm">❌ Something went wrong. Please try again.</p>}
+              {!formspreeEndpoint && !isPublished && <p className="text-amber-500 text-xs">⚠️ Connect your Formspree endpoint in the editor</p>}
+            </form>
           </div>
         </div>
-      </div>
-    </section>
-  );
+      </section>
+    );
+  };
 
   return (
     <main

@@ -26,5 +26,5 @@ export default function PreviewPage() {
     );
   }
 
-  return <WebsiteRenderer schema={schema} />;
+  return <WebsiteRenderer schema={schema} isPublished={true} />;
 }

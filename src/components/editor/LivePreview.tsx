@@ -1,29 +1,26 @@
 "use client";
 
-import React, { memo, useMemo, useState } from "react";
+import React, { memo, useMemo, useRef, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Monitor, Tablet, Smartphone, ExternalLink } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useWebsiteBuilderStore } from "@/store/useWebsiteBuilderStore";
 import WebsiteRenderer from "@/components/renderer/WebsiteRenderer";
 import type { TemplateSchema } from "@/store/useWebsiteBuilderStore";
 
 type Props = {
   schema?: TemplateSchema | null;
+  isEditor?: boolean;
+  viewportWidth?: number;
 };
 
-type DeviceView = "desktop" | "tablet" | "mobile";
-
-function LivePreview({ schema }: Props) {
-  const router = useRouter();
-  const [deviceView, setDeviceView] =
-    useState<DeviceView>("desktop");
-
-  const storeSchema = useWebsiteBuilderStore(
-    (state) => state.schema
-  );
-
-  const currentSchema =
-    schema ?? storeSchema ?? null;
+/**
+ * LivePreview renders the template inside an <iframe> so that CSS media queries
+ * (Tailwind's sm:/md:/lg:/xl:) respond to the iframe's width — NOT the browser
+ * viewport. This gives a true responsive preview at any device size.
+ */
+function LivePreview({ schema, isEditor = false, viewportWidth = 1440 }: Props) {
+  const storeSchema = useWebsiteBuilderStore((state) => state.schema);
+  const currentSchema = schema ?? storeSchema ?? null;
 
   const memoizedSchema = useMemo(() => {
     if (!currentSchema) return null;
@@ -32,109 +29,165 @@ function LivePreview({ schema }: Props) {
 
   const handleOpenPreview = () => {
     if (!memoizedSchema) return;
-
-    localStorage.setItem(
-      "clyraweb-preview-schema",
-      JSON.stringify(memoizedSchema)
-    );
-
+    localStorage.setItem("clyraweb-preview-schema", JSON.stringify(memoizedSchema));
     const params = new URLSearchParams({
       t: Date.now().toString(),
-      template:
-        memoizedSchema.templateId || "template1",
-      category:
-        memoizedSchema.category || "business",
+      template: memoizedSchema.templateId || "template1",
+      category: memoizedSchema.category || "business",
     });
-
     window.open(`/preview?${params.toString()}`, "_blank");
   };
 
-  const deviceWidths = {
-    desktop: "w-full",
-    tablet: "max-w-4xl w-[1024px]",
-    mobile: "max-w-sm w-[375px]",
-  };
+  const isMobile = viewportWidth <= 375;
+  const isTablet = viewportWidth === 768;
 
   return (
-    <div className="relative h-[800px] w-full overflow-hidden rounded-3xl bg-[#0a0a0a] text-white shadow-2xl">
-      {/* Premium background */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-1/2 -left-1/2 h-[700px] w-[700px] rounded-full bg-purple-500/10 blur-3xl" />
-        <div className="absolute top-1/4 right-0 h-[500px] w-[500px] rounded-full bg-cyan-500/10 blur-3xl" />
-      </div>
+    <div className="w-full h-full flex flex-col overflow-hidden" style={{ background: "#0d1117" }}>
 
-      {/* Top toolbar */}
-      <div className="sticky top-0 z-20 flex items-center justify-between border-b border-white/10 bg-black/40 px-4 py-3 backdrop-blur-xl">
-        <div className="flex items-center gap-3">
-          <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
-            {currentSchema?.category || "business"} •{" "}
-            {currentSchema?.templateId || "template1"}
+      {/* ── Toolbar ── */}
+      <div className="flex-shrink-0 flex items-center justify-between border-b border-white/10 bg-black/60 px-4 py-2.5 backdrop-blur-xl">
+        <div className="flex items-center gap-2.5">
+          <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-400">
+            {currentSchema?.category ?? "business"} • {currentSchema?.templateId ?? "template1"}
           </div>
-
-          <div className="flex items-center rounded-md bg-white/10 p-0.5">
-            {(["desktop", "tablet", "mobile"] as DeviceView[]).map(
-              (device) => {
-                const Icon = {
-                  desktop: Monitor,
-                  tablet: Tablet,
-                  mobile: Smartphone,
-                }[device];
-
-                return (
-                  <button
-                    key={device}
-                    onClick={() =>
-                      setDeviceView(device)
-                    }
-                    className={`rounded-sm p-1 ${deviceView === device
-                      ? "bg-white/20 text-white"
-                      : "text-gray-400"
-                      }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                  </button>
-                );
-              }
-            )}
+          <div className="flex items-center gap-1.5 rounded-lg bg-white/10 px-2.5 py-1">
+            {isMobile ? <Smartphone className="h-3 w-3 text-white/50" /> :
+             isTablet ? <Tablet className="h-3 w-3 text-white/50" /> :
+                        <Monitor className="h-3 w-3 text-white/50" />}
+            <span className="text-[11px] text-white/50 font-medium">
+              {isMobile ? "Mobile • 375px" : isTablet ? "Tablet • 768px" : "Desktop"}
+            </span>
           </div>
         </div>
-
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-400">
-            Editable Live Preview
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-white/30">
+            {isEditor ? "Editor Mode" : "Preview"}
           </span>
-
           <button
             onClick={handleOpenPreview}
-            className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/20"
+            className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white transition hover:bg-white/20"
           >
-            <ExternalLink className="h-3.5 w-3.5" />
+            <ExternalLink className="h-3 w-3" />
             Full Preview
           </button>
         </div>
       </div>
 
-      {/* Real preview */}
-      <div className="relative h-[calc(100%-56px)] overflow-auto p-4">
-        <div className="flex min-h-full w-full justify-center">
-          <div
-            className={`transition-all duration-500 ${deviceWidths[deviceView]}`}
-          >
-            {deviceView !== "desktop" && (
-              <div className="flex items-center gap-2 border-b border-white/10 bg-black/30 px-3 py-2">
-                <div className="h-2.5 w-2.5 rounded-full bg-red-400" />
-                <div className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
-                <div className="h-2.5 w-2.5 rounded-full bg-green-400" />
-              </div>
-            )}
-
-            <div className="overflow-hidden rounded-b-2xl bg-white">
-              <WebsiteRenderer schema={memoizedSchema} />
-            </div>
-          </div>
+      {/* ── macOS dots bar (mobile/tablet only) ── */}
+      {(isMobile || isTablet) && (
+        <div className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 bg-black/40 border-b border-white/5">
+          <div className="h-2 w-2 rounded-full bg-red-400/80" />
+          <div className="h-2 w-2 rounded-full bg-yellow-400/80" />
+          <div className="h-2 w-2 rounded-full bg-green-400/80" />
+          <span className="ml-1 text-[10px] font-mono text-white/25">{viewportWidth}px</span>
         </div>
+      )}
+
+      {/* ── Template rendered inside iframe for true responsive preview ── */}
+      <div className="flex-1 overflow-hidden flex justify-center" style={{ background: "#0d1117" }}>
+        <IframePreview
+          schema={memoizedSchema}
+          isEditor={isEditor}
+          viewportWidth={viewportWidth}
+        />
       </div>
     </div>
+  );
+}
+
+/**
+ * IframePreview renders a same-origin blank iframe, then uses React portal
+ * to mount WebsiteRenderer inside it. The iframe's width is set to viewportWidth,
+ * giving Tailwind breakpoints the correct viewport to respond to.
+ */
+function IframePreview({
+  schema,
+  isEditor,
+  viewportWidth,
+}: {
+  schema: any;
+  isEditor: boolean;
+  viewportWidth: number;
+}) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [iframeBody, setIframeBody] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    const onLoad = () => {
+      const doc = iframe.contentDocument;
+      if (!doc) return;
+
+      // Inject Tailwind CDN into iframe head so all utility classes work
+      const head = doc.head;
+      if (!head.querySelector("[data-clyraweb-tw]")) {
+        const tw = doc.createElement("script");
+        tw.src = "https://cdn.tailwindcss.com";
+        tw.setAttribute("data-clyraweb-tw", "true");
+        head.appendChild(tw);
+      }
+
+      // Base styles
+      if (!head.querySelector("[data-clyraweb-base]")) {
+        const style = doc.createElement("style");
+        style.setAttribute("data-clyraweb-base", "true");
+        style.textContent = `
+          *, *::before, *::after { box-sizing: border-box; }
+          html, body { margin: 0; padding: 0; font-family: Inter, system-ui, sans-serif; overflow-x: hidden; }
+          body { background: #fff; }
+          img { max-width: 100%; height: auto; }
+        `;
+        head.appendChild(style);
+      }
+
+      // Google Font
+      if (!head.querySelector("[data-clyraweb-font]")) {
+        const link = doc.createElement("link");
+        link.rel = "stylesheet";
+        link.href = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap";
+        link.setAttribute("data-clyraweb-font", "true");
+        head.appendChild(link);
+      }
+
+      // Set the body as portal target
+      setIframeBody(doc.body);
+    };
+
+    iframe.addEventListener("load", onLoad);
+
+    // For same-origin about:blank, load fires immediately in some browsers
+    // so also try to set up right away
+    if (iframe.contentDocument?.body) {
+      onLoad();
+    }
+
+    return () => iframe.removeEventListener("load", onLoad);
+  }, []);
+
+  const isDesktop = viewportWidth >= 1440;
+
+  return (
+    <iframe
+      ref={iframeRef}
+      title="Preview"
+      src="about:blank"
+      className="border-0 bg-white"
+      style={{
+        width: isDesktop ? "100%" : `${viewportWidth}px`,
+        height: "100%",
+        maxWidth: "100%",
+        flexShrink: 0,
+      }}
+    >
+      {/* Portal React content into the iframe body */}
+      {iframeBody &&
+        createPortal(
+          <WebsiteRenderer schema={schema} isPublished={!isEditor} />,
+          iframeBody
+        )}
+    </iframe>
   );
 }
 

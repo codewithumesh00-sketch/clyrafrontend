@@ -17,16 +17,18 @@ export const template11Meta = {
 
 type TemplateProps = {
   editableData?: any;
+  isPublished?: boolean;
 };
 
 const getNestedValue = (obj: any, path: string) => {
   return path.split(".").reduce((acc, part) => acc && acc[part], obj);
 };
 
-export default function Template11({ editableData }: TemplateProps) {
+export default function Template11({ editableData, isPublished = false }: TemplateProps) {
   const [activePage, setActivePage] = useState<"home" | "about" | "contact">("home");
   const { theme } = useThemeStore();
-  const updateRegion = useWebsiteBuilderStore((state: any) => state.updateRegion);
+  const storeUpdateRegion = useWebsiteBuilderStore((state: any) => state.updateRegion);
+  const updateRegion = isPublished ? () => { } : storeUpdateRegion;
 
   // ✅ STEP 1 + BONUS: Get Formspree endpoint + form provider (scalable)
   const formspreeEndpoint = useRegionValue("contact.formspreeEndpoint");
@@ -392,123 +394,129 @@ export default function Template11({ editableData }: TemplateProps) {
     }
   };
 
+  // ========== CONTACT VIEW ==========
   const ContactView = () => {
-    // ✅ STEP 6: Get endpoint for validation
-    const formspreeEndpoint = useRegionValue("contact.formspreeEndpoint");
+    const [formData, setFormData] = React.useState({ name: "", email: "", phone: "", message: "" });
+    const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle");
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!formspreeEndpoint) {
+        alert("âš ï¸ Form is not connected. Please add your Formspree endpoint in the editor.");
+        return;
+      }
+      setStatus("loading");
+      try {
+        const res = await fetch(formspreeEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(formData),
+        });
+        if (res.ok) {
+          setStatus("success");
+          setFormData({ name: "", email: "", phone: "", message: "" });
+          setTimeout(() => setStatus("idle"), 5000);
+        } else throw new Error();
+      } catch {
+        setStatus("error");
+        setTimeout(() => setStatus("idle"), 5000);
+      }
+    };
 
     return (
-      <Section id="contact" bgType="secondary" className="animate-in zoom-in-95 duration-500 w-full max-w-full">
-        <div className="max-w-5xl mx-auto break-words">
-          <div className="text-center mb-16 space-y-6">
-            <EditableText as="h1" regionKey="contact.title" fallback="Get in Touch" className="text-5xl sm:text-6xl font-extrabold tracking-tight block" />
-            <EditableText as="p" regionKey="contact.subtitle" fallback="Have questions about enrollment? Our admissions team is here to help you begin your journey." className="text-xl opacity-70 block max-w-2xl mx-auto" />
+      <div>
+        <Section id="contact-header">
+          <div className="text-center max-w-3xl mx-auto">
+            <EditableText as="h1" regionKey="contact.title" fallback="Let's Connect" className="text-5xl md:text-6xl font-black tracking-tighter block mb-6" />
+            <EditableText as="p" regionKey="contact.subtitle" fallback="Ready to work together? Reach out and let's start the conversation." className="text-xl opacity-70 block" />
           </div>
+        </Section>
 
-          <div
-            className="grid md:grid-cols-5 gap-0 shadow-2xl overflow-hidden"
-            style={{ borderRadius: `${theme.borderRadius * 2}px`, backgroundColor: theme.backgroundColor }}
-          >
-            <div
-              className="md:col-span-2 p-10 sm:p-12 text-white flex flex-col justify-between"
-              style={{ backgroundColor: theme.primaryColor }}
-            >
-              <div className="space-y-10">
-                <EditableText as="h3" regionKey="contact.infoTitle" fallback="Contact Information" className="text-2xl font-bold block" />
-                <div className="space-y-8">
-                  <div>
-                    <p className="text-sm font-bold opacity-60 uppercase tracking-wider mb-2">Admissions Office</p>
-                    <EditableText regionKey="contact.address" fallback="123 Education Lane, Tech District, CA 94105" className="font-semibold text-lg block" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold opacity-60 uppercase tracking-wider mb-2">Direct Line</p>
-                    <EditableText regionKey="contact.phone" fallback="+1 (800) 123-4567" className="font-semibold text-lg block" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold opacity-60 uppercase tracking-wider mb-2">Email Support</p>
-                    <EditableText regionKey="contact.emailBox" fallback="admissions@edunova.edu" className="font-semibold text-lg block" />
-                  </div>
-                </div>
+        <Section id="contact-form">
+          <div className="grid md:grid-cols-2 gap-16">
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-2xl font-bold mb-4">Visit Us</h3>
+                <EditableText regionKey="contact.address" fallback="123 Business Avenue, Suite 100, New York, NY 10001" className="opacity-70 block" />
               </div>
-              <div className="mt-16 opacity-50 text-sm">
-                <EditableText regionKey="contact.hours" fallback="Operating Hours: Mon-Fri, 9AM - 6PM PST" />
+              <div>
+                <h3 className="text-2xl font-bold mb-4">Contact Info</h3>
+                <EditableText regionKey="contact.email" fallback="hello@example.com" className="opacity-70 block mb-2" />
+                <EditableText regionKey="contact.phone" fallback="+1 (555) 123-4567" className="opacity-70 block" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold mb-4">Follow Us</h3>
+                <div className="flex gap-4">
+                  {["LinkedIn", "Twitter", "Instagram"].map((social) => (
+                    <span key={social} className="cursor-pointer hover:underline" style={{ color: theme.primaryColor }}>{social}</span>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* ✅ STEP 3 + 4 + 5: Real form with named inputs + submit button */}
-            <div className="md:col-span-3 p-10 sm:p-12">
-              <form
-                onSubmit={handleSubmit}
-                // ✅ STEP 3: action + method for Formspree
-                action={formspreeEndpoint || undefined}
-                method="POST"
-                className="space-y-6"
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <input
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Your Name"
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-blue-500 transition-colors"
+                style={{ borderColor: `${theme.textColor}20` }}
+                required
+                disabled={status === "loading"}
+              />
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Your Email"
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-blue-500 transition-colors"
+                style={{ borderColor: `${theme.textColor}20` }}
+                required
+                disabled={status === "loading"}
+              />
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="Your Phone"
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-blue-500 transition-colors"
+                style={{ borderColor: `${theme.textColor}20` }}
+                required
+                disabled={status === "loading"}
+              />
+              <textarea
+                name="message"
+                value={formData.message}
+                onChange={handleChange}
+                placeholder="Your Message"
+                rows={5}
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-blue-500 transition-colors resize-none"
+                style={{ borderColor: `${theme.textColor}20` }}
+                required
+                disabled={status === "loading"}
+              />
+              <button
+                type="submit"
+                disabled={status === "loading" || !formspreeEndpoint}
+                className={`w-full py-4 font-bold uppercase tracking-widest text-sm transition-all ${status === "loading" || !formspreeEndpoint ? "opacity-60 cursor-not-allowed" : "hover:opacity-90 active:scale-[0.98]"}`}
+                style={{ backgroundColor: theme.primaryColor, color: "#fff", borderRadius: `${theme.borderRadius}px` }}
               >
-                <div className="grid sm:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold opacity-70">First Name</label>
-                    {/* ✅ STEP 4: name attribute (REQUIRED for Formspree) */}
-                    <input
-                      name="firstName"
-                      className="w-full p-4 bg-transparent border outline-none transition-all focus:ring-2 focus:ring-opacity-50"
-                      style={{ borderColor: `${theme.textColor}20`, borderRadius: `${theme.borderRadius}px` }}
-                      placeholder="John"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold opacity-70">Last Name</label>
-                    <input
-                      name="lastName"
-                      className="w-full p-4 bg-transparent border outline-none transition-all focus:ring-2 focus:ring-opacity-50"
-                      style={{ borderColor: `${theme.textColor}20`, borderRadius: `${theme.borderRadius}px` }}
-                      placeholder="Doe"
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-bold opacity-70">Email Address</label>
-                  <input
-                    name="email"
-                    type="email"
-                    className="w-full p-4 bg-transparent border outline-none transition-all focus:ring-2 focus:ring-opacity-50"
-                    style={{ borderColor: `${theme.textColor}20`, borderRadius: `${theme.borderRadius}px` }}
-                    placeholder="john@example.com"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-bold opacity-70">Message / Inquiry</label>
-                  <textarea
-                    name="message"
-                    rows={4}
-                    className="w-full p-4 bg-transparent border outline-none transition-all focus:ring-2 focus:ring-opacity-50 resize-none"
-                    style={{ borderColor: `${theme.textColor}20`, borderRadius: `${theme.borderRadius}px` }}
-                    placeholder="How can we help you today?"
-                    required
-                  ></textarea>
-                </div>
-                {/* ✅ STEP 5: type="submit" */}
-                <button
-                  type="submit"
-                  className="w-full py-5 font-bold text-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: theme.primaryColor, color: "#fff", borderRadius: `${theme.borderRadius}px` }}
-                  disabled={!formspreeEndpoint}
-                >
-                  <EditableText regionKey="contact.submitBtn" fallback="Send Message" />
-                </button>
-
-                {/* ✅ Helper hint for builder users */}
-                {!formspreeEndpoint && (
-                  <p className="text-xs opacity-60 text-center mt-2">
-                    🔧 Connect your Formspree endpoint in the builder settings to enable this form
-                  </p>
-                )}
-              </form>
-            </div>
+                {status === "loading" ? "Sending..." : "Send Message"}
+              </button>
+              {status === "success" && <p className="text-green-500 text-sm font-medium animate-in fade-in">âœ“ Message sent successfully!</p>}
+              {status === "error" && <p className="text-red-500 text-sm font-medium animate-in fade-in">âŒ Something went wrong. Please try again.</p>}
+              {!formspreeEndpoint && !isPublished && <p className="text-amber-500 text-xs">âš ï¸ Connect your Formspree endpoint in the editor</p>}
+            </form>
           </div>
-        </div>
-      </Section>
+        </Section>
+      </div>
     );
   };
 

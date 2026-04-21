@@ -29,11 +29,6 @@ type GeneratorMode = "ui" | "blog";
 type ActiveView = "editor" | "preview";
 type ThemeMode = "dark" | "light";
 
-interface DeployConfig {
-  platform: string;
-  projectName: string;
-}
-
 // ==================== ⚙️ CONFIGURATION ====================
 const CONFIG = {
   AUTO_GENERATE_ON_LOAD: false,
@@ -149,7 +144,7 @@ export default function Home() {
       phone: "+91 9876543210",
     },
     footer: {
-      company: "clyrawebWeb",
+      company: "Your AI Builder",
       copyright: "© 2026",
     },
   });
@@ -158,7 +153,6 @@ export default function Home() {
   const [status, setStatus] = useState("Ready");
   const [isLoading, setIsLoading] = useState(false);
   const [activeView, setActiveView] = useState<ActiveView>("preview");
-  const [copied, setCopied] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [generationHistory, setGenerationHistory] = useState<string[]>([]);
   const [generatedPages, setGeneratedPages] = useState<string[]>(["home"]);
@@ -184,17 +178,7 @@ body {
   const [blogContent, setBlogContent] = useState("");
   const [blogTitle, setBlogTitle] = useState("");
   const [blogStatus, setBlogStatus] = useState("Ready");
-  const [blogCopied, setBlogCopied] = useState(false);
 
-  // Deploy States
-  const [showDeployModal, setShowDeployModal] = useState(false);
-  const [deployConfig, setDeployConfig] = useState<DeployConfig>({
-    platform: "netlify",
-    projectName: "",
-  });
-  const [isDeploying, setIsDeploying] = useState(false);
-  const [deployStatus, setDeployStatus] = useState<string | null>(null);
-  const [deployedUrl, setDeployedUrl] = useState<string | null>(null);
 
   // Shared States
   const [activeMode, setActiveMode] = useState<GeneratorMode>("ui");
@@ -210,6 +194,11 @@ body {
   // ✅ Chatbox toggle state + animated word index
   const [isChatOpen, setIsChatOpen] = useState(true);
   const [animatedWordIndex, setAnimatedWordIndex] = useState(0);
+
+  // Search State
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const lastGenerateRef = useRef<number>(0);
   const editorRef = useRef<unknown>(null);
@@ -351,6 +340,19 @@ body {
     };
   }, []);
 
+  // Ctrl+K to open search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchOpen(true);
+        setTimeout(() => searchInputRef.current?.focus(), 50);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   useEffect(() => {
     return () => {
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
@@ -378,7 +380,6 @@ body {
 
     setIsLoading(true);
     setStatus("Initializing AI Pipeline...");
-    setCopied(false);
 
     try {
       const result = await generateWebsite(prompt.trim());
@@ -424,7 +425,7 @@ export default function ${capitalize(pageName || "Home")}Page() {
   const schema = ${JSON.stringify(pageSchema, null, 2)}
   return (
     <div className="min-h-screen bg-black">
-      <WebsiteRenderer schema={schema} />
+      <WebsiteRenderer schema={schema} isPublished={true} />
     </div>
   );
 }
@@ -508,7 +509,7 @@ export default function ${capitalize(pageName || "Home")}Page() {
           files: {
             ...projectFiles,
             "package.json": JSON.stringify({
-              name: deployConfig.projectName,
+              name: "clyraweb-project",
               private: true,
               scripts: { dev: "next dev", build: "next build", start: "next start" },
               dependencies: { next: "14.1.0", react: "18.2.0", "react-dom": "18.2.0" }
@@ -516,8 +517,8 @@ export default function ${capitalize(pageName || "Home")}Page() {
             "next.config.js": `/** @type {import('next').NextConfig} */\nconst nextConfig = {};\nmodule.exports = nextConfig;`,
             "src/components/renderer/WebsiteRenderer.tsx": `export default function WebsiteRenderer({ schema }: any) { return <div style={{ padding: "40px", color: "white", background: "black", minHeight: "100vh" }}><pre>{JSON.stringify(schema, null, 2)}</pre></div>; }`
           },
-          projectName: deployConfig.projectName,
-          platform: deployConfig.platform,
+          projectName: "clyraweb-project",
+          platform: "auto",
         }),
       });
     } catch (error) {
@@ -530,7 +531,6 @@ export default function ${capitalize(pageName || "Home")}Page() {
     if (!blogPrompt.trim()) return;
     setIsLoading(true);
     setBlogStatus("Crafting Your Blog Post...");
-    setBlogCopied(false);
     try {
       const response = await fetch(BLOG_WEBHOOK, {
         method: "POST",
@@ -562,11 +562,9 @@ export default function ${capitalize(pageName || "Home")}Page() {
       }
       if ((e.metaKey || e.ctrlKey) && e.key === "s") {
         e.preventDefault();
-        handleDownload();
       }
       if (e.key === "Escape") {
         setIsFullscreen(false);
-        setShowDeployModal(false);
         setShowMobileMenu(false);
       }
       if ((e.metaKey || e.ctrlKey) && e.key === "`") {
@@ -586,114 +584,8 @@ export default function ${capitalize(pageName || "Home")}Page() {
       .trim();
   };
 
-  const handleCopy = async () => {
-    const contentToCopy = activeMode === "ui" ? code : blogContent;
-    if (!contentToCopy) return;
-    await navigator.clipboard.writeText(contentToCopy);
-    if (activeMode === "ui") {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } else {
-      setBlogCopied(true);
-      setTimeout(() => setBlogCopied(false), 2000);
-    }
-  };
 
-  const [isDownloading, setIsDownloading] = useState(false);
 
-  const handleDownload = async () => {
-    if (activeMode === "ui" && Object.keys(filesState).length === 0) {
-      setStatus("No code to download");
-      return;
-    }
-    if (activeMode === "blog" && !blogContent) {
-      setBlogStatus("No content to download");
-      return;
-    }
-
-    setIsDownloading(true);
-    try {
-      const zip = new JSZip();
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-
-      if (activeMode === "ui") {
-        const projectFolder = zip.folder(`clyrawebweb-Ai${timestamp}`);
-        const assetsFolder = projectFolder?.folder("assets");
-
-        Object.entries(filesState).forEach(([fileName, content]) => {
-          projectFolder?.file(fileName, content);
-        });
-
-        if (globalCss) assetsFolder?.file("style.css", globalCss);
-        Object.entries(assets).forEach(([fileName, content]) => {
-          if (fileName !== "style.css") assetsFolder?.file(fileName, content);
-        });
-
-        const pageList = Object.keys(filesState)
-          .filter((f) => f.endsWith("page.tsx"))
-          .map((f) => {
-            let route = f.replace("src/app", "").replace("/page.tsx", "");
-            if (!route || route === "") route = "/";
-            return route;
-          })
-          .join("\n- ");
-
-        const readmeContent = `# clyrawebWeb Project - React/Next.js
-Generated with clyrawebWeb AI Content Studio
-Date: ${new Date().toLocaleDateString()}
-
-## Files Included
-${Object.keys(filesState).map(f => `- ${f}`).join('\n')}
-
-## Pages
-- ${pageList}
-
-## Navigation
-All pages include auto-working navbar routes using Next.js Link component.
-`;
-        projectFolder?.file("README.md", readmeContent);
-        projectFolder?.file("package.json", JSON.stringify({
-          "name": `clyrawebweb-ai-${timestamp}`,
-          "version": "1.0.0",
-          "scripts": { "dev": "next dev", "build": "next build", "start": "next start" },
-          "dependencies": { "next": "14.1.0", "react": "18.2.0", "react-dom": "18.2.0" }
-        }, null, 2));
-
-        const content = await zip.generateAsync({ type: "blob" });
-        const url = URL.createObjectURL(content);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `clyrawebweb-ai-${timestamp}.zip`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        setStatus("React Project ZIP Downloaded Successfully");
-      } else {
-        const projectFolder = zip.folder(`clyraweb-blog-${timestamp}`);
-        const safeTitle = blogTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 50) || "blog-post";
-        projectFolder?.file(`${safeTitle}.md`, `# ${blogTitle}\n\n${blogContent}`);
-
-        const content = await zip.generateAsync({ type: "blob" });
-        const url = URL.createObjectURL(content);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `clyraweb-blog-${timestamp}.zip`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        setBlogStatus("ZIP Downloaded Successfully");
-      }
-    } catch (error: unknown) {
-      console.error("Download error:", error);
-      const message = error instanceof Error ? error.message : String(error);
-      if (activeMode === "ui") setStatus(`Download Failed: ${message}`);
-      else setBlogStatus(`Download Failed: ${message}`);
-    } finally {
-      setIsDownloading(false);
-    }
-  };
 
   const resetWorkspace = () => {
     if (activeMode === "ui") {
@@ -723,167 +615,6 @@ All pages include auto-working navbar routes using Next.js Link component.
     }
   };
 
-  // ✅ FIXED: Clean handleDeploy function - NO DUPLICATION
-  // ✅ FIXED: Clean handleDeploy function - proper if/else structure
-  const handleDeploy = async () => {
-    if (!deployConfig.projectName.trim()) {
-      setDeployStatus("Please enter a project name");
-      return;
-    }
-
-    setIsDeploying(true);
-    setDeployStatus("Preparing deploy...");
-    setDeployedUrl(null);
-
-    try {
-      let deployFiles: Record<string, string> = {};
-
-      // Template deploy mode
-      if (liveSchema?.templateId) {
-        const selectedTemplate = liveSchema.templateId;
-        const templatePath = `src/templates/${selectedTemplate}.tsx`;
-
-        deployFiles = {
-          [templatePath]:
-            filesState[templatePath] ||
-            buildStudioExportSource(selectedTemplate, studioContent),
-
-          "src/app/layout.tsx": `
-export const metadata = {
-  title: "${deployConfig.projectName}",
-  description: "Generated by clyraweb"
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
-  );
-}
-`,
-          "src/app/page.tsx": `
-import TemplatePage from "../templates/${selectedTemplate}";
-
-const editableData = ${JSON.stringify(studioContent || liveSchema || {}, null, 2)};
-
-export default function Home() {
-  return <TemplatePage editableData={editableData} />;
-}
-`,
-
-
-        };
-      } else {
-        // Standard deploy mode
-        deployFiles = {
-          ...filesState,
-
-          "src/app/layout.tsx": `
-export const metadata = {
-  title: "${deployConfig.projectName}",
-  description: "Generated by clyraweb"
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
-  );
-}
-`,
-        };
-      }
-
-      // Add required Next.js config files
-      deployFiles["package.json"] = JSON.stringify({
-        name: deployConfig.projectName,
-        private: true,
-        scripts: { build: "next build", start: "next start" },
-        dependencies: {
-          next: "14.1.0",
-          react: "18.2.0",
-          "react-dom": "18.2.0"
-        }
-      }, null, 2);
-
-      deployFiles["next.config.js"] = `
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  output: "export"
-};
-module.exports = nextConfig;
-`;
-      // sync latest deploy files
-      filesRef.current = {
-        ...filesRef.current,
-        ...deployFiles
-      };
-
-      const res = await fetch(`${API_ORIGIN}/deploy`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          files: deployFiles,
-          projectName: deployConfig.projectName,
-          templateName: liveSchema?.templateId || null
-        })
-      });
-
-      if (!res.body) throw new Error("No readable stream");
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let finalUrl = null;
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        console.log("CHUNK:", chunk);
-        buffer += chunk;
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          if (!line.trim()) continue;
-          if (line.startsWith("STEP:")) {
-            // Could update step here if UI supported it
-          } else if (line.startsWith("PROGRESS:")) {
-            // Could update progress here if UI supported it
-          } else if (line.startsWith("URL:")) {
-            finalUrl = line.substring(4).trim();
-            setDeployedUrl(finalUrl);
-          } else if (line.startsWith("ERROR:") || line.includes("❌")) {
-            throw new Error(line);
-          } else {
-            setDeployStatus(line.trim());
-          }
-        }
-      }
-
-      setDeployStatus("Deployment successful 🚀");
-      if (finalUrl) {
-        window.open(finalUrl, "_blank");
-      }
-    } catch (error: any) {
-      setDeployStatus("Deploy Failed: " + error.message);
-    } finally {
-      setIsDeploying(false);
-    }
-  };
-
   // ✅ FIX #2: Update filesRef and trigger preview refresh on editor change
   const handleEditorChange = useCallback((value: string | undefined) => {
     const newValue = value || "";
@@ -908,6 +639,24 @@ module.exports = nextConfig;
     setStatus("File saved");
     setTimeout(() => setStatus("Ready"), 2000);
   }, [currentFile, code]);
+
+  const handleShare = async () => {
+    const shareData = {
+      title: "Your AI Builder - AI Website Builder",
+      text: "Build stunning, production-ready websites with AI. Check out Your AI Builder!",
+      url: window.location.origin,
+    };
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error("Error sharing:", err);
+      }
+    } else {
+      navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
+      alert("Link copied to clipboard!");
+    }
+  };
 
   const renderBlogPreview = () => {
     if (!blogContent) {
@@ -1029,10 +778,7 @@ module.exports = nextConfig;
       <aside className={`${showSidebar ? 'w-64' : 'w-0'} flex-shrink-0 border-r transition-all duration-300 overflow-hidden flex flex-col ${isDark ? 'bg-black border-zinc-800' : 'bg-white border-zinc-200'}`}>
         <div className="p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
-              <Layout size={18} className="text-white" />
-            </div>
-            <span className="font-semibold text-sm"> clyrawebWeb</span>
+            <img src={isDark ? "https://res.cloudinary.com/dzwxmiu47/image/upload/q_auto/f_auto/v1776653092/Gemini_Generated_Image_qoawvdqoawvdqoaw_wk3t7j.png" : "https://res.cloudinary.com/dzwxmiu47/image/upload/q_auto/f_auto/v1776653092/Gemini_Generated_Image_t3eylit3eylit3ey_cdkk4p.png"} alt="Logo" className="h-8 md:h-10 w-auto object-contain" />
           </div>
           <button onClick={() => setShowSidebar(false)} className={`p-1 rounded transition-colors ${isDark ? 'hover:bg-zinc-800' : 'hover:bg-zinc-100'}`}>
             <X size={16} className="text-red-500" />
@@ -1044,13 +790,31 @@ module.exports = nextConfig;
             <HomeIcon size={18} />
             Home
           </button>
-          <button className={`w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors justify-between ${isDark ? 'text-zinc-400 hover:text-white hover:bg-zinc-900' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'}`}>
-            <div className="flex items-center gap-3">
-              <Search size={18} />
-              Search
+          {isSearchOpen ? (
+            <div className={`flex items-center px-3 py-1.5 rounded-lg border ${isDark ? 'bg-zinc-900 border-zinc-700 text-white' : 'bg-white border-zinc-300 text-zinc-900'}`}>
+              <Search size={16} className={isDark ? 'text-zinc-500' : 'text-zinc-400'} />
+              <input
+                ref={searchInputRef as any}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search projects..."
+                className="w-full bg-transparent border-none outline-none text-sm px-2"
+                onBlur={() => { if (!searchQuery) setIsSearchOpen(false); }}
+              />
+              <button onClick={() => { setIsSearchOpen(false); setSearchQuery(""); }}>
+                <X size={14} className={isDark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-600'} />
+              </button>
             </div>
-            <span className={`text-xs px-2 py-0.5 rounded ${isDark ? 'text-zinc-600 bg-zinc-900' : 'text-zinc-500 bg-zinc-100'}`}>Ctrl K</span>
-          </button>
+          ) : (
+            <button onClick={() => { setIsSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 50); }} className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-colors ${isDark ? 'text-zinc-400 hover:text-white hover:bg-zinc-900' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'}`}>
+              <div className="flex items-center gap-3">
+                <Search size={18} />
+                Search
+              </div>
+              <span className={`text-xs px-2 py-0.5 rounded ${isDark ? 'text-zinc-600 bg-zinc-900' : 'text-zinc-500 bg-zinc-100'}`}>Ctrl K</span>
+            </button>
+          )}
           <button className={`w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors ${isDark ? 'text-zinc-400 hover:text-white hover:bg-zinc-900' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'}`}>
             <HelpCircle size={18} />
             Resources
@@ -1085,46 +849,49 @@ module.exports = nextConfig;
             {savedProjects.length === 0 ? (
               <div className={`py-2 text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>No recent projects</div>
             ) : (
-              savedProjects.slice(0, 5).map(proj => (
-                <div key={proj.id} className={`w-full text-left p-2 rounded-lg border flex flex-col gap-1.5 transition-colors ${isDark ? 'bg-zinc-900/50 border-zinc-800 hover:bg-zinc-900' : 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100'}`}>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold truncate max-w-[120px]">{proj.title}</span>
-                    <span className="text-[10px] flex items-center gap-1 font-medium">
-                      {proj.status === "deployed" ? <><CheckCircle2 size={10} className="text-green-500" /> Live</> :
-                        proj.status === "failed" ? <><XCircle size={10} className="text-red-500" /> Failed</> :
-                          <><Circle size={10} className="text-amber-500 fill-amber-500" /> Draft</>}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className={`text-[10px] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{new Date(proj.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    <div className="flex items-center gap-1">
-                      {proj.deployUrl && (
-                        <a href={proj.deployUrl} target="_blank" rel="noopener noreferrer" className="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 text-blue-500" title="Open Live">
-                          <ExternalLink size={12} />
-                        </a>
-                      )}
-                      <button onClick={() => {
-                        useWebsiteBuilderStore.getState().setSchema(proj.schema);
-                        useWebsiteBuilderStore.getState().setCurrentProjectId(proj.id);
-                        router.push("/editor");
-                      }} className={`px-2 py-0.5 rounded text-[10px] font-medium ${isDark ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-zinc-200 text-zinc-700 hover:bg-zinc-300'}`}>
-                        Edit
-                      </button>
+              savedProjects
+                .filter(proj => proj.title?.toLowerCase().includes(searchQuery.toLowerCase()))
+                .slice(0, 5)
+                .map(proj => (
+                  <div key={proj.id} className={`w-full text-left p-2 rounded-lg border flex flex-col gap-1.5 transition-colors ${isDark ? 'bg-zinc-900/50 border-zinc-800 hover:bg-zinc-900' : 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100'}`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold truncate max-w-[120px]">{proj.title}</span>
+                      <span className="text-[10px] flex items-center gap-1 font-medium">
+                        {proj.status === "deployed" ? <><CheckCircle2 size={10} className="text-green-500" /> Live</> :
+                          proj.status === "failed" ? <><XCircle size={10} className="text-red-500" /> Failed</> :
+                            <><Circle size={10} className="text-amber-500 fill-amber-500" /> Draft</>}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className={`text-[10px] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{new Date(proj.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <div className="flex items-center gap-1">
+                        {proj.deployUrl && (
+                          <a href={proj.deployUrl} target="_blank" rel="noopener noreferrer" className="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 text-blue-500" title="Open Live">
+                            <ExternalLink size={12} />
+                          </a>
+                        )}
+                        <button onClick={() => {
+                          useWebsiteBuilderStore.getState().setSchema(proj.schema);
+                          useWebsiteBuilderStore.getState().setCurrentProjectId(proj.id);
+                          router.push("/editor");
+                        }} className={`px-2 py-0.5 rounded text-[10px] font-medium ${isDark ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-zinc-200 text-zinc-700 hover:bg-zinc-300'}`}>
+                          Edit
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                ))
             )}
           </div>
         </nav>
 
         <div className="pt-4 pb-2 space-y-2">
-          <button className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group ${isDark ? 'bg-zinc-900 hover:bg-zinc-800' : 'bg-zinc-100 hover:bg-zinc-200'}`}>
+          <button onClick={handleShare} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group ${isDark ? 'bg-zinc-900 hover:bg-zinc-800' : 'bg-zinc-100 hover:bg-zinc-200'}`}>
             <div className={`p-1.5 rounded-md ${isDark ? 'bg-zinc-800 group-hover:bg-zinc-700' : 'bg-zinc-200 group-hover:bg-zinc-300'}`}>
               <Gift size={16} className={isDark ? 'text-zinc-400' : 'text-zinc-600'} />
             </div>
             <div className="text-left">
-              <div className={`text-sm font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-800'}`}>Share clyrawebWeb</div>
+              <div className={`text-sm font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-800'}`}>Share Your AI Builder</div>
               <div className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>100 credits per paid referral</div>
             </div>
           </button>
@@ -1173,9 +940,6 @@ module.exports = nextConfig;
 
           <div className="flex items-center gap-1">
             <button onClick={toggleTheme} className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white' : 'hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900'}`} title="Toggle theme">{isDark ? <Sun size={18} /> : <Moon size={18} />}</button>
-            <button onClick={handleCopy} className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white' : 'hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900'}`} title="Copy code">{copied || blogCopied ? <Check size={18} className="text-emerald-400" /> : <Copy size={18} />}</button>
-            <button onClick={handleDownload} className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white' : 'hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900'}`} title="Download project"><Download size={18} /></button>
-            <button onClick={() => setShowDeployModal(true)} className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white' : 'hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900'}`} title="Deploy"><Rocket size={18} /></button>
           </div>
         </header>
 
@@ -1324,30 +1088,6 @@ module.exports = nextConfig;
         </div>
       </main>
 
-      {/* Deploy Modal */}
-      {showDeployModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className={`w-full max-w-md border rounded-2xl overflow-hidden shadow-2xl ${isDark ? 'bg-black border-zinc-800' : 'bg-white border-zinc-200'}`}>
-            <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-zinc-800' : 'border-zinc-200'}`}>
-              <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>Deploy Project</h3>
-              <button onClick={() => setShowDeployModal(false)} className={`p-1 rounded ${isDark ? 'hover:bg-zinc-800' : 'hover:bg-zinc-100'}`}><X size={18} /></button>
-            </div>
-            <div className="p-4 space-y-4">
-              <div>
-                <label className={`block text-sm mb-2 ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>Project Name</label>
-                <input type="text" value={deployConfig.projectName} onChange={(e) => setDeployConfig({ ...deployConfig, projectName: e.target.value })} placeholder="my-project" className={`w-full px-3 py-2 border rounded-lg text-sm outline-none focus:border-violet-500 transition-colors ${isDark ? 'bg-black border-zinc-700 text-white placeholder:text-zinc-600' : 'bg-white border-zinc-300 text-zinc-900 placeholder:text-zinc-400'}`} />
-              </div>
-              {deployStatus && <div className={`p-3 rounded-lg text-sm ${isDark ? 'bg-zinc-900' : 'bg-zinc-100'}`}>{deployStatus}</div>}
-            </div>
-            <div className={`flex justify-end gap-2 p-4 border-t ${isDark ? 'border-zinc-800' : 'border-zinc-200'}`}>
-              <button onClick={() => setShowDeployModal(false)} className={`px-4 py-2 text-sm ${isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-600 hover:text-zinc-900'}`}>Cancel</button>
-              <button onClick={handleDeploy} disabled={isDeploying || !deployConfig.projectName.trim()} className="px-4 py-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white text-sm font-medium rounded-lg disabled:opacity-50 transition-all shadow-lg shadow-violet-500/20">{isDeploying ? "Deploying..." : "Deploy"}</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Global Styles */}
       <style jsx global>{`
         @keyframes gradient-x { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
         @keyframes glow-pulse { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.05); } }

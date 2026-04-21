@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import Script from "next/script";
@@ -17,16 +17,25 @@ export const template23Meta = {
 
 type TemplateProps = {
   editableData?: any;
+  isPublished?: boolean;
 };
 
 const getNestedValue = (obj: any, path: string) => {
   return path.split(".").reduce((acc, part) => acc && acc[part], obj);
 };
 
-export default function Template23({ editableData }: TemplateProps) {
+export default function Template23({ editableData, isPublished = false }: TemplateProps) {
   const [activePage, setActivePage] = useState<"home" | "about" | "contact">("home");
   const { theme } = useThemeStore();
-  const updateRegion = useWebsiteBuilderStore((state: any) => state.updateRegion);
+  const storeUpdateRegion = useWebsiteBuilderStore((state: any) => state.updateRegion);
+  const updateRegion = isPublished ? () => { } : storeUpdateRegion;
+
+  const storeEndpoint = useWebsiteBuilderStore(
+    (state: any) => state.schema?.editableData?.formspreeEndpoint
+  );
+  const formspreeEndpoint = isPublished
+    ? editableData?.formspreeEndpoint
+    : storeEndpoint || editableData?.formspreeEndpoint;
 
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = (regionKey: string) => {
@@ -234,29 +243,66 @@ export default function Template23({ editableData }: TemplateProps) {
     </div>
   );
 
-  const Contact = () => (
-    <div className="flex flex-col pt-20 min-h-screen animate-in zoom-in-95 duration-500">
-      <Section>
-        <div className="max-w-3xl mx-auto space-y-16">
-          <div className="text-center space-y-4">
-            <EditableText as="h1" regionKey="contact.title" fallback="GET IN THE BOOTH" className="text-7xl font-black italic uppercase" />
-            <EditableText as="p" regionKey="contact.sub" fallback="Ready to launch your series? Let's build your audio identity." className="text-xl opacity-50 block" />
-          </div>
+  const Contact = () => {
+    const [formData, setFormData] = React.useState({ name: "", email: "", phone: "", message: "" });
+    const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle");
 
-          <div className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              <input type="text" placeholder="NAME" className="w-full bg-white/5 border border-white/10 p-6 text-xs font-black tracking-widest outline-none focus:border-white transition-all uppercase" />
-              <input type="email" placeholder="EMAIL" className="w-full bg-white/5 border border-white/10 p-6 text-xs font-black tracking-widest outline-none focus:border-white transition-all uppercase" />
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!formspreeEndpoint) {
+        alert("⚠️ Form is not connected. Please add your Formspree endpoint in the editor.");
+        return;
+      }
+      setStatus("loading");
+      try {
+        const res = await fetch(formspreeEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(formData),
+        });
+        if (res.ok) {
+          setStatus("success");
+          setFormData({ name: "", email: "", phone: "", message: "" });
+          setTimeout(() => setStatus("idle"), 5000);
+        } else throw new Error();
+      } catch {
+        setStatus("error");
+        setTimeout(() => setStatus("idle"), 5000);
+      }
+    };
+
+    return (
+      <div className="flex flex-col pt-20 min-h-screen animate-in zoom-in-95 duration-500">
+        <Section>
+          <div className="max-w-3xl mx-auto space-y-16">
+            <div className="text-center space-y-4">
+              <EditableText as="h1" regionKey="contact.title" fallback="GET IN THE BOOTH" className="text-7xl font-black italic uppercase" />
+              <EditableText as="p" regionKey="contact.sub" fallback="Ready to launch your series? Let's build your audio identity." className="text-xl opacity-50 block" />
             </div>
-            <textarea placeholder="PROJECT DETAILS" rows={6} className="w-full bg-white/5 border border-white/10 p-6 text-xs font-black tracking-widest outline-none focus:border-white transition-all uppercase resize-none"></textarea>
-            <button className="w-full py-8 bg-white text-black font-black text-sm tracking-[0.4em] uppercase hover:bg-neutral-200 transition-all">
-              <EditableText regionKey="contact.btn" fallback="SUBMIT INQUIRY" />
-            </button>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="NAME" required disabled={status === "loading"} className="w-full bg-white/5 border border-white/10 p-6 text-xs font-black tracking-widest outline-none focus:border-white transition-all uppercase" />
+                <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="EMAIL" required disabled={status === "loading"} className="w-full bg-white/5 border border-white/10 p-6 text-xs font-black tracking-widest outline-none focus:border-white transition-all uppercase" />
+              </div>
+              <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="PHONE" required disabled={status === "loading"} className="w-full bg-white/5 border border-white/10 p-6 text-xs font-black tracking-widest outline-none focus:border-white transition-all uppercase" />
+              <textarea name="message" value={formData.message} onChange={handleChange} placeholder="PROJECT DETAILS" rows={6} required disabled={status === "loading"} className="w-full bg-white/5 border border-white/10 p-6 text-xs font-black tracking-widest outline-none focus:border-white transition-all uppercase resize-none" />
+              <button type="submit" disabled={status === "loading" || !formspreeEndpoint} className={`w-full py-8 bg-white text-black font-black text-sm tracking-[0.4em] uppercase transition-all ${status === "loading" || !formspreeEndpoint ? "opacity-60 cursor-not-allowed" : "hover:bg-neutral-200"}`}>
+                {status === "loading" ? "SENDING..." : "SUBMIT INQUIRY"}
+              </button>
+              {status === "success" && <p className="text-green-400 text-sm font-bold">✓ Message sent successfully!</p>}
+              {status === "error" && <p className="text-red-400 text-sm font-bold">❌ Something went wrong. Please try again.</p>}
+              {!formspreeEndpoint && !isPublished && <p className="text-amber-400 text-xs">⚠️ Connect your Formspree endpoint in the editor</p>}
+            </form>
           </div>
-        </div>
-      </Section>
-    </div>
-  );
+        </Section>
+      </div>
+    );
+  };
 
   return (
     <main

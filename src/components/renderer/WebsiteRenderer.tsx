@@ -7,14 +7,14 @@ import type { TemplateSchema } from "@/store/useWebsiteBuilderStore";
 
 type Props = {
   schema?: TemplateSchema | null;
+  isPublished: boolean;
 };
 
 export default function WebsiteRenderer({
   schema,
+  isPublished,
 }: Props) {
-  const storeSchema = useWebsiteBuilderStore(
-    (s) => s.schema
-  );
+  const storeSchema = useWebsiteBuilderStore((s) => s.schema);
 
   const currentSchema: TemplateSchema | null =
     schema ?? storeSchema ?? null;
@@ -53,13 +53,21 @@ export default function WebsiteRenderer({
   const SelectedComponent =
     selectedTemplate.component as React.ComponentType<{
       editableData?: any;
+      isPublished?: boolean;
     }>;
+
+  /* ================================
+     🧠 IMPORTANT FIX
+     Pass ONLY editableData (not full schema)
+  ================================ */
+  const editableData = currentSchema?.editableData ?? currentSchema;
 
   return (
     <div className="min-h-screen">
       <SelectedComponent
         key={JSON.stringify(currentSchema)}
-        editableData={currentSchema}
+        editableData={editableData}
+        isPublished={isPublished}
       />
     </div>
   );

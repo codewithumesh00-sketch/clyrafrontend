@@ -1,67 +1,45 @@
 "use client";
 
 import React, { useEffect, useMemo, useState, useCallback } from "react";
-import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { ContentEditable } from "@lexical/react/LexicalContentEditable";
-import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
-import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
-import { $getRoot } from "lexical";
-import { HeadingNode, QuoteNode } from "@lexical/rich-text";
+import Script from "next/script";
 import {
-  RotateCcw,
-  RotateCw,
   Monitor,
   Tablet,
   Smartphone,
   Upload,
   Save,
-  Eye,
   Menu,
   X,
-  ChevronRight,
-  Sparkles,
-  LayoutTemplate,
   Palette,
-  Layers,
-  Plus,
   Undo2,
   Redo2,
   History,
+  Sparkles,
+  Settings,
+  Check,
+  LayoutDashboard,
 } from "lucide-react";
 
 import DeployPanel from "@/components/editor/DeployPanel";
-import SectionLibraryPanel from "@/components/editor/SectionLibraryPanel";
-import LexicalToolbar from "@/components/editor/LexicalToolbar";
-import LivePreview from "@/components/editor/LivePreview";
 import ThemeCustomizer from "@/components/editor/ThemeCustomizer";
+import LivePreview from "@/components/editor/LivePreview";
 import { useThemeStore } from "@/store/useThemeStore";
 import { useWebsiteBuilderStore } from "@/store/useWebsiteBuilderStore";
-import { resolveTemplate } from "@/templates/templateRegistry";
 
-const lexicalTheme = {
-  paragraph: "mb-3 text-gray-700 leading-relaxed",
-  heading: {
-    h1: "text-4xl font-bold mb-4 text-gray-900",
-    h2: "text-2xl font-semibold mb-3 text-gray-900",
-    h3: "text-xl font-semibold mb-2 text-gray-900",
-  },
-  quote: "border-l-4 border-blue-500 pl-4 italic text-gray-600 my-4",
-};
+import { useRouter } from "next/navigation";
 
 export default function EditorPage() {
   const schema = useWebsiteBuilderStore((state) => state.schema);
   const { theme } = useThemeStore();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [saveTime, setSaveTime] = useState("Not saved");
-  const [savedState, setSavedState] = useState<string | null>(null);
   const [device, setDevice] = useState<"desktop" | "tablet" | "mobile">("desktop");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState<"content" | "theme" | "sections">("content");
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [activeTab, setActiveTab] = useState<"theme" | "settings">("theme");
   const [isDeploying, setIsDeploying] = useState(false);
   const [showDeployPanel, setShowDeployPanel] = useState(false);
+  const [formEndpoint, setFormEndpoint] = useState("");
 
   const {
     setDeployProgress,
@@ -77,28 +55,69 @@ export default function EditorPage() {
   useEffect(() => {
     setMounted(true);
     useWebsiteBuilderStore.getState().loadProjects();
-    const saved = localStorage.getItem("clyraweb-editor");
-    if (saved) {
-      setSavedState(saved);
-      setLastSaved(new Date());
-      setSaveTime(`Last saved ${new Date().toLocaleTimeString()}`);
+
+    const savedEndpoint = localStorage.getItem("clyraweb-form-endpoint");
+    if (savedEndpoint) {
+      setFormEndpoint(savedEndpoint);
     }
   }, []);
 
+  // --- 🖼️ IMAGE UPLOAD LISTENER ---
+  useEffect(() => {
+    const handleOpenUpload = (e: any) => {
+      const regionKey = e.detail?.regionKey;
+      if (!regionKey || typeof window === "undefined" || !(window as any).cloudinary) return;
+
+      const updateRegion = useWebsiteBuilderStore.getState().updateRegion;
+
+      if (!(window as any).__cloudinaryWidget) {
+        (window as any).__cloudinaryWidget = (window as any).cloudinary.createUploadWidget(
+          {
+            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "demo",
+            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "docs_upload_example_us_preset",
+            multiple: false,
+            clientAllowedFormats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+            maxImageFileSize: 5000000,
+          },
+          (error: any, result: any) => {
+            if (!error && result && result.event === "success") {
+              const activeRegion = (window as any).__clyraweb_active_upload_region;
+              if (activeRegion) {
+                updateRegion(activeRegion, result.info.secure_url);
+              }
+            }
+          }
+        );
+      }
+      (window as any).__clyraweb_active_upload_region = regionKey;
+      (window as any).__cloudinaryWidget.open();
+    };
+
+    window.addEventListener("clyraweb-open-image-upload", handleOpenUpload);
+    return () => window.removeEventListener("clyraweb-open-image-upload", handleOpenUpload);
+  }, []);
+
   const handleSave = useCallback(() => {
-    const lexicalState = localStorage.getItem("clyraweb-editor");
-    if (lexicalState) {
-      localStorage.setItem("clyraweb-editor-saved", lexicalState);
-    }
     const now = new Date();
-    setLastSaved(now);
     setSaveTime(`Saved ${now.toLocaleTimeString()}`);
-    // Show saving indicator
-    const timer = setTimeout(() => {
+    setTimeout(() => {
       setSaveTime(`Last saved ${now.toLocaleTimeString()}`);
     }, 2000);
-    return () => clearTimeout(timer);
   }, []);
+
+  const handleSaveFormEndpoint = () => {
+    localStorage.setItem("clyraweb-form-endpoint", formEndpoint);
+    useWebsiteBuilderStore.setState((state: any) => ({
+      schema: {
+        ...state.schema,
+        editableData: {
+          ...state.schema.editableData,
+          formspreeEndpoint: formEndpoint,
+        },
+      },
+    }));
+    handleSave();
+  };
 
   const handlePublish = async () => {
     setIsDeploying(true);
@@ -111,18 +130,18 @@ export default function EditorPage() {
     try {
       const templateId = schema.templateId || "template1";
       const cleanTemplateName = templateId.split("/").pop();
-
       const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
       const response = await fetch(`${API_URL}/deploy`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           projectName: "clyraweb-auto-publish",
           templateName: cleanTemplateName,
-          editableData: schema.editableData,
+          editableData: {
+            ...schema.editableData,
+            formspreeEndpoint: formEndpoint,
+          },
           theme: theme,
         }),
       });
@@ -138,17 +157,14 @@ export default function EditorPage() {
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
-        console.log("CHUNK:", chunk);
         buffer += chunk;
-        const lines = buffer.split("\\n");
+        const lines = buffer.split("\n");
         buffer = lines.pop() || "";
 
         for (const line of lines) {
           if (!line.trim()) continue;
-
           if (line.startsWith("STEP:")) {
-            const step = line.substring(5).trim();
-            setDeployStep(step);
+            setDeployStep(line.substring(5).trim());
           } else if (line.startsWith("PROGRESS:")) {
             setDeployProgress(parseInt(line.split(":")[1]));
           } else if (line.startsWith("URL:")) {
@@ -157,22 +173,17 @@ export default function EditorPage() {
               id: Date.now().toString(),
               date: new Date().toISOString(),
               status: "success",
-              url: url
+              url: url,
             });
             if (currentProjectId) {
               updateProject(currentProjectId, {
                 status: "deployed",
                 deployUrl: url,
-                deployedAt: new Date().toISOString()
+                deployedAt: new Date().toISOString(),
               });
             }
-            // window.open(url, "_blank"); // Optional auto-open
           } else if (line.startsWith("ERROR:") || line.includes("❌")) {
-            if (line.startsWith("ERROR:")) {
-              addDeployLog(line.substring(6).trim());
-            } else {
-              addDeployLog(line.trim());
-            }
+            addDeployLog(line.startsWith("ERROR:") ? line.substring(6).trim() : line.trim());
             addDeployHistory({
               id: Date.now().toString(),
               date: new Date().toISOString(),
@@ -202,317 +213,361 @@ export default function EditorPage() {
     }
   };
 
-  const previewWidth = {
-    desktop: "100%",
-    tablet: "768px",
-    mobile: "375px",
+  // Device preview configurations with exact viewport widths
+  const deviceConfig = {
+    desktop: { width: "100%", label: "Desktop", icon: Monitor, viewport: 1440 },
+    tablet: { width: "768px", label: "Tablet", icon: Tablet, viewport: 768 },
+    mobile: { width: "375px", label: "Mobile", icon: Smartphone, viewport: 375 },
   };
 
-  const initialConfig = useMemo(() => {
-    return {
-      namespace: "clyrawebEditor",
-      theme: lexicalTheme,
-      nodes: [HeadingNode, QuoteNode],
-      editorState: savedState || undefined,
-      onError(error: Error) {
-        console.error(error);
-      },
-    };
-  }, [savedState]);
-
-  const getDeviceIcon = () => {
-    switch (device) {
-      case "desktop": return <Monitor className="h-4 w-4" />;
-      case "tablet": return <Tablet className="h-4 w-4" />;
-      case "mobile": return <Smartphone className="h-4 w-4" />;
-    }
+  const getDeviceIcon = (dev: keyof typeof deviceConfig) => {
+    const Icon = deviceConfig[dev].icon;
+    return <Icon className="h-4 w-4" />;
   };
 
   if (!mounted) {
     return (
-      <div className="h-screen w-screen bg-white flex items-center justify-center">
-        <div className="animate-pulse flex flex-col items-center gap-4">
-          <div className="w-12 h-12 bg-blue-600 rounded-xl"></div>
-          <div className="text-gray-400">Loading editor...</div>
+      <div className="h-screen w-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 animate-pulse">
+          <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg" />
+          <div className="text-gray-500 font-medium">Loading workspace...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-gray-50 flex flex-col">
-      <LexicalComposer initialConfig={initialConfig}>
-        {!isPreviewMode && (
-          <header className="bg-white border-b border-gray-100 shadow-sm flex-shrink-0">
-            <div className="flex items-center justify-between px-6 py-3">
-              <div className="flex items-center gap-4">
+    <div className="h-screen overflow-hidden bg-slate-50 flex flex-col">
+      <Script src="https://upload-widget.cloudinary.com/global/all.js" strategy="lazyOnload" />
+
+      {/* === NAVBAR === */}
+      <header className="bg-[#0a0a0a] border-b border-white/8 shadow-lg flex-shrink-0 z-30">
+        <div className="flex items-center justify-between px-4 md:px-6 py-3 gap-3">
+
+          {/* Logo + Mobile Menu Toggle */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="lg:hidden p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+              aria-label="Toggle sidebar"
+            >
+              {isSidebarOpen
+                ? <X className="h-5 w-5 text-white" />
+                : <Menu className="h-5 w-5 text-white" />}
+            </button>
+            <div className="flex items-center gap-2">
+              <img
+                src="https://res.cloudinary.com/dzwxmiu47/image/upload/v1776662521/Gemini_Generated_Image_qoawvdqoawvdqoaw-removebg-preview_eyghjk.png"
+                alt="clyraweb"
+
+                className="h-7 w-auto object-contain flex-shrink-0"
+              />
+              <span className="hidden sm:inline font-bold text-white text-sm tracking-wide"></span>
+
+              <span className="hidden sm:inline text-white/40 text-xs font-bold">Editor</span>
+            </div>
+          </div>
+
+          {/* === RESPONSIVE DEVICE TABS - Always visible, adapts to screen === */}
+          <div className="flex items-center gap-1 bg-white/10 rounded-xl p-1.5">
+            {(["desktop", "tablet", "mobile"] as const).map((dev) => {
+              const isActive = device === dev;
+              const config = deviceConfig[dev];
+              return (
                 <button
-                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  key={dev}
+                  onClick={() => setDevice(dev)}
+                  className={`
+                      flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200
+                      ${isActive
+                      ? "bg-white shadow-sm text-gray-900"
+                      : "text-white/50 hover:text-white hover:bg-white/10"
+                    }
+                    `}
+                  title={`${config.label} • ${config.viewport}px`}
                 >
-                  {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-                </button>
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">C</span>
-                  </div>
-                  <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-                    clyraweb
-                  </h1>
-                </div>
-              </div>
-
-
-              <div className="hidden md:flex items-center gap-1 bg-gray-50 rounded-xl p-1">
-                {["desktop", "tablet", "mobile"].map((d) => (
-                  <button
-                    key={d}
-                    onClick={() => setDevice(d as any)}
-                    className={`p-2 rounded-lg transition-all ${device === d
-                        ? "bg-white shadow-sm text-gray-900"
-                        : "text-gray-500 hover:text-gray-700"
-                      }`}
-                  >
-                    {d === "desktop" && <Monitor className="h-4 w-4" />}
-                    {d === "tablet" && <Tablet className="h-4 w-4" />}
-                    {d === "mobile" && <Smartphone className="h-4 w-4" />}
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSave}
-                  className="hidden sm:flex items-center gap-2 text-sm text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 hover:text-blue-600 px-3 py-1.5 rounded-lg transition-all shadow-sm cursor-pointer"
-                >
-                  <Save className="h-3.5 w-3.5" />
-                  <span>{saveTime === "Not saved" ? "Save" : saveTime}</span>
-                </button>
-
-                <button
-                  onClick={() => setIsPreviewMode(!isPreviewMode)}
-                  className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${isPreviewMode
-                      ? "bg-blue-50 text-blue-600 border border-blue-200"
-                      : "text-gray-600 hover:bg-gray-100"
-                    }`}
-                >
-                  <Eye className="h-4 w-4" />
-                  <span className="text-sm"></span>
-                </button>
-
-                <button
-                  onClick={() => setShowDeployPanel(true)}
-                  className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all text-gray-600 hover:bg-gray-100 hover:text-blue-600 border border-transparent hover:border-gray-200"
-                  title="Deploy History"
-                >
-                  <History className="h-4 w-4" />
-                </button>
-
-                <button
-                  onClick={handlePublish}
-                  disabled={isDeploying}
-                  className={`flex items-center gap-2 bg-gradient-to-r ${isDeploying
-                      ? "from-gray-400 to-gray-500 cursor-not-allowed"
-                      : "from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-                    } text-white px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-sm hover:shadow-md`}
-                >
-                  <Upload className="h-4 w-4" />
-                  <span className="hidden sm:inline">
-                    {isDeploying ? "Publishing..." : "Publish"}
+                  {getDeviceIcon(dev)}
+                  <span className="hidden xl:inline">{config.label}</span>
+                  <span className="hidden lg:inline xl:hidden text-[10px] opacity-70">
+                    {config.viewport}
                   </span>
                 </button>
-              </div>
+              );
+            })}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
+            {/* Save Status */}
+            <div className="hidden sm:flex items-center gap-2 text-xs text-white/40 bg-white/10 px-3 py-1.5 rounded-lg">
+              <Save className="h-3.5 w-3.5" />
+              <span>{saveTime}</span>
             </div>
-          </header>
-        )}
 
-        {/* MAIN CONTENT */}
-        <div className="flex-1 flex overflow-hidden relative">
-          {/* SIDEBAR */}
-          {!isPreviewMode && (
-            <aside
-              className={`
-                fixed lg:relative z-20 lg:z-auto
-                transform transition-transform duration-300 ease-in-out
-                w-80 bg-white border-r border-gray-100 shadow-lg lg:shadow-none
-                flex flex-col h-full
-                ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
-                ${isSidebarOpen && !window.matchMedia('(min-width: 1024px)').matches ? 'left-0' : ''}
-              `}
+            {/* Dashboard Button */}
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/10 border border-transparent transition-all"
+              title="Go to Dashboard"
             >
-              {/* Sidebar Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-white">
-                <div className="flex gap-1 bg-gray-50 rounded-lg p-1 w-full">
-                  {[
-                    { id: "content", icon: <Layers className="h-4 w-4" />, label: "Content" },
-                    { id: "theme", icon: <Palette className="h-4 w-4" />, label: "Theme" },
-                    { id: "sections", icon: <LayoutTemplate className="h-4 w-4" />, label: "Sections" },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id as any)}
-                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-all ${activeTab === tab.id
-                          ? "bg-white shadow-sm text-gray-900"
-                          : "text-gray-500 hover:text-gray-700"
-                        }`}
-                    >
-                      {tab.icon}
-                      <span className="hidden sm:inline">{tab.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <LayoutDashboard className="h-4 w-4" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </button>
 
-              {/* Sidebar Content */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {activeTab === "content" && (
-                  <div className="space-y-4">
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Sparkles className="h-4 w-4 text-blue-600" />
-                        <span className="text-sm font-medium text-gray-700">Content Editor</span>
-                      </div>
-                      <LexicalToolbar />
-                      <div className="relative mt-3 min-h-[280px] rounded-xl border border-gray-200 bg-white overflow-hidden">
-                        <div className="absolute inset-0 pointer-events-none rounded-xl ring-1 ring-inset ring-black/5" />
-                        <div className="p-4">
-                          <RichTextPlugin
-                            contentEditable={
-                              <ContentEditable className="min-h-[240px] outline-none text-sm leading-relaxed prose prose-sm max-w-none" />
-                            }
-                            placeholder={
-                              <div className="absolute left-4 top-4 text-gray-400 text-sm pointer-events-none">
-                                Write your content here...
-                              </div>
-                            }
-                            ErrorBoundary={() => (
-                              <div className="text-red-500 p-4">Something went wrong</div>
-                            )}
-                          />
-                          <HistoryPlugin />
-                          <OnChangePlugin
-                            onChange={(editorState) => {
-                              const json = editorState.toJSON();
-                              localStorage.setItem("clyraweb-editor", JSON.stringify(json));
-                              handleSave();
-                              editorState.read(() => {
-                                $getRoot().getTextContent();
-                              });
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
+            {/* Deploy History */}
+            <button
+              onClick={() => setShowDeployPanel(true)}
+              className="p-2 text-white/40 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+              title="Deploy History"
+            >
+              <History className="h-4 w-4" />
+            </button>
+
+            {/* Publish Button */}
+            <button
+              onClick={handlePublish}
+              disabled={isDeploying}
+              className={`
+                  flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-sm
+                  ${isDeploying
+                  ? "bg-gray-600 text-white cursor-not-allowed"
+                  : "from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 bg-gradient-to-r text-white hover:shadow-md"
+                }
+                `}
+            >
+              <Upload className={`h-4 w-4 ${isDeploying ? "animate-pulse" : ""}`} />
+              <span className="hidden sm:inline">
+                {isDeploying ? "Publishing..." : "Publish"}
+              </span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* === MAIN CONTENT AREA === */}
+      <div className="flex-1 flex overflow-hidden relative">
+
+        {/* === SIDEBAR === */}
+        <aside
+            className={`
+                fixed lg:relative z-20 lg:z-auto inset-y-0 left-0
+                transform transition-transform duration-300 ease-in-out
+                w-72 bg-[#111111] border-r border-white/8 shadow-2xl lg:shadow-none
+                flex flex-col
+                ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+              `}
+          >
+            {/* Sidebar Tabs */}
+            <div className="flex items-center gap-1 p-3 border-b border-white/8 bg-black/30">
+              {[
+                { id: "theme", icon: Palette, label: "Theme" },
+                { id: "settings", icon: Settings, label: "Settings" },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`
+                        flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all
+                        ${isActive
+                        ? "bg-white/15 shadow-sm text-white ring-1 ring-white/10"
+                        : "text-white/40 hover:text-white hover:bg-white/10"
+                      }
+                      `}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span className="hidden sm:inline">{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Sidebar Content */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-5">
+
+              {/* Theme Tab */}
+              {activeTab === "theme" && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="h-4 w-4 text-indigo-500" />
+                    <h3 className="text-sm font-semibold text-white/80">Visual Customization</h3>
                   </div>
-                )}
-
-                {activeTab === "theme" && (
-                  <div className="bg-white rounded-xl border border-gray-100 p-4">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Palette className="h-4 w-4 text-gray-600" />
-                      <h3 className="font-medium text-gray-900">Theme Customizer</h3>
-                    </div>
+                  <div className="rounded-2xl p-0">
                     <ThemeCustomizer />
                   </div>
-                )}
+                </div>
+              )}
 
-                {activeTab === "sections" && (
-                  <div className="bg-white rounded-xl border border-gray-100 p-4">
-                    <div className="flex items-center gap-2 mb-4">
-                      <LayoutTemplate className="h-4 w-4 text-gray-600" />
-                      <h3 className="font-medium text-gray-900">Section Library</h3>
-                    </div>
-                    <SectionLibraryPanel />
+              {/* Settings Tab */}
+              {activeTab === "settings" && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Settings className="h-4 w-4 text-white/50" />
+                    <h3 className="text-sm font-semibold text-white/80">Form & Integration</h3>
                   </div>
-                )}
-              </div>
-            </aside>
-          )}
 
-          {/* PREVIEW AREA */}
-          <main
-            className={`flex-1 overflow-auto ${isPreviewMode ? "bg-white" : "bg-gray-50"
-              }`}
-          >
-            <div
-              className={`${isPreviewMode
-                  ? "min-h-screen w-full"
-                  : "min-h-full p-4 md:p-6"
-                }`}
-            >
-              <div className="flex justify-center">
-                <div
-                  className={`transition-all duration-300 ease-in-out ${isPreviewMode
-                      ? "w-full min-h-screen bg-white"
-                      : "bg-white rounded-2xl shadow-sm overflow-hidden"
-                    }`}
-                  style={
-                    isPreviewMode
-                      ? {}
-                      : {
-                        width: previewWidth[device],
-                        maxWidth: "100%",
-                        minHeight: "calc(100vh - 120px)",
-                      }
-                  }
-                >
-                  {isPreviewMode && (
+                  {/* Form Endpoint Card */}
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-white/70">Contact Form</label>
+                      {formEndpoint && (
+                        <span className="flex items-center gap-1 text-xs text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                          <Check className="h-3 w-3" /> Connected
+                        </span>
+                      )}
+                    </div>
+                    <input
+                      type="url"
+                      placeholder="https://formspree.io/f/your_id"
+                      value={formEndpoint}
+                      onChange={(e) => setFormEndpoint(e.target.value)}
+                      className="w-full text-sm text-white placeholder-white/30 p-2.5 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400/50 transition-all"
+                    />
                     <button
-                      onClick={() => setIsPreviewMode(false)}
-                      className="fixed top-6 right-6 z-50 rounded-xl bg-black px-4 py-2 text-sm font-medium text-white shadow-xl"
+                      onClick={handleSaveFormEndpoint}
+                      className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm py-2.5 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all font-medium shadow-sm hover:shadow"
                     >
-                      Exit Preview
+                      Connect Form Endpoint
                     </button>
-                  )}
-                  <div
-                    id="preview-root"
-                    data-clyraweb-preview="true"
-                    className={isPreviewMode ? "pointer-events-auto" : ""}
-                  >
-                    <LivePreview schema={schema} />
+                    {formEndpoint && (
+                      <p className="text-xs text-gray-400 text-center">
+                        Forms will submit to your configured endpoint
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-2">
+                    <h4 className="text-xs font-semibold text-white/30 uppercase tracking-wide">Quick Actions</h4>
+                    <button
+                      onClick={handleSave}
+                      className="w-full flex items-center gap-2 text-sm text-white/60 hover:text-white hover:bg-white/10 p-2.5 rounded-xl transition-all text-left"
+                    >
+                      <Save className="h-4 w-4" />
+                      Save Current State
+                    </button>
+                    <button
+                      onClick={() => setShowDeployPanel(true)}
+                      className="w-full flex items-center gap-2 text-sm text-white/60 hover:text-white hover:bg-white/10 p-2.5 rounded-xl transition-all text-left"
+                    >
+                      <History className="h-4 w-4" />
+                      View Deploy History
+                    </button>
                   </div>
                 </div>
+              )}
+            </div>
+        </aside>
+
+        {/* === PREVIEW CANVAS === */}
+        <main className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-slate-100 to-gray-100">
+          {/* Editor mode: card sized to device, template responds naturally */}
+          <div className="flex-1 flex items-start justify-center p-4 md:p-6 overflow-auto">
+              <div
+                className={`
+                    flex-shrink-0 overflow-hidden shadow-2xl transition-all duration-300
+                    ${device === "mobile"
+                    ? "rounded-[2.5rem] ring-[6px] ring-gray-700/80 shadow-[0_0_0_2px_#1a1a1a]"
+                    : device === "tablet"
+                      ? "rounded-[1.5rem] ring-[4px] ring-gray-600/60"
+                      : "rounded-2xl ring-1 ring-black/10"
+                  }
+                  `}
+                style={{
+                  width: device === "desktop" ? "100%" : `${deviceConfig[device].viewport}px`,
+                  maxWidth: "100%",
+                  height: device === "mobile"
+                    ? "calc(100vh - 160px)"
+                    : device === "tablet"
+                      ? "calc(100vh - 160px)"
+                      : "calc(100vh - 140px)",
+                }}
+              >
+                {/* Phone notch bar for mobile */}
+                {device === "mobile" && (
+                  <div className="bg-black h-8 flex items-center justify-center flex-shrink-0">
+                    <div className="w-24 h-5 bg-black rounded-full border border-gray-700 flex items-center justify-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />
+                      <div className="w-8 h-1 rounded-full bg-gray-700" />
+                    </div>
+                  </div>
+                )}
+
+                <div id="preview-root" data-clyraweb-preview="true"
+                  style={{ height: device === "mobile" ? "calc(100% - 2rem)" : "100%" }}
+                >
+                  <LivePreview
+                    schema={schema}
+                    isEditor={true}
+                    viewportWidth={deviceConfig[device].viewport}
+                  />
+                </div>
+
+                {/* Home bar for mobile */}
+                {device === "mobile" && (
+                  <div className="bg-black h-6 flex items-end justify-center pb-1.5 flex-shrink-0">
+                    <div className="w-24 h-1 rounded-full bg-gray-600" />
+                  </div>
+                )}
               </div>
             </div>
-          </main>
 
-          {/* Mobile overlay */}
-          {isSidebarOpen && (
-            <div
-              className="fixed inset-0 bg-black/20 z-10 lg:hidden"
-              onClick={() => setIsSidebarOpen(false)}
-            />
-          )}
-        </div>
 
-        {/* Floating action buttons */}
-        <div className="fixed bottom-6 right-6 flex gap-2">
+        </main>
+
+        {/* Mobile Sidebar Overlay */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-10 lg:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+      </div>
+
+      {/* === FLOATING ACTION BUTTONS === */}
+      <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-20">
+          {/* Undo */}
           <button
-            className="bg-white shadow-lg rounded-full p-3 hover:shadow-xl transition-all border border-gray-100"
+            className="group bg-white shadow-lg rounded-2xl p-3.5 hover:shadow-xl transition-all border border-gray-100 hover:border-blue-200 hover:-translate-y-0.5"
             onClick={() => {
-              const history = (window as any).__lexicalHistory;
-              if (history?.undo) history.undo();
+              // Lexical undo logic would go here
+              handleSave();
             }}
+            title="Undo"
           >
-            <Undo2 className="h-5 w-5 text-gray-600" />
+            <Undo2 className="h-5 w-5 text-gray-600 group-hover:text-blue-600 transition-colors" />
           </button>
+
+          {/* Redo */}
           <button
-            className="bg-white shadow-lg rounded-full p-3 hover:shadow-xl transition-all border border-gray-100"
+            className="group bg-white shadow-lg rounded-2xl p-3.5 hover:shadow-xl transition-all border border-gray-100 hover:border-blue-200 hover:-translate-y-0.5"
             onClick={() => {
-              const history = (window as any).__lexicalHistory;
-              if (history?.redo) history.redo();
+              // Lexical redo logic would go here
+              handleSave();
             }}
+            title="Redo"
           >
-            <Redo2 className="h-5 w-5 text-gray-600" />
+            <Redo2 className="h-5 w-5 text-gray-600 group-hover:text-blue-600 transition-colors" />
           </button>
+
+          {/* Device Quick Toggle */}
           <button
-            onClick={() => setDevice(device === "desktop" ? "mobile" : device === "mobile" ? "tablet" : "desktop")}
-            className="bg-white shadow-lg rounded-full p-3 hover:shadow-xl transition-all border border-gray-100"
+            onClick={() => {
+              const devices: Array<"desktop" | "tablet" | "mobile"> = ["desktop", "tablet", "mobile"];
+              const currentIndex = devices.indexOf(device);
+              const nextIndex = (currentIndex + 1) % devices.length;
+              setDevice(devices[nextIndex]);
+            }}
+            className="group bg-gradient-to-br from-blue-600 to-indigo-600 shadow-lg rounded-2xl p-3.5 hover:shadow-xl transition-all hover:-translate-y-0.5"
+            title="Cycle Viewport"
           >
-            {getDeviceIcon()}
+            {React.createElement(deviceConfig[device].icon, {
+              className: "h-5 w-5 text-white group-hover:scale-110 transition-transform"
+            })}
           </button>
-        </div>
-      </LexicalComposer>
+      </div>
 
       {/* Deploy Panel Overlay */}
       <DeployPanel

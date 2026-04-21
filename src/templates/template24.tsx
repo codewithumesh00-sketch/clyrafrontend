@@ -24,16 +24,25 @@ export const template24Meta = {
 
 type TemplateProps = {
   editableData?: any;
+  isPublished?: boolean;
 };
 
 const getNestedValue = (obj: any, path: string) => {
   return path.split(".").reduce((acc, part) => acc && acc[part], obj);
 };
 
-export default function Template24({ editableData }: TemplateProps) {
+export default function Template24({ editableData, isPublished = false }: TemplateProps) {
   const [activePage, setActivePage] = useState("home");
   const { theme } = useThemeStore();
-  const updateRegion = useWebsiteBuilderStore((state: any) => state.updateRegion);
+  const storeUpdateRegion = useWebsiteBuilderStore((state: any) => state.updateRegion);
+  const updateRegion = isPublished ? () => { } : storeUpdateRegion;
+
+  const storeEndpoint = useWebsiteBuilderStore(
+    (state: any) => state.schema?.editableData?.formspreeEndpoint
+  );
+  const formspreeEndpoint = isPublished
+    ? editableData?.formspreeEndpoint
+    : storeEndpoint || editableData?.formspreeEndpoint;
 
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = (regionKey: string) => {
@@ -407,85 +416,131 @@ export default function Template24({ editableData }: TemplateProps) {
     </div>
   );
 
-  const ContactView = () => (
-    <Section id="contact">
-      <div className="min-h-[70vh] flex flex-col justify-center animate-in zoom-in-95 duration-700 max-w-6xl mx-auto w-full py-12">
-        <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-start">
+  // ========== CONTACT VIEW ==========
+  const ContactView = () => {
+    const [formData, setFormData] = React.useState({ name: "", email: "", phone: "", message: "" });
+    const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle");
 
-          {/* Left: Info */}
-          <div className="space-y-12">
-            <div>
-              <EditableText as="h1" regionKey="contact.title" fallback="GET IN TOUCH" className="text-4xl md:text-6xl font-light uppercase tracking-tighter block mb-6" />
-              <EditableText as="p" regionKey="contact.subtitle" fallback="For press inquiries, private client services, or general questions, please reach out to our dedicated team." className="text-lg opacity-70 leading-relaxed block" />
-            </div>
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
-            <div className="space-y-8 pt-8 border-t" style={{ borderColor: `${theme.textColor}20` }}>
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-[0.2em] opacity-40 mb-3">Flagship Boutique</h4>
-                <EditableText regionKey="contact.address" fallback="123 Fashion Avenue, Le Marais, Paris 75003" className="font-medium text-lg block" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-[0.2em] opacity-40 mb-3">Client Concierge</h4>
-                <EditableText regionKey="contact.email" fallback="concierge@maisonclyraweb.com" className="font-medium text-lg block mb-1" />
-                <EditableText regionKey="contact.phone" fallback="+33 1 23 45 67 89" className="font-medium text-lg block" />
-              </div>
-            </div>
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!formspreeEndpoint) {
+        alert("âš ï¸ Form is not connected. Please add your Formspree endpoint in the editor.");
+        return;
+      }
+      setStatus("loading");
+      try {
+        const res = await fetch(formspreeEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(formData),
+        });
+        if (res.ok) {
+          setStatus("success");
+          setFormData({ name: "", email: "", phone: "", message: "" });
+          setTimeout(() => setStatus("idle"), 5000);
+        } else throw new Error();
+      } catch {
+        setStatus("error");
+        setTimeout(() => setStatus("idle"), 5000);
+      }
+    };
+
+    return (
+      <div>
+        <Section id="contact-header">
+          <div className="text-center max-w-3xl mx-auto">
+            <EditableText as="h1" regionKey="contact.title" fallback="Let's Connect" className="text-5xl md:text-6xl font-black tracking-tighter block mb-6" />
+            <EditableText as="p" regionKey="contact.subtitle" fallback="Ready to work together? Reach out and let's start the conversation." className="text-xl opacity-70 block" />
           </div>
+        </Section>
 
-          {/* Right: Form */}
-          <div className="bg-white/5 p-8 md:p-12 border shadow-sm" style={{ borderColor: `${theme.textColor}15`, borderRadius: `${theme.borderRadius}px`, backgroundColor: theme.backgroundColor }}>
+        <Section id="contact-form">
+          <div className="grid md:grid-cols-2 gap-16">
             <div className="space-y-8">
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-[0.1em] opacity-60">Full Name</label>
-                <input
-                  type="text"
-                  className="w-full pb-3 bg-transparent border-b outline-none transition-colors focus:border-current"
-                  style={{ borderColor: `${theme.textColor}30` }}
-                  placeholder="Jane Doe"
-                />
+              <div>
+                <h3 className="text-2xl font-bold mb-4">Visit Us</h3>
+                <EditableText regionKey="contact.address" fallback="123 Business Avenue, Suite 100, New York, NY 10001" className="opacity-70 block" />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-[0.1em] opacity-60">Email Address</label>
-                <input
-                  type="email"
-                  className="w-full pb-3 bg-transparent border-b outline-none transition-colors focus:border-current"
-                  style={{ borderColor: `${theme.textColor}30` }}
-                  placeholder="jane@example.com"
-                />
+              <div>
+                <h3 className="text-2xl font-bold mb-4">Contact Info</h3>
+                <EditableText regionKey="contact.email" fallback="hello@example.com" className="opacity-70 block mb-2" />
+                <EditableText regionKey="contact.phone" fallback="+1 (555) 123-4567" className="opacity-70 block" />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-[0.1em] opacity-60">Inquiry Type</label>
-                <select
-                  className="w-full pb-3 bg-transparent border-b outline-none transition-colors focus:border-current appearance-none cursor-pointer"
-                  style={{ borderColor: `${theme.textColor}30`, color: theme.textColor }}
-                >
-                  <option>Customer Service</option>
-                  <option>Press & PR</option>
-                  <option>Wholesale</option>
-                </select>
+              <div>
+                <h3 className="text-2xl font-bold mb-4">Follow Us</h3>
+                <div className="flex gap-4">
+                  {["LinkedIn", "Twitter", "Instagram"].map((social) => (
+                    <span key={social} className="cursor-pointer hover:underline" style={{ color: theme.primaryColor }}>{social}</span>
+                  ))}
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-[0.1em] opacity-60">Message</label>
-                <textarea
-                  rows={3}
-                  className="w-full pb-3 bg-transparent border-b outline-none transition-colors focus:border-current resize-none"
-                  style={{ borderColor: `${theme.textColor}30` }}
-                  placeholder="How can we assist you?"
-                />
-              </div>
-              <button
-                className="w-full py-5 font-bold uppercase tracking-[0.2em] text-xs transition-colors"
-                style={{ backgroundColor: theme.primaryColor, color: theme.backgroundColor, borderRadius: `${theme.borderRadius}px` }}
-              >
-                <EditableText regionKey="contact.submitBtn" fallback="Submit Inquiry" />
-              </button>
             </div>
-          </div>
 
-        </div>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <input
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Your Name"
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-blue-500 transition-colors"
+                style={{ borderColor: `${theme.textColor}20` }}
+                required
+                disabled={status === "loading"}
+              />
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Your Email"
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-blue-500 transition-colors"
+                style={{ borderColor: `${theme.textColor}20` }}
+                required
+                disabled={status === "loading"}
+              />
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="Your Phone"
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-blue-500 transition-colors"
+                style={{ borderColor: `${theme.textColor}20` }}
+                required
+                disabled={status === "loading"}
+              />
+              <textarea
+                name="message"
+                value={formData.message}
+                onChange={handleChange}
+                placeholder="Your Message"
+                rows={5}
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-blue-500 transition-colors resize-none"
+                style={{ borderColor: `${theme.textColor}20` }}
+                required
+                disabled={status === "loading"}
+              />
+              <button
+                type="submit"
+                disabled={status === "loading" || !formspreeEndpoint}
+                className={`w-full py-4 font-bold uppercase tracking-widest text-sm transition-all ${status === "loading" || !formspreeEndpoint ? "opacity-60 cursor-not-allowed" : "hover:opacity-90 active:scale-[0.98]"}`}
+                style={{ backgroundColor: theme.primaryColor, color: "#fff", borderRadius: `${theme.borderRadius}px` }}
+              >
+                {status === "loading" ? "Sending..." : "Send Message"}
+              </button>
+              {status === "success" && <p className="text-green-500 text-sm font-medium animate-in fade-in">âœ“ Message sent successfully!</p>}
+              {status === "error" && <p className="text-red-500 text-sm font-medium animate-in fade-in">âŒ Something went wrong. Please try again.</p>}
+              {!formspreeEndpoint && !isPublished && <p className="text-amber-500 text-xs">âš ï¸ Connect your Formspree endpoint in the editor</p>}
+            </form>
+          </div>
+        </Section>
       </div>
-    </Section>
-  );
+    );
+  };
 
   return (
     <main

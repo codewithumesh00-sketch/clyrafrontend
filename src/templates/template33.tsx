@@ -24,16 +24,25 @@ export const template33Meta = {
 
 type TemplateProps = {
   editableData?: any;
+  isPublished?: boolean;
 };
 
 const getNestedValue = (obj: any, path: string) => {
   return path.split(".").reduce((acc, part) => acc && acc[part], obj);
 };
 
-export default function Template33({ editableData }: TemplateProps) {
+export default function Template33({ editableData, isPublished = false }: TemplateProps) {
   const [activePage, setActivePage] = useState<"home" | "about" | "contact">("home");
   const { theme } = useThemeStore();
-  const updateRegion = useWebsiteBuilderStore((state: any) => state.updateRegion);
+  const storeUpdateRegion = useWebsiteBuilderStore((state: any) => state.updateRegion);
+  const updateRegion = isPublished ? () => { } : storeUpdateRegion;
+
+  const storeEndpoint = useWebsiteBuilderStore(
+    (state: any) => state.schema?.editableData?.formspreeEndpoint
+  );
+  const formspreeEndpoint = isPublished
+    ? editableData?.formspreeEndpoint
+    : storeEndpoint || editableData?.formspreeEndpoint;
 
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageUpload = (regionKey: string) => {
@@ -335,49 +344,131 @@ export default function Template33({ editableData }: TemplateProps) {
     </div>
   );
 
-  const ContactView = () => (
-    <div className="animate-zoom-in w-full max-w-full overflow-hidden">
-      <Section id="contact" bgType="secondary">
-        <div className="max-w-4xl mx-auto flex-wrap break-words min-w-0">
-          <div className="text-center space-y-4 mb-12">
-            <EditableText as="h1" regionKey="contact.title" fallback="We're here to help" className="text-5xl md:text-6xl font-extrabold tracking-tight block" />
-            <EditableText as="p" regionKey="contact.subtitle" fallback="Got questions about the app? Reach out to our dedicated support team." className="text-xl opacity-70 block" />
-          </div>
+  // ========== CONTACT VIEW ==========
+  const ContactView = () => {
+    const [formData, setFormData] = React.useState({ name: "", email: "", phone: "", message: "" });
+    const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle");
 
-          <div className="bg-white shadow-2xl overflow-hidden flex flex-col md:flex-row" style={{ borderRadius: `${theme.borderRadius * 1.5}px`, backgroundColor: theme.backgroundColor }}>
-            <div className="p-10 md:w-2/5 flex flex-col justify-between" style={{ backgroundColor: theme.primaryColor, color: "#ffffff" }}>
-              <div className="space-y-8">
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-widest opacity-70 mb-2">Support Email</h4>
-                  <EditableText regionKey="contact.email" fallback="support@appflow.com" className="font-bold text-lg block" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-widest opacity-70 mb-2">Headquarters</h4>
-                  <EditableText regionKey="contact.address" fallback="Creative District, 404 App Street, San Francisco, CA" className="font-bold text-lg block leading-tight" />
-                </div>
-              </div>
-              <div className="mt-12 opacity-80 text-sm">
-                <EditableText regionKey="contact.hours" fallback="Available Mon-Fri, 9am - 6pm PST" />
-              </div>
-            </div>
-            <div className="p-10 md:w-3/5 space-y-6">
-              <div className="space-y-2">
-                <label className="text-sm font-bold opacity-70">Name</label>
-                <input className="w-full p-4 bg-transparent border-2 outline-none transition-colors focus:border-opacity-100 rounded-xl" style={{ borderColor: `${theme.textColor}15` }} placeholder="Jane Doe" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-bold opacity-70">Message</label>
-                <textarea rows={4} className="w-full p-4 bg-transparent border-2 outline-none transition-colors focus:border-opacity-100 rounded-xl resize-none" style={{ borderColor: `${theme.textColor}15` }} placeholder="How can we help you?" />
-              </div>
-              <button className="w-full py-4 font-bold text-base shadow-md transition-transform hover:-translate-y-1" style={{ backgroundColor: theme.primaryColor, color: "#fff", borderRadius: `${theme.borderRadius}px` }}>
-                <EditableText regionKey="contact.submit" fallback="Send Message" />
-              </button>
-            </div>
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!formspreeEndpoint) {
+        alert("âš ï¸ Form is not connected. Please add your Formspree endpoint in the editor.");
+        return;
+      }
+      setStatus("loading");
+      try {
+        const res = await fetch(formspreeEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(formData),
+        });
+        if (res.ok) {
+          setStatus("success");
+          setFormData({ name: "", email: "", phone: "", message: "" });
+          setTimeout(() => setStatus("idle"), 5000);
+        } else throw new Error();
+      } catch {
+        setStatus("error");
+        setTimeout(() => setStatus("idle"), 5000);
+      }
+    };
+
+    return (
+      <div>
+        <Section id="contact-header">
+          <div className="text-center max-w-3xl mx-auto">
+            <EditableText as="h1" regionKey="contact.title" fallback="Let's Connect" className="text-5xl md:text-6xl font-black tracking-tighter block mb-6" />
+            <EditableText as="p" regionKey="contact.subtitle" fallback="Ready to work together? Reach out and let's start the conversation." className="text-xl opacity-70 block" />
           </div>
-        </div>
-      </Section>
-    </div>
-  );
+        </Section>
+
+        <Section id="contact-form">
+          <div className="grid md:grid-cols-2 gap-16">
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-2xl font-bold mb-4">Visit Us</h3>
+                <EditableText regionKey="contact.address" fallback="123 Business Avenue, Suite 100, New York, NY 10001" className="opacity-70 block" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold mb-4">Contact Info</h3>
+                <EditableText regionKey="contact.email" fallback="hello@example.com" className="opacity-70 block mb-2" />
+                <EditableText regionKey="contact.phone" fallback="+1 (555) 123-4567" className="opacity-70 block" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold mb-4">Follow Us</h3>
+                <div className="flex gap-4">
+                  {["LinkedIn", "Twitter", "Instagram"].map((social) => (
+                    <span key={social} className="cursor-pointer hover:underline" style={{ color: theme.primaryColor }}>{social}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <input
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Your Name"
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-blue-500 transition-colors"
+                style={{ borderColor: `${theme.textColor}20` }}
+                required
+                disabled={status === "loading"}
+              />
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Your Email"
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-blue-500 transition-colors"
+                style={{ borderColor: `${theme.textColor}20` }}
+                required
+                disabled={status === "loading"}
+              />
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="Your Phone"
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-blue-500 transition-colors"
+                style={{ borderColor: `${theme.textColor}20` }}
+                required
+                disabled={status === "loading"}
+              />
+              <textarea
+                name="message"
+                value={formData.message}
+                onChange={handleChange}
+                placeholder="Your Message"
+                rows={5}
+                className="w-full p-4 bg-transparent border-b outline-none focus:border-blue-500 transition-colors resize-none"
+                style={{ borderColor: `${theme.textColor}20` }}
+                required
+                disabled={status === "loading"}
+              />
+              <button
+                type="submit"
+                disabled={status === "loading" || !formspreeEndpoint}
+                className={`w-full py-4 font-bold uppercase tracking-widest text-sm transition-all ${status === "loading" || !formspreeEndpoint ? "opacity-60 cursor-not-allowed" : "hover:opacity-90 active:scale-[0.98]"}`}
+                style={{ backgroundColor: theme.primaryColor, color: "#fff", borderRadius: `${theme.borderRadius}px` }}
+              >
+                {status === "loading" ? "Sending..." : "Send Message"}
+              </button>
+              {status === "success" && <p className="text-green-500 text-sm font-medium animate-in fade-in">âœ“ Message sent successfully!</p>}
+              {status === "error" && <p className="text-red-500 text-sm font-medium animate-in fade-in">âŒ Something went wrong. Please try again.</p>}
+              {!formspreeEndpoint && !isPublished && <p className="text-amber-500 text-xs">âš ï¸ Connect your Formspree endpoint in the editor</p>}
+            </form>
+          </div>
+        </Section>
+      </div>
+    );
+  };
 
   return (
     <main
