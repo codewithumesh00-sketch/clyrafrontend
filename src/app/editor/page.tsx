@@ -214,65 +214,62 @@ ${clone.body.innerHTML}
 </body>
 </html>`;
 
-              // ── 6. Inject production navigation + layout fix script ─────
+              // ── 6. Inject production navigation script ──────────────────
 const NAV_SCRIPT = `<script>
 (function(){
-  // Collect all top-level content sections (not nav/footer)
-  var sections = Array.from(document.querySelectorAll(
-    "main > section, main > div > section, section, main > div, .min-h-screen > div > div"
-  )).filter(function(el){
-    return !el.closest("nav") && !el.closest("header") && !el.closest("footer") &&
-           el.tagName !== "NAV" && el.tagName !== "FOOTER" && el.tagName !== "HEADER";
+  // 1. Find all <section> elements that are direct content blocks
+  //    (not inside nav/header/footer)
+  var allSections = Array.from(document.querySelectorAll("section")).filter(function(el){
+    return !el.closest("nav") && !el.closest("header") && !el.closest("footer");
   });
 
-  // Remove duplicates (keep outermost)
-  sections = sections.filter(function(el){
-    return !sections.some(function(other){ return other !== el && other.contains(el); });
+  // 2. Keep only top-level sections (not nested inside another section)
+  var sections = allSections.filter(function(el){
+    return !allSections.some(function(other){
+      return other !== el && other !== el.parentElement && other.contains(el);
+    });
   });
 
-  // Assign sequential IDs
-  sections.forEach(function(sec, i){
-    if(!sec.id){ sec.id = "section-" + i; }
-  });
+  // 3. Fallback: if no sections found, use main children
+  if(sections.length === 0){
+    var main = document.querySelector("main");
+    if(main){ sections = Array.from(main.children); }
+  }
 
-  // Get nav interaction buttons (exclude CTA / logo)
-  var navBtns = Array.from(document.querySelectorAll(
-    "nav button, nav a, header nav button, header nav a"
-  )).filter(function(el){
-    var t = el.textContent.trim();
-    return t.length > 0 && t.length < 30;
+  // 4. Assign stable IDs
+  sections.forEach(function(sec, i){ if(!sec.id){ sec.id = "clyra-sec-" + i; } });
+
+  // 5. Wire nav buttons — HOME=top, others map to sections by order
+  var navBtns = Array.from(document.querySelectorAll("nav button, nav a")).filter(function(el){
+    var t = (el.textContent || "").trim();
+    return t.length >= 2 && t.length <= 20;
   });
 
   navBtns.forEach(function(btn, idx){
     var txt = btn.textContent.trim().toLowerCase();
     btn.style.cursor = "pointer";
-
     btn.addEventListener("click", function(e){
       e.preventDefault();
       e.stopPropagation();
 
-      // HOME always scrolls to top
       if(txt === "home"){
         window.scrollTo({top:0,behavior:"smooth"});
         return;
       }
 
-      // Try text match first (e.g., section heading contains button text)
-      var byText = sections.find(function(s){
-        var heading = s.querySelector("h1,h2,h3,h4");
-        return heading && heading.textContent.trim().toLowerCase().indexOf(txt) !== -1;
+      // Try heading text match first
+      var match = sections.find(function(s){
+        var h = s.querySelector("h1,h2,h3,h4,h5");
+        return h && h.textContent.trim().toLowerCase().indexOf(txt) !== -1;
       });
-      if(byText){ byText.scrollIntoView({behavior:"smooth",block:"start"}); return; }
+      if(match){ match.scrollIntoView({behavior:"smooth",block:"start"}); return; }
 
-      // Fallback: map by order (2nd btn -> section 1, 3rd btn -> section 2, etc.)
-      var sectionIdx = Math.max(0, idx - 1);
-      // Last nav item (contact) always goes to last section
-      if(idx === navBtns.length - 1 || txt === "contact"){
-        sectionIdx = sections.length - 1;
-      }
-      if(sections[sectionIdx]){
-        sections[sectionIdx].scrollIntoView({behavior:"smooth",block:"start"});
-      }
+      // Position-based fallback
+      // contact/last nav item → last section
+      // 2nd item → section[0], 3rd item → section[1] etc.
+      var isLast = idx === navBtns.length - 1 || txt.indexOf("contact") !== -1;
+      var si = isLast ? sections.length - 1 : Math.max(0, idx - 1);
+      if(sections[si]){ sections[si].scrollIntoView({behavior:"smooth",block:"start"}); }
     });
   });
 })();
