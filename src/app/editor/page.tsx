@@ -149,7 +149,6 @@ export default function EditorPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           projectName: "clyraweb-auto-publish",
-          // Capture live rendered HTML from preview iframe for exact visual match
           editableData: {
             ...schema.editableData,
             formspreeEndpoint: formEndpoint,
@@ -158,20 +157,68 @@ export default function EditorPage() {
           files: (() => {
             try {
               const iframeEl = document.querySelector("#preview-root iframe") as HTMLIFrameElement | null;
-              if (iframeEl?.contentDocument) {
-                const doc = iframeEl.contentDocument;
-                const siteTitle =
-                  (schema?.editableData as any)?.hero?.title ||
+              if (!iframeEl?.contentDocument) return {};
+
+              const doc = iframeEl.contentDocument;
+
+              // ── 1. Deep-clone so we don't mutate the live preview ──────
+              const clone = doc.cloneNode(true) as Document;
+
+              // ── 2. Strip ALL editor-only attributes ────────────────────
+              clone.querySelectorAll("[contenteditable]").forEach((el) => {
+                el.removeAttribute("contenteditable");
+              });
+              // Remove editor focus-ring helper classes from every element
+              const EDITOR_CLASSES = [
+                "focus:outline-none","focus:ring-2","focus:ring-blue-400","transition-all"
+              ];
+              clone.querySelectorAll("*").forEach((el) => {
+                EDITOR_CLASSES.forEach((cls) => el.classList?.remove(cls));
+              });
+
+              // ── 3. Fill empty h1 from editableData (template default) ──
+              const h1 = clone.querySelector("h1");
+              if (h1 && !h1.textContent?.trim()) {
+                const fallbackTitle =
                   (schema?.editableData as any)?.hero?.heading ||
+                  (schema?.editableData as any)?.hero?.title ||
                   (schema?.editableData as any)?.navbar?.brand ||
-                  "My Site";
-                const headExtras = Array.from(doc.head.children).map(el => el.outerHTML).join("\n  ");
-                return {
-                  "index.html": `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>${siteTitle}</title>\n  ${headExtras}\n  <style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0;padding:0;overflow-x:hidden}</style>\n</head>\n<body>\n${doc.body.innerHTML}\n</body>\n</html>`
-                };
+                  (schema as any)?.prompt ||
+                  "Welcome";
+                h1.textContent = fallbackTitle;
               }
-            } catch(e) { console.warn("iframe capture failed", e); }
-            return {};
+
+              // ── 4. Build site title ────────────────────────────────────
+              const siteTitle =
+                (schema?.editableData as any)?.hero?.heading ||
+                (schema?.editableData as any)?.hero?.title ||
+                (schema?.editableData as any)?.navbar?.brand ||
+                "My Site";
+
+              // ── 5. Collect head assets (Tailwind CDN + fonts + styles) ─
+              const headExtras = Array.from(clone.head.children)
+                .map((el) => el.outerHTML)
+                .join("\n  ");
+
+              const cleanHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${siteTitle}</title>
+  ${headExtras}
+  <style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0;padding:0;overflow-x:hidden}</style>
+</head>
+<body>
+${clone.body.innerHTML}
+</body>
+</html>`;
+
+              return { "index.html": cleanHTML };
+            } catch (e) {
+              console.warn("iframe capture failed", e);
+              return {};
+            }
           })(),
         }),
       });
