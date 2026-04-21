@@ -340,9 +340,9 @@ export default function Template7({
       <div className="w-full">
         {isPublished ? (
           <>
-            <div id="clyra-page-home"><Home /></div>
-            <div id="clyra-page-about" style={{display:'none'}}><About /></div>
-            <div id="clyra-page-contact" style={{display:'none'}}><Contact /></div>
+            <div id="clyra-page-home" style={{display: activePage === 'home' ? 'block' : 'none'}}><Home /></div>
+            <div id="clyra-page-about" style={{display: activePage === 'about' ? 'block' : 'none'}}><About /></div>
+            <div id="clyra-page-contact" style={{display: activePage === 'contact' ? 'block' : 'none'}}><Contact /></div>
           </>
         ) : (
           <>

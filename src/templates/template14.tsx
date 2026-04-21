@@ -516,9 +516,9 @@ export default function Template14({ editableData, isPublished = false }: Templa
       <div className="flex-grow w-full flex flex-col min-w-0">
         {isPublished ? (
           <>
-          <div id="clyra-page-home"><HomeView /></div>
-          <div id="clyra-page-about" style={{display:'none'}}><AboutView /></div>
-          <div id="clyra-page-contact" style={{display:'none'}}><ContactView /></div>
+          <div id="clyra-page-home" style={{display: activePage === 'home' ? 'block' : 'none'}}><HomeView /></div>
+          <div id="clyra-page-about" style={{display: activePage === 'about' ? 'block' : 'none'}}><AboutView /></div>
+          <div id="clyra-page-contact" style={{display: activePage === 'contact' ? 'block' : 'none'}}><ContactView /></div>
           </>
         ) : (
           <>

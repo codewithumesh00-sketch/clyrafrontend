@@ -1453,11 +1453,11 @@ export default function Template2({ editableData, isPublished = false }: Templat
       <div className="flex flex-col w-full">
         {isPublished ? (
           <>
-          <div id="clyra-page-home"><HomeView /></div>
-          <div id="clyra-page-shop" style={{display:'none'}}><ShopView /></div>
-          <div id="clyra-page-product" style={{display:'none'}}><ProductView /></div>
-          <div id="clyra-page-cart" style={{display:'none'}}><CartPageView /></div>
-          <div id="clyra-page-contact" style={{display:'none'}}><ContactView /></div>
+          <div id="clyra-page-home" style={{display: activePage === 'home' ? 'block' : 'none'}}><HomeView /></div>
+          <div id="clyra-page-shop" style={{display: activePage === 'shop' ? 'block' : 'none'}}><ShopView /></div>
+          <div id="clyra-page-product" style={{display: activePage === 'product' ? 'block' : 'none'}}><ProductView /></div>
+          <div id="clyra-page-cart" style={{display: activePage === 'cart' ? 'block' : 'none'}}><CartPageView /></div>
+          <div id="clyra-page-contact" style={{display: activePage === 'contact' ? 'block' : 'none'}}><ContactView /></div>
           </>
         ) : (
           <>

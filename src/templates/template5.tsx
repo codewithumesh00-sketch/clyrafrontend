@@ -607,11 +607,11 @@ export default function Template5({ editableData, isPublished = false }: Templat
       <div className="w-full">
         {isPublished ? (
           <>
-          <div id="clyra-page-home"><HomeView /></div>
-          <div id="clyra-page-programs" style={{display:'none'}}><ProgramsView /></div>
-          <div id="clyra-page-about" style={{display:'none'}}><AboutView /></div>
-          <div id="clyra-page-blog" style={{display:'none'}}><BlogView /></div>
-          <div id="clyra-page-contact" style={{display:'none'}}><ContactView /></div>
+          <div id="clyra-page-home" style={{display: activePage === 'home' ? 'block' : 'none'}}><HomeView /></div>
+          <div id="clyra-page-programs" style={{display: activePage === 'programs' ? 'block' : 'none'}}><ProgramsView /></div>
+          <div id="clyra-page-about" style={{display: activePage === 'about' ? 'block' : 'none'}}><AboutView /></div>
+          <div id="clyra-page-blog" style={{display: activePage === 'blog' ? 'block' : 'none'}}><BlogView /></div>
+          <div id="clyra-page-contact" style={{display: activePage === 'contact' ? 'block' : 'none'}}><ContactView /></div>
           </>
         ) : (
           <>
